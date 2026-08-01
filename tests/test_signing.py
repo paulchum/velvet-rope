@@ -281,7 +281,11 @@ def test_tampered_ed25519_signature_is_rejected() -> None:
     signed = signer.attach_signature({"artifact": "warrant"}, PURPOSE_WARRANT)
     tampered = dict(signed)
     tampered["signature"] = dict(signed["signature"])
-    tampered["signature"]["signature"] = "A" + str(signed["signature"]["signature"])[1:]
+    signature_bytes = bytearray(
+        base64.b64decode(str(signed["signature"]["signature"]), validate=True)
+    )
+    signature_bytes[0] ^= 0x01
+    tampered["signature"]["signature"] = base64.b64encode(signature_bytes).decode("ascii")
     assert not signer.verify_payload(tampered, PURPOSE_WARRANT)
 
 
