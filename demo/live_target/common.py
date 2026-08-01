@@ -374,14 +374,14 @@ def guard_dispatch(
         admitted_policy_hash=admitted_policy_hash,
         attempted_policy_hash=current_policy_hash,
     )
-    if admitted_action_hash != attempted_action_hash:
-        raise _refusal("canonical action hash mismatch", result)
-    if admitted_args_hash != attempted_args_hash:
-        raise _refusal("arguments hash mismatch", result)
     if admitted_schema_hash != current_schema_hash:
         raise _refusal("tool schema hash mismatch", result)
     if admitted_policy_hash != current_policy_hash:
         raise _refusal("policy hash mismatch", result)
+    if admitted_action_hash != attempted_action_hash:
+        raise _refusal("canonical action hash mismatch", result)
+    if admitted_args_hash != attempted_args_hash:
+        raise _refusal("arguments hash mismatch", result)
     _validate_execution_permit(conn, permit, request, tool_name, result)
     if tool_name == "delete_customer_records":
         _validate_approval_receipt(actual_arguments, result)

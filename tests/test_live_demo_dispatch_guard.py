@@ -22,8 +22,17 @@ def _load_common_module() -> ModuleType:
 common: Any = _load_common_module()
 
 
-def test_dispatch_guard_compares_attempt_to_signed_admitted_hashes(
+@pytest.mark.parametrize(
+    ("schema_drift", "expected_reason"),
+    [
+        (False, "canonical action hash mismatch"),
+        (True, "tool schema hash mismatch"),
+    ],
+)
+def test_dispatch_guard_prioritizes_explicit_signed_scope_mismatches(
     monkeypatch: pytest.MonkeyPatch,
+    schema_drift: bool,
+    expected_reason: str,
 ) -> None:
     admitted_hash = "sha256:" + "a" * 64
     attempted_hash = "sha256:" + "b" * 64
@@ -49,7 +58,8 @@ def test_dispatch_guard_compares_attempt_to_signed_admitted_hashes(
         ),
     )
     monkeypatch.setattr(common, "tool_by_name", lambda _conn, _tool_name: {})
-    monkeypatch.setattr(common, "tool_schema_hash", lambda _tool: schema_hash)
+    current_schema_hash = "sha256:" + "e" * 64 if schema_drift else schema_hash
+    monkeypatch.setattr(common, "tool_schema_hash", lambda _tool: current_schema_hash)
     monkeypatch.setattr(
         common,
         "get_control",
@@ -63,7 +73,7 @@ def test_dispatch_guard_compares_attempt_to_signed_admitted_hashes(
         ),
     )
 
-    with pytest.raises(common.DispatchRefusal, match="canonical action hash mismatch") as exc:
+    with pytest.raises(common.DispatchRefusal, match=expected_reason) as exc:
         common.guard_dispatch(
             None,
             request={},
