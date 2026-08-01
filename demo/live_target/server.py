@@ -268,8 +268,8 @@ def execute_mutation(
                 order["customer_id"],
                 amount_cents,
                 str(arguments["reason"]),
-                guard.admitted_action.canonical_action_hash,
-                guard.attempted_action.canonical_action_hash,
+                guard.admitted_action_hash,
+                guard.attempted_action_hash,
             ),
         )
         conn.execute(

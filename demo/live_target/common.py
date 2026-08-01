@@ -22,7 +22,7 @@ from velvet.execution import (
     verify_execution_permit,
 )
 from velvet.normalizer import VelvetActionNormalizer
-from velvet.serialization import canonical_dumps, canonical_hash_sha256
+from velvet.serialization import canonical_hash_sha256
 from velvet.signing import (
     DEMO_ED25519_PUBLIC_KEY_PATH,
     PURPOSE_APPROVAL_RECEIPT_V1,
@@ -86,8 +86,9 @@ class DispatchRefusal(RuntimeError):
 
 @dataclass(frozen=True)
 class GuardResult:
-    admitted_action: CanonicalAction
+    admitted_action_hash: str
     attempted_action: CanonicalAction
+    attempted_action_hash: str
     admitted_arguments_hash: str
     attempted_arguments_hash: str
     admitted_tool_schema_hash: str
@@ -143,18 +144,6 @@ def amount_string(cents_value: int) -> str:
 
 def stable_hash(value: Mapping[str, Any] | list[Any]) -> str:
     return canonical_hash_sha256(value)
-
-
-def strip_velvet_execution_metadata(request: Mapping[str, Any]) -> JsonObject:
-    payload = json.loads(canonical_dumps(request))
-    params = payload.get("params")
-    if isinstance(params, dict):
-        meta = params.get("_meta")
-        if isinstance(meta, dict):
-            meta.pop("velvet_execution", None)
-            if not meta:
-                params.pop("_meta", None)
-    return cast(JsonObject, payload)
 
 
 def arguments_hash(arguments: Mapping[str, Any]) -> str:
@@ -340,14 +329,6 @@ def normalize_for_tool(
     )
 
 
-def admitted_request_from_meta(
-    request: Mapping[str, Any],
-    meta: Mapping[str, Any],
-) -> JsonObject:
-    del meta
-    return strip_velvet_execution_metadata(request)
-
-
 def admission_bundle(meta: Mapping[str, Any]) -> Mapping[str, Any]:
     value = meta.get("velvet_execution")
     return cast(Mapping[str, Any], value) if isinstance(value, Mapping) else {}
@@ -369,22 +350,13 @@ def guard_dispatch(
     meta: Mapping[str, Any],
     attack: str,
 ) -> GuardResult:
-    admitted_request = admitted_request_from_meta(request, meta)
-    admitted_params = (
-        admitted_request.get("params") if isinstance(admitted_request, Mapping) else {}
-    )
-    admitted_args = {}
-    if isinstance(admitted_params, Mapping) and isinstance(
-        admitted_params.get("arguments"),
-        Mapping,
-    ):
-        admitted_args = dict(cast(Mapping[str, Any], admitted_params["arguments"]))
     bundle = admission_bundle(meta)
     permit = execution_permit_from_bundle(bundle)
 
     attempted_action = normalize_for_tool(conn, tool_name, actual_arguments)
-    admitted_action = attempted_action
-    admitted_args_hash = arguments_hash(admitted_args)
+    admitted_action_hash = permit.scope.canonical_action_hash
+    attempted_action_hash = f"sha256:{attempted_action.canonical_action_hash}"
+    admitted_args_hash = permit.scope.arguments_hash
     attempted_args_hash = arguments_hash(actual_arguments)
     current_schema_hash = tool_schema_hash(tool_by_name(conn, tool_name))
     admitted_schema_hash = permit.scope.tool_schema_hash
@@ -392,8 +364,9 @@ def guard_dispatch(
     current_policy_hash = get_control(conn, "policy_hash", DEFAULT_POLICY_HASH)
 
     result = GuardResult(
-        admitted_action=admitted_action,
+        admitted_action_hash=admitted_action_hash,
         attempted_action=attempted_action,
+        attempted_action_hash=attempted_action_hash,
         admitted_arguments_hash=admitted_args_hash,
         attempted_arguments_hash=attempted_args_hash,
         admitted_tool_schema_hash=admitted_schema_hash,
@@ -401,7 +374,7 @@ def guard_dispatch(
         admitted_policy_hash=admitted_policy_hash,
         attempted_policy_hash=current_policy_hash,
     )
-    if admitted_action.canonical_action_hash != attempted_action.canonical_action_hash:
+    if admitted_action_hash != attempted_action_hash:
         raise _refusal("canonical action hash mismatch", result)
     if admitted_args_hash != attempted_args_hash:
         raise _refusal("arguments hash mismatch", result)
@@ -409,7 +382,7 @@ def guard_dispatch(
         raise _refusal("tool schema hash mismatch", result)
     if admitted_policy_hash != current_policy_hash:
         raise _refusal("policy hash mismatch", result)
-    _validate_execution_permit(conn, permit, admitted_request, tool_name, result)
+    _validate_execution_permit(conn, permit, request, tool_name, result)
     if tool_name == "delete_customer_records":
         _validate_approval_receipt(actual_arguments, result)
     return result
@@ -497,8 +470,8 @@ def _validate_approval_receipt(arguments: Mapping[str, Any], result: GuardResult
 def _refusal(reason: str, result: GuardResult) -> DispatchRefusal:
     return DispatchRefusal(
         reason,
-        admitted_action_hash=result.admitted_action.canonical_action_hash,
-        attempted_action_hash=result.attempted_action.canonical_action_hash,
+        admitted_action_hash=result.admitted_action_hash,
+        attempted_action_hash=result.attempted_action_hash,
         admitted_arguments_hash=result.admitted_arguments_hash,
         attempted_arguments_hash=result.attempted_arguments_hash,
         admitted_tool_schema_hash=result.admitted_tool_schema_hash,
@@ -631,9 +604,9 @@ def record_audit(
             "decision": decision,
             "reason": reason,
             "admitted_action_hash": (source.admitted_action_hash if source else None)
-            or (guard.admitted_action.canonical_action_hash if guard else None),
+            or (guard.admitted_action_hash if guard else None),
             "attempted_action_hash": (source.attempted_action_hash if source else None)
-            or (guard.attempted_action.canonical_action_hash if guard else None),
+            or (guard.attempted_action_hash if guard else None),
             "admitted_arguments_hash": (source.admitted_arguments_hash if source else None)
             or (guard.admitted_arguments_hash if guard else None),
             "attempted_arguments_hash": (source.attempted_arguments_hash if source else None)
