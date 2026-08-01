@@ -216,6 +216,11 @@ class ProxyClient(AbstractContextManager["ProxyClient"]):
         request_meta: JsonObject = {
             "user_request": "Velvet live drift demonstration.",
         }
+        if self.attack:
+            # The target records this label in its audit row. Bind it into the
+            # request before the proxy signs the execution permit; adding it in
+            # the downstream dispatcher would correctly look like tampering.
+            request_meta["attack"] = self.attack
         if meta is not None:
             request_meta.update(meta)
         return self.send(

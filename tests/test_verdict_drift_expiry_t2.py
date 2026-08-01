@@ -227,12 +227,17 @@ def test_A3_bracket_is_bracket_and_matches_reference():
 
 
 def test_A3_saturation_removed_and_gated():
-    """The concentrated-anchor saturation is killed (Beta(30000,10000):
-    grid ~15 -> certified >= 8400) while moderate anchors keep the exact
-    grid arm (gate) and the T*-0 collapse stays exact."""
+    """The concentrated-anchor grid undershoot is killed while moderate
+    anchors keep the exact grid arm (gate) and the T*-0 collapse stays exact.
+
+    The raw grid value depends on platform math-library tail behavior, so the
+    invariant is that it trips the series gate and the certified arm dominates
+    it, rather than pinning a platform-specific approximation.
+    """
     g = de._rate_I_lower_grid(30000, 10000, 0.43)
-    assert g < 20.0                              # the old saturation, pinned
-    assert de.rate_I_lower(30000, 10000, 0.43) >= 8400.0
+    certified = de.rate_I_lower(30000, 10000, 0.43)
+    assert de._A3_SERIES_THRESHOLD <= g < certified
+    assert certified >= 8400.0
     assert (de.rate_I_lower(21, 21, 0.4264)
             == de._rate_I_lower_grid(21, 21, 0.4264))   # gate: grid arm kept
     assert de.rate_I_lower(2, 2, 0.5) == 0.0
