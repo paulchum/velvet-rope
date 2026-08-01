@@ -126,7 +126,7 @@ jobs:
         run: uv run python scripts/check_publish_safety.py build/oss/velvet
       - name: Install cargo-deny and secret scanners
         run: |
-          cargo install cargo-deny --locked --version 0.18.4
+          cargo install cargo-deny --locked --version 0.19.4
           go install github.com/zricethezav/gitleaks/v8@v8.28.0
           curl -sSfL https://github.com/trufflesecurity/trufflehog/releases/download/v3.90.5/trufflehog_3.90.5_linux_amd64.tar.gz -o /tmp/trufflehog.tar.gz
           tar -xzf /tmp/trufflehog.tar.gz -C /tmp trufflehog
