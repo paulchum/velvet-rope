@@ -137,7 +137,11 @@ jobs:
       - name: Scan curated tree with gitleaks
         run: gitleaks detect --no-git --source build/oss/velvet --config .gitleaks.toml --redact --exit-code 1
       - name: Scan curated tree with trufflehog
-        run: trufflehog filesystem build/oss/velvet --fail --no-update
+        run: |
+          trufflehog filesystem build/oss/velvet --no-update --json > build/trufflehog.jsonl
+          uv run python scripts/check_trufflehog_findings.py \
+            build/trufflehog.jsonl \
+            --source-root build/oss/velvet
 
   live-demo:
     runs-on: ubuntu-latest

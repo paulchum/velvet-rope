@@ -8,3 +8,24 @@ description = "Committed public demo key material is documented in SECURITY.md."
 paths = [
   '''demo/keys/live_demo_oap_public_key\.hex''',
 ]
+
+[[allowlists]]
+description = "Exact signing-key environment variable names are configuration identifiers, not credentials."
+condition = "AND"
+regexTarget = "match"
+paths = [
+  '''crates/velvet-rope-proxy/src/oap\.rs''',
+  '''deploy/mcp_proxy/kubernetes\.yaml''',
+  '''examples/deployment/openai-secure-mcp-tunnel/velvet-config\.yaml''',
+  '''examples/mcp_proxy/config\.production\.yaml''',
+]
+regexes = [
+  '''VELVET_(?:OAP|MAXDE)_ED25519_PRIVATE_KEY''',
+]
+
+[[allowlists]]
+description = "Deterministic private-key fixtures are non-production test material documented in SECURITY.md."
+paths = [
+  '''crates/velvet-rope-proxy/src/tests/support\.rs''',
+  '''tests/fixtures/keys/velvet_demo_ed25519\.key''',
+]

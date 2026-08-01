@@ -187,12 +187,13 @@ class FleetAccountant:
                  gammas: Sequence[Fraction | int | float] | None = None,
                  k_max: int | None = None,
                  epsilons: Sequence[Fraction | int | float] | None = None):
-        assert mode in ("elond", "ebh", "spend", "naive-broken")
+        if mode not in ("elond", "ebh", "spend", "naive-broken"):
+            raise ValueError(f"unsupported fleet accounting mode: {mode}")
         self.mode = mode
         self.delta = Frac(delta)
         self.gammas = [Frac(g) for g in gammas] if gammas else None
-        if self.gammas is not None:
-            assert sum(self.gammas) <= 1
+        if self.gammas is not None and sum(self.gammas) > 1:
+            raise ValueError("fleet accounting gamma weights must sum to at most one")
         self.k_max = k_max
         self.epsilons = [Frac(e) for e in epsilons] if epsilons else None
         self.decisions: list[dict[str, Any]] = []
@@ -236,8 +237,10 @@ class FleetAccountant:
     # -- adjudication (at tau_j + W_j; pure observation of the trace) --
     def adjudicate(self, decision_id: int, crossed: bool) -> Fraction:
         rec = self.decisions[decision_id]
-        assert rec["executed"], "only executed decisions are adjudicated"
-        assert not rec["adjudicated"], "already adjudicated"
+        if not rec["executed"]:
+            raise ValueError("only executed decisions are adjudicated")
+        if rec["adjudicated"]:
+            raise ValueError("decision is already adjudicated")
         cert = rec["cert"] or Certificate(W=0, u=rec["u"])
         e_hat = finalize(crossed, cert)
         rec.update(adjudicated=True, crossed=crossed, e_hat=e_hat)

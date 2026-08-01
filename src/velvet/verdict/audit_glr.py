@@ -512,7 +512,9 @@ def n_cert(na: int, sa: int, nb: int, sb: int, delta: float,
     point = _ncert_point(mua, mub, delta, family, eta)
 
     import random as _random
-    rng = _random.Random(seed)  # noqa: S311 - bootstrap resampling, not cryptography
+
+    # This seeded generator drives reproducible bootstrap resampling, not cryptography.
+    rng = _random.Random(seed)  # noqa: S311  # nosec B311
     boots, degenerate = [], 0
     for _ in range(n_boot):
         sa_r = sum(1 for _ in range(na) if rng.random() < mua)

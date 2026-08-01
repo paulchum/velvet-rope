@@ -134,6 +134,7 @@ ROOT_FILES = {
     "scripts/check-doc-links.sh",
     "scripts/check_no_npm.py",
     "scripts/check_publish_safety.py",
+    "scripts/check_trufflehog_findings.py",
     "scripts/check_workflows.py",
     "scripts/build_shadowpath_launch_video.py",
     "scripts/export_benchmark_tree.py",

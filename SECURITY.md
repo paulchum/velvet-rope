@@ -2,8 +2,8 @@
 
 ## Supported Version
 
-Velvet is pre-1.0 research-engineering infrastructure. Security fixes apply to
-the current `0.9.x` launch line until a public release process is established.
+Velvet is research-engineering infrastructure. Security fixes apply to the
+current `1.x` release line.
 
 ## Threat Model
 
@@ -66,12 +66,19 @@ discarded or regenerated when the schema changes.
 
 ## Demo Key Boundary
 
-The repository may contain committed public demo key material and deterministic
-local-demo signing helpers so examples, benchmark fixtures, and verifier tests
-can be reproduced offline. Demo keys are not production credentials, are
-documented as demo-only material, and must be rejected by production signing
-profiles. Do not add private production keys, tenant keys, API tokens, cloud
-credentials, or hosted-service secrets to the repository.
+The repository contains committed public demo key material and two deterministic
+private-key fixtures so examples, benchmark fixtures, mTLS tests, and verifier
+tests can be reproduced offline:
+
+- `tests/fixtures/keys/velvet_demo_ed25519.key` is the demo verifier key;
+- `crates/velvet-rope-proxy/src/tests/support.rs` embeds an mTLS test key.
+
+Treat both as universally compromised. They are not production credentials and
+production signing profiles must reject demo keys. Secret-scanner exceptions
+are pinned to exact fixture paths and values, exact environment-variable
+identifiers, or public upstream commit identifiers; any changed or additional
+finding fails CI. Do not add private production keys, tenant keys, API tokens,
+cloud credentials, or hosted-service secrets to the repository.
 
 ## Reporting
 

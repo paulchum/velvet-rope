@@ -589,7 +589,8 @@ def _call_adapter(
     timeout_seconds: float,
 ) -> JsonObject:
     try:
-        completed = subprocess.run(  # noqa: S603
+        # The user opts into this adapter command; argv is passed directly with no shell.
+        completed = subprocess.run(  # noqa: S603  # nosec B603
             list(command),
             cwd=cwd,
             input=json.dumps(request, sort_keys=True) + "\n",
