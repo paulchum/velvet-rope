@@ -1,0 +1,573 @@
+{
+  "$id": "https://velvet.local/schemas/assurance/control_state_attestation.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "budget_safety": {
+      "additionalProperties": false,
+      "properties": {
+        "h1_true_hard_caps_present": {
+          "type": "boolean"
+        },
+        "h2_single_writer_accounting": {
+          "type": "boolean"
+        },
+        "max_configured_cap_usd": {
+          "pattern": "^[0-9]+\\.[0-9]{6}$",
+          "type": "string"
+        },
+        "zero_overshoot_observed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "h1_true_hard_caps_present",
+        "h2_single_writer_accounting",
+        "max_configured_cap_usd",
+        "zero_overshoot_observed"
+      ],
+      "type": "object"
+    },
+    "certificate_coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "irreversible_class_actions": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "irreversible_class_max_de_lockout_inspection_certificate_fraction": {
+          "pattern": "^(?:0|1)\\.[0-9]{6}$",
+          "type": "string"
+        },
+        "irreversible_class_verdict_certificate_fraction": {
+          "pattern": "^(?:0|1)\\.[0-9]{6}$",
+          "type": "string"
+        },
+        "spend_class_actions": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "spend_class_deterministic_budget_certificate_fraction": {
+          "pattern": "^(?:0|1)\\.[0-9]{6}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spend_class_actions",
+        "spend_class_deterministic_budget_certificate_fraction",
+        "irreversible_class_actions",
+        "irreversible_class_max_de_lockout_inspection_certificate_fraction",
+        "irreversible_class_verdict_certificate_fraction"
+      ],
+      "type": "object"
+    },
+    "decision_counts": {
+      "additionalProperties": false,
+      "properties": {
+        "admit": {
+          "additionalProperties": false,
+          "properties": {
+            "bind_external": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "destructive": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "high": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "irreversible": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "low": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "medium": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "other": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "spend": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unknown": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unlisted": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unknown",
+            "low",
+            "medium",
+            "high",
+            "unlisted",
+            "destructive",
+            "bind_external",
+            "spend",
+            "irreversible",
+            "other"
+          ],
+          "type": "object"
+        },
+        "block": {
+          "additionalProperties": false,
+          "properties": {
+            "bind_external": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "destructive": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "high": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "irreversible": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "low": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "medium": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "other": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "spend": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unknown": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unlisted": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unknown",
+            "low",
+            "medium",
+            "high",
+            "unlisted",
+            "destructive",
+            "bind_external",
+            "spend",
+            "irreversible",
+            "other"
+          ],
+          "type": "object"
+        },
+        "defer": {
+          "additionalProperties": false,
+          "properties": {
+            "bind_external": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "destructive": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "high": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "irreversible": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "low": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "medium": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "other": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "spend": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unknown": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unlisted": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unknown",
+            "low",
+            "medium",
+            "high",
+            "unlisted",
+            "destructive",
+            "bind_external",
+            "spend",
+            "irreversible",
+            "other"
+          ],
+          "type": "object"
+        },
+        "escalate": {
+          "additionalProperties": false,
+          "properties": {
+            "bind_external": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "destructive": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "high": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "irreversible": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "low": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "medium": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "other": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "spend": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unknown": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unlisted": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unknown",
+            "low",
+            "medium",
+            "high",
+            "unlisted",
+            "destructive",
+            "bind_external",
+            "spend",
+            "irreversible",
+            "other"
+          ],
+          "type": "object"
+        },
+        "skip": {
+          "additionalProperties": false,
+          "properties": {
+            "bind_external": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "destructive": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "high": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "irreversible": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "low": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "medium": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "other": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "spend": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unknown": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "unlisted": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unknown",
+            "low",
+            "medium",
+            "high",
+            "unlisted",
+            "destructive",
+            "bind_external",
+            "spend",
+            "irreversible",
+            "other"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "admit",
+        "block",
+        "escalate",
+        "defer",
+        "skip"
+      ],
+      "type": "object"
+    },
+    "degraded_flags": {
+      "additionalProperties": false,
+      "properties": {
+        "anchoring_degraded": {
+          "type": "boolean"
+        },
+        "fail_open_condition_observed": {
+          "type": "boolean"
+        },
+        "signing_degraded": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "signing_degraded",
+        "anchoring_degraded",
+        "fail_open_condition_observed"
+      ],
+      "type": "object"
+    },
+    "deployment_id": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "drift_rejections": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_action_mismatch_refusals": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "canonical_action_mismatch_refusals"
+      ],
+      "type": "object"
+    },
+    "escalation_integrity": {
+      "additionalProperties": false,
+      "properties": {
+        "escalations_in_period": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "valid_approval_receipt_fraction": {
+          "pattern": "^(?:0|1)\\.[0-9]{6}$",
+          "type": "string"
+        },
+        "valid_approval_receipts": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "escalations_in_period",
+        "valid_approval_receipts",
+        "valid_approval_receipt_fraction"
+      ],
+      "type": "object"
+    },
+    "evidence_plane": {
+      "additionalProperties": false,
+      "properties": {
+        "last_successful_external_anchor_timestamp": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latest_sth": {
+          "additionalProperties": false,
+          "properties": {
+            "root_hash": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "tree_size": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "tree_size",
+            "root_hash"
+          ],
+          "type": "object"
+        },
+        "retention_preset": {
+          "enum": [
+            "unavailable",
+            "eu_ai_act_minimum",
+            "minimal",
+            "standard",
+            "extended",
+            "legal_hold"
+          ]
+        }
+      },
+      "required": [
+        "latest_sth",
+        "last_successful_external_anchor_timestamp",
+        "retention_preset"
+      ],
+      "type": "object"
+    },
+    "gateway_liveness": {
+      "additionalProperties": false,
+      "properties": {
+        "decisions_observed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_gap_seconds": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "decisions_observed",
+        "max_gap_seconds"
+      ],
+      "type": "object"
+    },
+    "period": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
+          "type": "string"
+        },
+        "start": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "type": "object"
+    },
+    "policy_state": {
+      "additionalProperties": false,
+      "properties": {
+        "active_policy_bundle_hash": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundle_signature_status": {
+          "enum": [
+            "valid",
+            "invalid",
+            "unavailable",
+            "degraded"
+          ]
+        },
+        "last_change_timestamp": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "active_policy_bundle_hash",
+        "bundle_signature_status",
+        "last_change_timestamp"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "velvet.assurance.control_state_attestation.v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "period",
+    "deployment_id",
+    "gateway_liveness",
+    "policy_state",
+    "decision_counts",
+    "escalation_integrity",
+    "drift_rejections",
+    "certificate_coverage",
+    "budget_safety",
+    "evidence_plane",
+    "degraded_flags"
+  ],
+  "type": "object"
+}

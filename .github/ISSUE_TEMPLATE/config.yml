@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/paulchum/velvet-rope/security/policy
+    about: Please use the private security reporting process for vulnerabilities.
+  - name: OSS boundary
+    url: https://github.com/paulchum/velvet-rope#readme
+    about: Check what is intended to stay open/free versus paid or private.

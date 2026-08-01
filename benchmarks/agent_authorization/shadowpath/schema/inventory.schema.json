@@ -1,0 +1,79 @@
+{
+  "$id": "https://velvet.example/schemas/shadowpath/inventory.v0.1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "effect": {
+      "const": "customer.account.status:active->disabled"
+    },
+    "routes": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "actuator": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "expected_effect": {
+            "const": "customer.account.status:active->disabled"
+          },
+          "ingress": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "intermediates": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observer": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "route_id": {
+            "enum": [
+              "browser_automation",
+              "alternate_api",
+              "database_mutation",
+              "queue_insertion",
+              "webhook_creation",
+              "admin_console",
+              "credential_delegation",
+              "human_operator_message"
+            ]
+          }
+        },
+        "required": [
+          "route_id",
+          "label",
+          "ingress",
+          "intermediates",
+          "actuator",
+          "observer",
+          "expected_effect"
+        ],
+        "type": "object"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "velvet.shadowpath.inventory.v0.1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "effect",
+    "routes"
+  ],
+  "title": "ShadowPath effect-route inventory",
+  "type": "object"
+}

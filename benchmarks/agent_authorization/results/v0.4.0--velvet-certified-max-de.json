@@ -1,0 +1,115 @@
+{
+  "benchmark_version": "0.4.0",
+  "commit_hash": "c6acc0acccbe54464c0c47df3d3a162603c551a1",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "repeat_count": 20,
+  "schema_version": "velvet.agent_authorization.results.v0.3",
+  "system_result": {
+    "adapter_kind": "native",
+    "capabilities": {
+      "certificate_emission": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "Measured from emitted_decision_certificate on completed adapter results; a pass requires a first-class decision certificate artifact.",
+        "status": "pass",
+        "value": true
+      },
+      "certificate_expiry": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_verdict_measurements.json",
+        "measurement": "Same signed certificate verified twice against the pinned public key: within TTL it is accepted; past expires_at verification reports expired with verdict_expired_recertification_required and licenses nothing.",
+        "status": "pass",
+        "value": true
+      },
+      "determinism": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "Identical decision across N=20 repeated runs; pass^k reports the probability that all k sampled runs are successful.",
+        "pass_k": {
+          "1": 1.0,
+          "10": 1.0,
+          "2": 1.0,
+          "20": 1.0,
+          "5": 1.0
+        },
+        "reliability_estimator": "tau-bench all-sampled-runs-successful estimator",
+        "status": "pass",
+        "value": true
+      },
+      "effect_inventory": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no ShadowPath effect-level adapter was supplied for this system; not_measured is not a product failure",
+        "status": "not_measured",
+        "value": null
+      },
+      "effect_prevention": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no ShadowPath effect-level adapter was supplied for this system; not_measured is not a product failure",
+        "status": "not_measured",
+        "value": null
+      },
+      "effect_reconciliation": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no ShadowPath effect-level adapter was supplied for this system; not_measured is not a product failure",
+        "status": "not_measured",
+        "value": null
+      },
+      "fleet_false_lockout_accounting": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_verdict_measurements.json",
+        "measurement": "Declared decision window {k_max, delta} with per-decision e-BH threshold_used and budget accounting recorded for executed and gated_out proposals.",
+        "status": "pass",
+        "value": true
+      },
+      "independent_verifiability": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_public_verification.json",
+        "measurement": "Decision certificate signature verified with public key material only.",
+        "status": "pass",
+        "value": true
+      },
+      "priced_inspection": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_verdict_measurements.json",
+        "measurement": "Certificate quotes the inspection alternative in native units (expected rounds to gate crossing); dollar figures appear only with an explicit dollars_source.",
+        "status": "pass",
+        "value": true
+      },
+      "refusal_as_output": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_verdict_measurements.json",
+        "measurement": "Over-budget proposal returned a structured refusal verdict with a machine reason code rather than an exception, timeout, or silent allow.",
+        "status": "pass",
+        "value": true
+      },
+      "replayability": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_replay_measurement.json",
+        "measurement": "Stored decision replay reproduced the same decision and seal.",
+        "status": "pass",
+        "value": true
+      },
+      "route_authorization": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/0",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no ShadowPath effect-level adapter was supplied for this system; not_measured is not a product failure",
+        "status": "not_measured",
+        "value": null
+      },
+      "tamper_evidence": {
+        "evidence_pointer": "benchmarks/agent_authorization/verification/velvet_decision_certificate.json",
+        "measurement": "Single-field mutation changed the signed payload hash and was rejected.",
+        "status": "pass",
+        "value": true
+      }
+    },
+    "case_count": 10,
+    "completed_case_count": 10,
+    "measurement_status": "measured",
+    "not_run_reasons": [],
+    "pass_k_reliability": {
+      "1": 1.0,
+      "10": 1.0,
+      "2": 1.0,
+      "20": 1.0,
+      "5": 1.0
+    },
+    "system": "Velvet Certified Max-DE",
+    "system_version": "1.0.0"
+  }
+}

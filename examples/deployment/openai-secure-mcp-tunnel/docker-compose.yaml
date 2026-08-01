@@ -1,0 +1,46 @@
+services:
+  tunnel-client:
+    image: openai-secure-mcp-tunnel-client:latest
+    environment:
+      MCP_UPSTREAM_URL: http://velvet-rope-proxy:8791/mcp
+    networks:
+      - tunnel-net
+    depends_on:
+      - velvet-rope-proxy
+
+  velvet-rope-proxy:
+    image: velvet-mcp-proxy:latest
+    command: ["--config", "/etc/velvet/velvet-config.yaml"]
+    environment:
+      VELVET_MCP_PROXY_TOKEN: replace-with-secret
+      VELVET_OAP_ED25519_PRIVATE_KEY: replace-with-secret
+      VELVET_MAXDE_ED25519_PRIVATE_KEY: replace-with-secret
+      VELVET_OPENAI_TUNNEL_ID: ""
+      VELVET_OPENAI_WORKSPACE_ID: ""
+      VELVET_CONNECTOR_SUBJECT: ""
+      VELVET_PRIVATE_MCP_UPSTREAM_TOKEN: replace-with-private-mcp-secret
+      VELVET_PRIVATE_MCP_CLIENT_IDENTITY_PEM: replace-with-client-cert-and-key-pem
+      VELVET_PRIVATE_MCP_CA_BUNDLE_PEM: replace-with-private-mcp-ca-bundle-pem
+    volumes:
+      - ./velvet-config.yaml:/etc/velvet/velvet-config.yaml:ro
+      - ./data:/var/lib/velvet/ledger
+    networks:
+      - tunnel-net
+      - private-mcp-net
+    depends_on:
+      - private-mcp
+
+  private-mcp:
+    image: private-mcp-server:latest
+    expose:
+      - "8443"
+    environment:
+      REQUIRE_MTLS_CLIENT_IDENTITY: "true"
+      REQUIRE_PRIVATE_MCP_UPSTREAM_TOKEN: "true"
+    networks:
+      - private-mcp-net
+
+networks:
+  tunnel-net: {}
+  private-mcp-net:
+    internal: true

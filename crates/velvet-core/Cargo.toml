@@ -1,0 +1,31 @@
+[package]
+name = "velvet-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Deterministic Velvet routing kernel."
+
+[dependencies]
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+sha2.workspace = true
+uuid.workspace = true
+
+[features]
+default = []
+legacy-heuristic-routing = []
+sandbox-required = []
+gvisor = []
+firecracker = []
+kubernetes = []
+
+[dev-dependencies]
+criterion = "0.7.0"
+proptest = "1.6.0"
+serde_json.workspace = true
+
+[[bench]]
+name = "sandbox_plan"
+harness = false

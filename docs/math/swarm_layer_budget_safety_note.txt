@@ -1,0 +1,909 @@
+Swarm Layer Budget Safety over Per-Action Certificates
+=====================================================
+
+Version: theorem-note draft
+Status: research note, not a runtime-backed production claim
+
+This note specifies a future lock-free swarm-layer reservation protocol above
+the existing per-action budget certificates. The current Velvet runtime certifies
+only the single-writer atomic budget path described in
+docs/math/budget_safety_deterministic_theorem.txt and
+docs/math/adaptive_spend_safety_theorem.txt.
+
+0. Concurrency fork before any theorem
+--------------------------------------
+
+There are two concurrency regimes.
+
+Regime A: atomic read-decide-write.
+
+Each agent reads the current mediated budget state atomically, decides whether
+an action is admissible, and atomically debits the relevant local pool before
+executing the action. The only concurrency is in the decision computation. The
+filtration is the ordinary commit-time filtration, and the usual martingale or
+supermartingale arguments apply directly.
+
+Regime B: bounded-stale lock-free reads.
+
+Each agent reads a snapshot that may be up to tau time-units stale. Writes are
+still exclusively mediated by the swarm layer through linearizable conditional
+local-pool debits, but the read used for the decision may be stale. This is the
+Hogwild-style regime.
+
+This note states the main ledger theorem for Regime B, using a pessimistic
+projection that corrects stale-read bias. Regime A is recovered by setting
+tau = 0.
+
+The important sign fact is:
+
+    stale available budget >= current available budget.
+
+For a draining budget, stale reads systematically overestimate available
+capacity. This is first-order mean drift toward overspend. It is not a variance
+effect and must not be hidden inside a quadratic-variation term.
+
+For shard s, resource coordinate k, and decision time t, let R_{s,k}(t) be the
+true current remaining local or shard budget. Suppose an agent reads
+
+    R_tilde_{s,k}(t) = R_{s,k}(t - d_t),
+    0 <= d_t <= tau.
+
+Let rho_{s,k}(t) be a predictable upper bound on aggregate certified debit rate
+from shard s in coordinate k during any stale interval ending at t. This bound
+must be enforceable or auditable from mediated reservations; an unverified
+estimate is not sufficient for a safety theorem.
+
+The lock-free decision uses projected budget
+
+    R_proj_{s,k}(t) = max(R_tilde_{s,k}(t) - tau * rho_{s,k}(t), 0).
+
+An action requiring reservation r_k in coordinate k is admissible from shard s
+only if
+
+    r_k <= R_proj_{s,k}(t)
+
+for every k. The actual authorization/debit is still a linearizable conditional
+debit. If another debit wins the race before this debit linearizes, this debit
+must fail, retry, or synchronize; it may not underflow the pool.
+
+Lemma 0.1: sign-aware stale-read correction
+
+Assume that, componentwise,
+
+    R_s(t - d_t) - R_s(t) <= tau * rho_s(t).
+
+Then every reservation satisfying
+
+    r <= R_proj_s(t)
+
+also satisfies
+
+    r <= R_s(t).
+
+Therefore the stale read cannot authorize a debit larger than the true current
+remaining budget at the decision instant.
+
+Proof.
+
+For each coordinate k,
+
+    R_{s,k}(t)
+      = R_{s,k}(t - d_t)
+        - (R_{s,k}(t - d_t) - R_{s,k}(t)).
+
+By the rate assumption,
+
+    R_{s,k}(t) >= R_tilde_{s,k}(t) - tau * rho_{s,k}(t).
+
+Therefore
+
+    R_proj_{s,k}(t)
+      = max(R_tilde_{s,k}(t) - tau * rho_{s,k}(t), 0)
+      <= R_{s,k}(t),
+
+because remaining budget is nonnegative. Hence any
+r_k <= R_proj_{s,k}(t) is also r_k <= R_{s,k}(t). Coordinatewise,
+r <= R_s(t).
+
+Remark 0.2: why this is not a variance correction.
+
+Without projection, R_tilde_s(t) - R_s(t) has positive drift in the overspend
+direction whenever other agents are concurrently draining the shard. Its
+conditional mean is approximately
+
+    E[R_tilde_s(t) - R_s(t) | F_{t-d_t}]
+      ~= integral_{t-d_t}^t mu_s(u) du,
+
+where mu_s(u) is the aggregate debit rate. This term is first order in the mean
+drain rate. A Freedman, Bernstein, Ville, or Cantelli variance term controls
+centered fluctuations around a mean; it does not reverse the sign of the mean
+drift. The projection subtracts an explicit sign-aware drift penalty.
+
+Remark 0.3: why the projection need not scale with total N.
+
+A valid but usually useless projection could take
+
+    rho_s(t) = N * r_max(t),
+
+where r_max is a per-agent rate cap. That is sound but may be vacuous.
+
+The intended production rule is local:
+
+    rho_s(t) = N_active(s,t) * r_local(s,t),
+
+where N_active(s,t) counts agents actually contending for shard s, and
+r_local(s,t) is the local certified debit-rate cap. Under hierarchical
+sharding, each decision is corrected using shard contention, not global swarm
+size. Thus the stale-read penalty is
+
+    O(tau * N_active(s,t) * r_local(s,t)),
+
+not O(tau * N * r_max). If a deployment routes all agents through one shard, the
+bound remains valid but may become operationally too conservative.
+
+1. Objects and assumptions
+--------------------------
+
+There are N agents and K resource coordinates. The finite global budget is
+
+    B in R_+^K.
+
+All inequalities between budget vectors are coordinatewise.
+
+Actions are indexed by commit order n = 1, 2, ... . Action n is proposed by
+agent a(n). Before executing action n, the existing per-action certificate
+engine emits a certified debit vector
+
+    X_n in R_+^K.
+
+This note treats X_n as the quantity mediated by the swarm layer.
+
+Assumption 1.1: exclusive write mediation.
+
+No agent can consume a mediated resource unless the swarm layer first authorizes
+and debits a reservation. Agents may not spend outside the swarm layer. If this
+assumption fails, the layer can detect budget violation after the fact, but it
+cannot prevent it.
+
+Assumption 1.2: per-action certificate composition.
+
+For each action, the underlying certificate engine provides a certified debit
+X_n.
+
+If the per-action certificate is deterministic, the physical spend Y_n satisfies
+
+    Y_n <= X_n
+
+pathwise.
+
+If the per-action certificate is high-probability, there is a certificate-good
+event G_cert such that
+
+    P(G_cert) >= 1 - delta_cert,
+
+and on G_cert,
+
+    Y_n <= X_n
+
+for every admitted n.
+
+The swarm-layer theorem below is stated for certified debits X_n. For physical
+spends Y_n, the total failure probability increases by delta_cert unless that
+risk is already included in the global failure budget.
+
+Assumption 1.3: global envelope.
+
+Let
+
+    D_t = sum_{n <= t} X_n
+
+be cumulative certified debit demanded by the workload up to commit index t,
+ignoring admission failure.
+
+A global 1 - delta envelope is a predictable process E_delta(t) in R_+^K such
+that, for every stopping time T,
+
+    P(exists t <= T: D_t not <= E_delta(t)) <= delta.
+
+Equivalently, with probability at least 1 - delta,
+
+    D_t <= E_delta(t) for every t <= T.
+
+The envelope must satisfy
+
+    E_delta(t) <= B for every t.
+
+The concentration slack is already embedded in E_delta. The swarm layer only
+allocates and reserves against this envelope.
+
+Assumption 1.4: local partition of the envelope.
+
+At every synchronization epoch, the currently usable global envelope is
+partitioned into disjoint local sub-envelopes
+
+    E_delta(t) = C(t) + G(t) + sum_i L_i(t),
+
+where C(t) is cumulative admitted certified debit, G(t) is unallocated global
+reserve, and L_i(t) is the local pool assigned to agent i or to a shard.
+
+If E_delta changes over time, synchronization must advance the invariant only
+through coordinatewise nonnegative new envelope mass. If a refreshed envelope
+would place C(t) outside E_delta(t), the layer must fail closed before
+authorizing further spend. Outstanding local pools may not be justified by an
+envelope value that is no longer valid.
+
+Assumption 1.5: atomic local debits.
+
+Each local-pool debit is linearizable at the pool or shard level. The system is
+lock-free in the sense that agents do not acquire a global lock, but the local
+decrement operation itself is a conditional atomic operation: it commits only
+if the true current pool covers the reservation at the debit's linearization
+point.
+
+Assumption 1.6: lazy synchronization protocol.
+
+Each agent executes locally while its projected local pool remains comfortably
+positive. A global or shard-level synchronization is triggered when an agent
+approaches a local boundary.
+
+Let eta_i(t) in R_+^K be the sync threshold. Agent i must synchronize before
+proposing any action whose reservation would leave L_i(t) below eta_i(t) in any
+coordinate.
+
+At sync, the protocol attempts to transfer unused capacity from G(t) or from
+surplus local pools into L_i(t), preserving
+
+    C(t) + G(t) + sum_i L_i(t) = E_delta(t).
+
+If no feasible transfer can make the proposed action admissible, the layer
+enters a fail-stop state. In fail-stop, no additional mediated spend is
+authorized.
+
+2. Local-envelope reservation theorem
+-------------------------------------
+
+Theorem 2.1: lock-free local reservation preserves the global budget envelope.
+
+Under Assumptions 1.1 through 1.6 and the stale-read projection of Lemma 0.1,
+the admitted certified debit process
+
+    C(t) = sum_{n <= t, n admitted} X_n
+
+satisfies
+
+    C(t) <= E_delta(t) <= B for every t
+
+pathwise, as a ledger statement.
+
+Consequently, for every stopping time T,
+
+    P(C(T) <= B) = 1
+
+for certified debits.
+
+If physical spends are governed by high-probability per-action certificates,
+then
+
+    P(sum_{n <= T, n admitted} Y_n <= B) >= 1 - delta_cert.
+
+If delta_cert has already been included inside the global envelope budget, this
+is written as the usual total statement with probability at least 1 - delta.
+
+Proof.
+
+We prove the certified-debit ledger statement first.
+
+At initialization, C(0) = 0 and G(0) + sum_i L_i(0) = E_delta(0), so the
+invariant holds.
+
+Assume the invariant holds before an admitted action. Agent i proposes an action
+with certified debit X_n. The action is admitted only if, after stale-read
+projection,
+
+    X_n <= L_i_proj(t).
+
+By Lemma 0.1, L_i_proj(t) <= L_i(t), where L_i(t) is the true current local pool
+at the decision instant. The subsequent conditional atomic debit linearizes only
+if the true current pool at the debit point still covers X_n. Therefore the
+committed debit satisfies X_n <= L_i(t*) at its linearization point t*.
+
+The local atomic debit sets
+
+    L_i(t*+) = L_i(t*) - X_n
+    C(t*+) = C(t*) + X_n.
+
+All other local pools and G(t*) are unchanged. Hence
+
+    C(t*+) + G(t*+) + sum_j L_j(t*+)
+      = C(t*) + X_n + G(t*) + L_i(t*) - X_n
+        + sum_{j != i} L_j(t*)
+      = E_delta(t*).
+
+Thus the invariant is preserved.
+
+A synchronization step only redistributes mass among G(t) and the L_i(t), or
+adds newly valid nonnegative envelope mass. It does not change C(t) and is
+required to preserve the invariant.
+
+A fail-stop authorizes no further debits, so the invariant remains true after
+fail-stop.
+
+Since all components of G(t) and L_i(t) remain nonnegative,
+
+    C(t) <= E_delta(t).
+
+By Assumption 1.3, E_delta(t) <= B. Therefore C(t) <= B for all t, pathwise.
+
+For physical spends Y_n, apply Assumption 1.2. On G_cert, Y_n <= X_n for every
+admitted action, so
+
+    sum_{n <= T, n admitted} Y_n
+      <= sum_{n <= T, n admitted} X_n
+      = C(T)
+      <= B.
+
+The probability of G_cert is at least 1 - delta_cert.
+
+Theorem 2.2: probability of unschedulable hard stop.
+
+Assume, in addition, that the lazy synchronization protocol is work-conserving:
+whenever the demanded certified debit path satisfies
+
+    D_t <= E_delta(t) for every t <= T,
+
+the protocol can find a sequence of local reallocations that admits all actions
+up to T.
+
+Then
+
+    P(fail-stop before T) <= delta.
+
+Proof.
+
+By Assumption 1.3,
+
+    P(exists t <= T: D_t not <= E_delta(t)) <= delta.
+
+On the complementary event, D_t <= E_delta(t) for every t <= T. By the
+work-conserving assumption, the lazy synchronization protocol can reallocate
+local pools so no action before T is rejected for lack of global envelope
+capacity. Therefore fail-stop before T can occur only on the
+envelope-exceedance event, whose probability is at most delta.
+
+Interpretation of delta.
+
+In this layer, delta is best interpreted as a liveness or schedulability risk:
+
+    delta = P(the certified demand path exceeds the allocated envelope
+              and the layer must hard-stop).
+
+It is not the probability that the ledger overspends. Under exclusive write
+mediation, certified-debit overspend is prevented by construction. If physical
+spend can exceed certified debit, that risk belongs to the underlying
+per-action certificate engine and must be accounted for separately or included
+in the global delta budget.
+
+3. Envelope construction
+------------------------
+
+The local-reservation theorem is envelope-agnostic. It only requires a valid
+global envelope E_delta. This section records two competing research-envelope
+constructions and the calibrated switch between them.
+
+Let
+
+    Z_t = X_t - mu_t
+
+be the centered certified-debit residual, where
+
+    mu_t = E[X_t | F_{t-1}]
+
+under the filtration appropriate to the admitted action process. Let cumulative
+conditional covariance be
+
+    Sigma_T = sum_{t <= T} E[Z_t Z_t^T | F_{t-1}].
+
+Write the eigenvalues of Sigma_T as
+
+    lambda_1 >= lambda_2 >= ... >= lambda_K >= 0,
+
+and define
+
+    Lambda = tr(Sigma_T)
+    kappa = lambda_1 / tr(Sigma_T).
+
+Thus kappa is the fraction of total variance in the leading eigen-direction.
+Large kappa means rank-one dominance. Small kappa means variance is spread
+across dimensions.
+
+3.1 Arm B: scalar empirical-Bernstein top-eigenvector envelope.
+
+Let u_hat_{t-1} be a predictable streaming estimate of the top eigenvector.
+Predictable means u_hat_{t-1} is measurable with respect to information
+available before Z_t is realized.
+
+Define the scalar projected increment
+
+    Y_t = u_hat_{t-1}^T Z_t.
+
+Assume a scalar range bound |Y_t| <= b_B and let V_hat_t be the empirical
+variance process for Y_1, ..., Y_t.
+
+A time-uniform empirical-Bernstein envelope has leading form
+
+    |sum_{s <= t} Y_s|
+      <= sqrt(2 * V_hat_t * ell_B(t, delta_B))
+         + c_B * b_B * ell_B(t, delta_B)
+
+simultaneously over time with probability at least 1 - delta_B, where ell_B is
+a stitched or mixture boundary term.
+
+The scalar envelope is useful when the top direction captures most variance. It
+must include a residual guard for orthogonal directions. In leading spectral
+form,
+
+    W_B(kappa)
+      ~= sqrt(Lambda) * (a_B * sqrt(kappa)
+                         + a_perp * sqrt(1 - kappa))
+         + linear/range terms.
+
+The first term is the top-eigenvector empirical-Bernstein width. The second is
+the orthogonal residual guard. In the rank-one-dominant regime kappa -> 1, the
+residual term vanishes.
+
+3.2 Arm A: matrix-Freedman Hermitian-dilation envelope.
+
+For coupled resource consumption, let C_t in R^{K x K} denote the centered
+consumption-coupling matrix increment used by the matrix layer. It may be
+asymmetric. Define the Hermitian dilation
+
+    D(C_t) = [[0, C_t],
+              [C_t^T, 0]].
+
+Then D(C_t) is symmetric and lambda_max(D(C_t)) = ||C_t||_op. The eigenvalues
+of D(C_t) are the singular values of C_t and their negatives.
+
+Let
+
+    M_t = D(C_t),
+    E[M_t | F_{t-1}] = 0,
+    ||M_t||_op <= R_A.
+
+The predictable matrix quadratic variation is
+
+    V_t = sum_{s <= t} E[M_s^2 | F_{s-1}].
+
+A matrix-Freedman envelope gives, simultaneously over time,
+
+    ||sum_{s <= t} C_s||_op <= psi_A(t, delta_A),
+
+with leading form
+
+    psi_A(t, delta_A)
+      = sqrt(2 * sigma_A^2(t) * ell_A(K, delta_A))
+        + (R_A / 3) * ell_A(K, delta_A),
+
+where sigma_A^2(t) = ||V_t||_op and ell_A has a matrix-log or intrinsic-dimension
+term.
+
+In leading spectral form,
+
+    W_A(kappa) ~= a_A(K) * sqrt(Lambda * kappa) + linear/range terms.
+
+The matrix envelope controls the worst spectral direction directly. It does not
+need to identify a stable top eigenvector online, which is why it can be
+tighter in low-kappa regimes where variance is spread.
+
+3.3 The kappa switch.
+
+The verified empirical result says the crossover is governed primarily by
+
+    kappa = lambda_1 / tr(Sigma),
+
+not by coupling strength itself.
+
+That is consistent with the leading spectral widths:
+
+    W_A(kappa) ~= a_A(K) * sqrt(Lambda * kappa) + r_A,
+
+    W_B(kappa) ~= a_B * sqrt(Lambda * kappa)
+                  + a_perp(K) * sqrt(Lambda * (1 - kappa))
+                  + r_B,
+
+where r_A and r_B collect range, finite-sample, estimator-error, and stitching
+terms.
+
+The scalar envelope pays a residual penalty proportional to sqrt(1 - kappa).
+The matrix envelope pays a matrix-log or intrinsic-dimension price, but it does
+not pay the same top-vector residual penalty.
+
+Therefore:
+
+* when kappa is low, the scalar residual term is large, so the matrix envelope
+  can be tighter;
+* when kappa is high, the residual term vanishes, and the scalar top-projection
+  envelope can match the matrix envelope up to calibrated log/range constants.
+
+The operational rule is:
+
+    Use scalar Arm B by default; switch to matrix Arm A only when kappa is low.
+
+This is not a "matrix by default" theorem.
+
+3.4 Derived crossover threshold.
+
+Let operational tolerance be epsilon_op >= 0. Use the scalar envelope whenever
+
+    W_B(kappa) <= (1 + epsilon_op) * W_A(kappa).
+
+Ignoring lower-order range terms first, write
+
+    W_A(kappa) = a_A(K) * sqrt(Lambda * kappa),
+
+    W_B(kappa) = a_B * sqrt(Lambda * kappa)
+                 + a_perp(K) * sqrt(Lambda * (1 - kappa)).
+
+The crossover kappa_* solves
+
+    a_B * sqrt(kappa_*)
+      + a_perp(K) * sqrt(1 - kappa_*)
+      = (1 + epsilon_op) * a_A(K) * sqrt(kappa_*).
+
+Assuming (1 + epsilon_op) * a_A(K) > a_B,
+
+    kappa_* =
+      a_perp(K)^2
+      /
+      (a_perp(K)^2 + ((1 + epsilon_op) * a_A(K) - a_B)^2).
+
+Matrix Arm A is selected for kappa < kappa_*. Scalar Arm B is selected for
+kappa >= kappa_*.
+
+With non-negligible range terms, write
+
+    W_A(kappa) = a_A * sqrt(Lambda * kappa) + r_A,
+
+    W_B(kappa) = a_B * sqrt(Lambda * kappa)
+                 + a_perp * sqrt(Lambda * (1 - kappa))
+                 + r_B.
+
+Let
+
+    A = (1 + epsilon_op) * a_A - a_B,
+    P = a_perp,
+    d = (r_B - (1 + epsilon_op) * r_A) / sqrt(Lambda).
+
+The crossover solves
+
+    P * sqrt(1 - kappa) = A * sqrt(kappa) - d.
+
+With q = sqrt(kappa / (1 - kappa)), the positive root of
+
+    (A^2 - d^2) q^2 - 2 A P q + (P^2 - d^2) = 0
+
+gives the finite-sample crossover. When d = 0, this reduces to the leading
+formula above.
+
+3.5 What is and is not model-independent.
+
+The exact crossover cannot be a universal function of K and kappa alone without
+additional assumptions.
+
+Two covariance spectra can share the same
+
+    kappa = lambda_1 / sum_j lambda_j
+
+but have different residual shapes. After fixing lambda_1 and the residual mass
+sum_{j>1} lambda_j, the residual variance may be flat,
+
+    lambda_2 = ... = lambda_K = (1 - kappa) * Lambda / (K - 1),
+
+or spiked,
+
+    lambda_2 ~= (1 - kappa) * Lambda,
+    lambda_3, ..., lambda_K ~= 0.
+
+These cases have the same kappa but different eigengaps, top-vector stability,
+and residual-guard requirements. Therefore an exact model-independent
+kappa_*(K) is not a theorem unless residual spectral shape is controlled.
+
+A useful controlled-shape parameter is
+
+    rho = (K - 1) * lambda_2 / ((1 - kappa) * Lambda),
+    1 <= rho <= K - 1.
+
+Flat residual spectrum gives rho = 1. A residual spike gives rho near K - 1.
+The eigengap satisfies
+
+    lambda_1 - lambda_2
+      >= Lambda * (kappa - rho * (1 - kappa) / (K - 1)).
+
+When
+
+    kappa > rho * (1 - kappa) / (K - 1),
+
+the top eigenvector is separated. Davis-Kahan-style streaming top-vector error
+bounds scale as
+
+    sin(angle(u_hat, u_1))
+      lesssim ||Sigma_hat - Sigma||_op
+              /
+              (Lambda * (kappa - rho * (1 - kappa) / (K - 1))).
+
+Thus a_perp(K) should be treated as
+
+    a_perp(K, rho, estimator error, delta),
+
+not as a pure function of K.
+
+A stability bound has the following form. Suppose the approximation error in
+the width comparison satisfies
+
+    |(W_B - W_A) - (W_B_tilde - W_A_tilde)| <= e
+
+uniformly near the predicted crossover, and suppose
+
+    m = inf_near_kappa_* |d/dkappa (W_B_tilde - W_A_tilde)| > 0.
+
+Then the true crossover lies within
+
+    |kappa_true - kappa_*| <= e / m.
+
+So the kappa switch is approximately model-independent only to the extent that
+residual-shape, range, estimator-error, and higher-moment terms keep e / m
+small.
+
+This matches the empirical statement: in the calibrated A-vs-B simulation, the
+crossover was governed by kappa, and in that synthetic model it occurred near
+kappa ~= 0.54, stable across N in {10, 100, 1000}. This note does not claim
+that 0.54 is universal.
+
+4. Main production rule
+-----------------------
+
+Let kappa_hat_t be the streaming estimate
+
+    kappa_hat_t = lambda_hat_1(t) / tr(Sigma_hat_t).
+
+Let kappa_lower_t and kappa_upper_t be confidence bounds for kappa. Define the
+calibrated switching threshold kappa_* from the width comparison above.
+
+Use the guarded rule:
+
+    Use scalar Arm B
+        if kappa_lower_t >= kappa_* + gamma.
+
+    Use matrix Arm A
+        if kappa_upper_t <= kappa_* - gamma.
+
+    Inside the guard band, use direct calibrated width comparison or the
+    conservative max envelope.
+
+Here gamma dominates estimation uncertainty in kappa_hat_t and the
+model-independence error e / m.
+
+The default is scalar because:
+
+1. high-kappa rank-one-dominant regimes are common in production workloads;
+2. in that regime the residual term sqrt(1 - kappa) is small;
+3. the verified result says Arm B matches Arm A to within roughly 0.03 percent
+   at high kappa;
+4. the matrix envelope is operationally justified only when kappa is low enough
+   that variance is genuinely spread across dimensions.
+
+5. Non-claims and boundaries
+----------------------------
+
+Non-claim 5.1: not pathwise zero-overshoot for random physical spend.
+
+This is a high-probability, time-uniform statistical guarantee for the certified
+process, composed with the per-action certificates. It is not a pathwise
+zero-overshoot guarantee for arbitrary physical spend unless the underlying
+per-action certificate is a deterministic hard cap. If pathwise physical safety
+is required, use deterministic hard-cap certificates underneath the swarm layer.
+
+Non-claim 5.2: no protection against unmediated spend.
+
+The theorem assumes exclusive write mediation. If agents can consume resources
+outside the swarm layer, the layer can at best detect violation after
+reconciliation. It cannot prevent overspend.
+
+Non-claim 5.3: matrix is not the default.
+
+The matrix envelope is not justified merely because resources are coupled.
+Strong coupling can still produce rank-one variance collapse, kappa ~= 1. In
+that case the scalar top-eigenvector envelope is the right default and
+empirically matches the matrix envelope.
+
+Non-claim 5.4: kappa-only universality is not exact.
+
+The exact crossover depends on residual spectral shape, range constants,
+estimator error, time-uniform stitching constants, and the chosen operational
+tolerance. The scalar-vs-matrix switch is approximately kappa-governed when
+these nuisance terms are controlled.
+
+Non-claim 5.5: validity is not usefulness.
+
+A bound may be sound but vacuous. Examples:
+
+* using N * r_max instead of N_active(s,t) * r_local(s,t) in stale-read
+  projection is valid but may kill utilization;
+* using a matrix-Freedman envelope with a huge range bound R_A is valid but may
+  be too conservative;
+* using a scalar top-eigenvector envelope in a low-kappa regime is valid only if
+  the orthogonal residual guard is included, but that guard may erase the
+  scalar method's operational benefit.
+
+Non-claim 5.6: no contradiction with per-action certificates.
+
+The matrix and scalar swarm layers make different epistemic assumptions about
+the aggregate residual process, but neither contradicts the per-action
+certificates. The per-action engine certifies individual actions. The swarm
+layer allocates aggregate slack and local reservations.
+
+The scalar layer assumes a predictable top-eigenvector projection and a valid
+scalar empirical-Bernstein boundary. The matrix layer assumes a bounded matrix
+martingale difference sequence and a valid matrix-Freedman quadratic-variation
+proxy. Both are aggregate accounting mechanisms above the same certified debits
+X_n.
+
+6. Verification harness specification
+-------------------------------------
+
+The central claims should be checked by Monte Carlo and re-derivation. The
+simulation must not rely on one special coupling model.
+
+Harness A: local-reservation coverage and fail-stop behavior.
+
+Goal: verify that local lock-free reservation prevents certified ledger
+overspend, and that observed hard-stop probability is at most the envelope
+failure probability.
+
+Parameters:
+
+    N in {10, 100, 1000}
+    K in {4, 8, 16}
+    B in R_+^K
+    staleness bound tau
+    shard count S
+    local sync threshold eta
+    envelope failure level delta
+
+Workloads should include adaptive policies that:
+
+1. greedily spend the coordinate closest to exhaustion;
+2. concentrate spend on one shard;
+3. alternate resource coordinates to maximize fragmentation;
+4. delay synchronization until threshold forces it.
+
+Protocols to compare:
+
+1. atomic read-decide-write, tau = 0;
+2. bounded-stale reads without projection;
+3. bounded-stale reads with R_tilde - tau * rho projection;
+4. projection using total N;
+5. projection using dynamic N_active(s,t).
+
+Measurements:
+
+    I_ledger_over = 1{exists t: C(t) not <= B}
+    I_physical_over = 1{exists t: sum_{n <= t} Y_n not <= B}
+    I_failstop = 1{fail-stop before horizon}
+    utilization U = sum_k C_k(T) / sum_k B_k
+    sync count per admitted action
+
+Pass conditions:
+
+* deterministic per-action caps should produce zero certified ledger overspend;
+* high-probability physical spend should respect the allocated certificate
+  failure level within binomial confidence margin;
+* fail-stop rate should be at most delta within the confidence interval when
+  workload generation matches the envelope calibration distribution;
+* bounded-stale reads without projection should show the stale-read failure
+  mode under adversarial contention, while projection removes that mechanism.
+
+Harness B: kappa-crossover verification.
+
+Goal: verify that the scalar-vs-matrix crossover is governed primarily by
+spectral concentration kappa, not coupling strength alone.
+
+Fix total variance Lambda = 1. For each target kappa, set lambda_1 = kappa and
+generate residual eigenvalues lambda_2, ..., lambda_K with total mass
+1 - kappa. Use at least:
+
+1. flat tail;
+2. geometric tail;
+3. residual spike parameterized by rho;
+4. random Dirichlet tail with multiple concentration parameters.
+
+For each spectrum, draw an orthogonal matrix Q and generate centered residuals
+
+    Z_t = Q * Lambda_diag^{1/2} * xi_t,
+
+where xi_t has independent standardized coordinates. Use Gaussian or truncated
+Gaussian coordinates, Rademacher coordinates, and bounded skewed coordinates.
+
+For each run, compute:
+
+* Arm A matrix-Freedman Hermitian-dilation width W_A;
+* Arm B scalar streaming top-eigenvector empirical-Bernstein width W_B,
+  including residual guard.
+
+Both arms must be calibrated to the same realized violation probability delta.
+Comparing uncalibrated nominal delta values can falsely favor one arm.
+
+Measure
+
+    R(kappa) = W_B(kappa) / W_A(kappa)
+
+and empirical crossover
+
+    kappa_hat_* = inf{kappa: R(kappa) <= 1 + epsilon_op}.
+
+Pass conditions:
+
+1. R(kappa) decreases as kappa increases up to finite-sample noise;
+2. matrix Arm A is tighter for low kappa;
+3. scalar Arm B matches Arm A within operational tolerance at high kappa;
+4. kappa_hat_* lies in the predicted interval
+   [kappa_* - e/m, kappa_* + e/m];
+5. crossover is stable across N in {10, 100, 1000} when covariance spectrum is
+   held fixed.
+
+If residual generators produce crossovers far outside the predicted interval
+for the same kappa, the exact model-independence claim is false. The production
+rule must then include rho or direct width comparison, not kappa alone.
+
+Harness C: dynamic projection scales with N_active, not total N.
+
+Goal: verify that stale-read projection penalty scales with actual shard
+contention, not total swarm size.
+
+Fix staleness tau, per-active local rate cap r_local, shard count S, and active
+agents per shard m. Vary total swarm size
+
+    N in {10, 100, 1000, 10000}
+
+while keeping N_active(s,t) ~= m for each shard.
+
+Use
+
+    P_s(t) = tau * N_active(s,t) * r_local
+
+and compare against pessimistic global projection
+
+    P_global(t) = tau * N * r_max.
+
+With dynamic projection, mean projection penalty per shard should remain
+approximately constant as total N grows, provided m is fixed. With global
+projection, the penalty should grow linearly in N. Certified ledger overspend
+should remain zero under both projections, but utilization should be materially
+higher under dynamic local projection.
+
+7. Final theorem summary
+------------------------
+
+Under exclusive write mediation, linearizable conditional local debits,
+bounded-stale projection R_tilde - tau * rho, and a valid time-uniform global
+budget envelope, the swarm layer maintains
+
+    C(t) <= B
+
+for all times, pathwise for certified debits.
+
+The statistical delta controls the probability that the certified demand path
+exceeds the allocated envelope and forces a hard stop, not the probability that
+the mediated ledger overspends.
+
+The envelope-selection rule is:
+
+    scalar top-eigenvector empirical-Bernstein by default;
+    matrix-Freedman Hermitian dilation only in low-kappa regimes.
+
+The governing statistic is
+
+    kappa = lambda_1 / tr(Sigma),
+
+the fraction of variance in the leading eigen-direction. Coupling strength alone
+is not the correct switch variable. Strong coupling can collapse variance into a
+rank-one direction, in which case the scalar envelope is the right default.

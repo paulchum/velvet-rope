@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenAI Secure MCP Tunnel Client
+After=network-online.target velvet-rope-proxy.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=MCP_UPSTREAM_URL=http://127.0.0.1:8791/mcp
+ExecStart=/usr/local/bin/openai-secure-mcp-tunnel-client
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

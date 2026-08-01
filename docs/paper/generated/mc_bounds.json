@@ -1,0 +1,95 @@
+{
+  "rows": [
+    {
+      "alpha": 1.0,
+      "baseline": 0.55,
+      "beta": 2.0,
+      "index": 1,
+      "lower_certificate": 0.07358253946267232,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0016263170661215717,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.08274683753445042,
+      "upper_certificate": 0.11225469081352345
+    },
+    {
+      "alpha": 1.0,
+      "baseline": 0.55,
+      "beta": 3.0,
+      "index": 2,
+      "lower_certificate": 0.028709501697443053,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001016872789800484,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.03432262538692168,
+      "upper_certificate": 0.04902110044994057
+    },
+    {
+      "alpha": 2.0,
+      "baseline": 0.5,
+      "beta": 2.0,
+      "index": 3,
+      "lower_certificate": 0.17531309320594268,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0020166476979112504,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.19398142048633119,
+      "upper_certificate": 0.25068529064734424
+    },
+    {
+      "alpha": 3.0,
+      "baseline": 0.45,
+      "beta": 5.0,
+      "index": 4,
+      "lower_certificate": 0.07725896451686898,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001423873978014723,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.09224611242837309,
+      "upper_certificate": 0.13540320493205146
+    },
+    {
+      "alpha": 5.0,
+      "baseline": 0.65,
+      "beta": 2.0,
+      "index": 5,
+      "lower_certificate": 0.1679558769886566,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0012599216578452696,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.1841442323263977,
+      "upper_certificate": 0.23104187542616605
+    },
+    {
+      "alpha": 2.0,
+      "baseline": 0.4,
+      "beta": 6.0,
+      "index": 6,
+      "lower_certificate": 0.037840485178098536,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001103185682096173,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.04736230413494869,
+      "upper_certificate": 0.07179056442419746
+    },
+    {
+      "alpha": 8.0,
+      "baseline": 0.6,
+      "beta": 4.0,
+      "index": 7,
+      "lower_certificate": 0.1486738805742841,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0012024336694352136,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.16586710266563573,
+      "upper_certificate": 0.23043526463964425
+    }
+  ]
+}

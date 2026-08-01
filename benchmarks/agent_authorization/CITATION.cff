@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use the Agent Authorization Benchmark, cite this benchmark package."
+title: "Agent Authorization Benchmark"
+version: "0.4.0"
+date-released: "2026-07-28"
+authors:
+  - family-names: Chumbe
+    given-names: Paul
+  - name: "Velvet Contributors"
+license: "Apache-2.0"
+repository-code: "https://github.com/paulchum/velvet-rope/tree/main/benchmarks/agent_authorization"
+keywords:
+  - agent authorization
+  - decision certificates
+  - replayability
+  - tamper evidence
+  - independent verification
+  - pass^k reliability
+  - effect-level authorization
+  - business-effect reconciliation

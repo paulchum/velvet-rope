@@ -1,0 +1,11 @@
+\begin{verbatim}
+uv run velvet agent-auth-benchmark --report-dir reports/agent_auth
+uv run python docs/paper/generate_assets.py
+uv run python docs/paper/build.py
+uv run pytest
+uv run ruff check .
+uv run mypy src tests
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+\end{verbatim}

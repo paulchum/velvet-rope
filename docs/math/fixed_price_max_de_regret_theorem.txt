@@ -1,0 +1,116 @@
+Theorem (Right regret comparator for fixed-price Max-DE).
+
+Fix a two-arm Bernoulli bandit with arm means μ_1, μ_2 ∈ (0,1), fixed Max-DE price
+
+    c = λ / L > 0,
+
+and baseline v_t equal to the current host posterior mean. A fixed-price Max-DE policy is called price-faithful if it obeys the shutoff principle
+
+    1 - v_t < c
+    ⇒
+    no non-host Bernoulli arm is inspected,
+
+because even the largest possible Bernoulli realization cannot improve on the host baseline by c.
+
+Then:
+
+1. Ordinary regret is not a uniformly attainable target for strict fixed-price Max-DE.
+
+   There exist two-arm Bernoulli instances for which a price-faithful policy incurs linear ordinary regret.
+
+   In particular, choose μ_1 < μ_2 with
+
+       0 < Δ := μ_2 - μ_1 < c.
+
+   Under Beta(1,1) priors, after k successes and no failures on arm 1, the posterior host baseline is
+
+       v_k = (k+1)/(k+2) = 1 - 1/(k+2).
+
+   Choose k such that
+
+       1/(k+2) < c.
+
+   Then v_k > 1 - c, so
+
+       1 - v_k < c.
+
+   Hence, by price-faithful shutoff, no further inspection is economically justified. The finite-history event
+
+       E_k = {the first k observations of arm 1 are all successes}
+
+   has probability
+
+       P(E_k) = μ_1^k > 0.
+
+   On E_k, if the policy locks onto arm 1 while arm 2 is truly optimal, then
+
+       R_T ≥ Δ(T-k).
+
+   Therefore
+
+       E[R_T] ≥ μ_1^k Δ(T-k) = Ω(T).
+
+   Thus strict fixed-price Max-DE cannot simultaneously preserve its shutoff identity and guarantee uniform ordinary sublinear regret.
+
+2. The faithful comparator is reservation regret, equivalently price-relative regret.
+
+   Define the c-reservation set
+
+       S_c = {a : μ_a ≥ μ_* - c},
+
+   where
+
+       μ_* = max_a μ_a.
+
+   The correct instantaneous regret is
+
+       r_t^res(c) = (μ_* - μ_{A_t} - c)^+.
+
+   The cumulative reservation regret is
+
+       R_T^res(c)
+       =
+       Σ_{t=1}^T (μ_* - μ_{A_t} - c)^+.
+
+   Equivalently,
+
+       R_T^res(c) = R_T^sat(μ_* - c),
+
+   where satisficing regret at aspiration level ρ is
+
+       R_T^sat(ρ) = Σ_{t=1}^T (ρ - μ_{A_t})^+.
+
+3. The correct theorem target for fixed-price Max-DE is therefore
+
+       R_T^res(c) = o(T),
+
+   not ordinary regret
+
+       R_T = o(T).
+
+   Under posterior consistency and sound Max-DE certificates preventing permanent false lockout of arms whose true improvement exceeds c + ε, the expected finite-time target should be logarithmic in the price-excess gaps.
+
+   Let
+
+       Δ_a = μ_* - μ_a,
+       Γ_a(c) = (Δ_a - c)^+.
+
+   Then the natural fixed-price analogue of classical logarithmic regret is
+
+       E[R_T^res(c)]
+       =
+       O( Σ_{a : Δ_a > c} log(T) / (Δ_a - c) ).
+
+Conclusion.
+
+Fixed-price Max-DE is not a best-arm identification policy. It is a reservation-search policy. UCB and Thompson sampling treat every arm with Δ_a > 0 as suboptimal. Fixed-price Max-DE treats an arm as meaningfully suboptimal only when
+
+    Δ_a > c.
+
+Accordingly, ordinary regret is the wrong primary comparator. The mathematically faithful regret comparator is
+
+    R_T^res(c)
+    =
+    Σ_{t=1}^T (μ_* - μ_{A_t} - c)^+.
+
+This preserves the fixed-price identity: improvements smaller than the inspection price are not counted as regret.

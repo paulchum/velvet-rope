@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/admission_trace.v1.schema.json",
+  "title": "Velvet Admission Trace v1",
+  "description": "Deterministic replay proof for the typed admission optimizer. Runtime timestamps belong to the enclosing thread, ledger, or evidence record and are intentionally excluded from this trace identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "candidate_hash",
+    "request_hash",
+    "policy_bundle_hash",
+    "tool_schema_hash",
+    "capability_registry_hash",
+    "effect_vector_hash",
+    "utility_model_version",
+    "risk_model_version",
+    "calibration_set_hash",
+    "hard_constraints",
+    "objective_components",
+    "selected_decision",
+    "selected_reason",
+    "deterministic_replay_inputs_hash"
+  ],
+  "properties": {
+    "schema_version": { "const": "velvet.admission_trace.v1" },
+    "candidate_hash": { "$ref": "#/$defs/hash" },
+    "request_hash": { "$ref": "#/$defs/hash" },
+    "policy_bundle_hash": { "$ref": "#/$defs/hash" },
+    "tool_schema_hash": { "$ref": "#/$defs/hash" },
+    "capability_registry_hash": { "$ref": "#/$defs/hash" },
+    "effect_vector_hash": { "$ref": "#/$defs/hash" },
+    "utility_model_version": { "type": "string", "minLength": 1 },
+    "risk_model_version": { "type": "string", "minLength": 1 },
+    "calibration_set_hash": { "$ref": "#/$defs/hash" },
+    "hard_constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/constraint_result" }
+    },
+    "objective_components": { "$ref": "#/$defs/objective_components" },
+    "selected_decision": {
+      "enum": [
+        "execute",
+        "block",
+        "defer",
+        "ask_approval",
+        "escalate",
+        "answer_directly",
+        "require_warrant"
+      ]
+    },
+    "selected_reason": { "type": "string", "minLength": 1 },
+    "deterministic_replay_inputs_hash": { "$ref": "#/$defs/hash" }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "constraint_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_id",
+        "passed",
+        "severity",
+        "reason_code",
+        "evidence_hash",
+        "safe_public_message"
+      ],
+      "properties": {
+        "constraint_id": { "type": "string", "minLength": 1 },
+        "passed": { "type": "boolean" },
+        "severity": {
+          "enum": ["info", "warning", "defer", "block"]
+        },
+        "reason_code": { "type": "string", "minLength": 1 },
+        "evidence_hash": { "$ref": "#/$defs/hash" },
+        "safe_public_message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "objective_components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "utility_lcb_bps",
+        "cost_ucb_microusd",
+        "risk_ucb_bps",
+        "cost_penalty_bps",
+        "risk_penalty_bps",
+        "structural_penalty_bps",
+        "objective_bps",
+        "optimizer_model_version"
+      ],
+      "properties": {
+        "schema_version": { "const": "velvet.objective_components.v1" },
+        "utility_lcb_bps": { "type": "integer" },
+        "cost_ucb_microusd": { "type": "integer", "minimum": 0 },
+        "risk_ucb_bps": { "type": "integer", "minimum": 0 },
+        "cost_penalty_bps": { "type": "integer" },
+        "risk_penalty_bps": { "type": "integer" },
+        "structural_penalty_bps": { "type": "integer" },
+        "objective_bps": { "type": "integer" },
+        "optimizer_model_version": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

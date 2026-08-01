@@ -1,0 +1,14 @@
+{
+  "state": {
+    "user_request": "What is the capital of France?",
+    "available_context": [],
+    "freshness_required": false,
+    "ambiguous": false,
+    "expected_action": "ANSWER_DIRECTLY"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "SEARCH_WEB", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "ASK_USER", "metadata": { "budget_affecting": false, "non_budget_affecting": true } }
+  ]
+}

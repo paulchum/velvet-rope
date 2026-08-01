@@ -1,0 +1,270 @@
+{
+  "id": "false_lockout_beta_1_2",
+  "state": {
+    "host_action": "ANSWER_DIRECTLY",
+    "expected_action": "RETRIEVE_CONTEXT",
+    "benchmark_suite": "liability",
+    "router_config": {
+      "pricing_policy": "fixed_price_baseline",
+      "lambda_floor": 0.06,
+      "lambda_cap": 0.06
+    },
+    "evaluation_context": {
+      "condition_id": "false_lockout_beta_1_2",
+      "scenario_id": "false_lockout_beta_1_2",
+      "decision_id": "false_lockout_beta_1_2",
+      "benchmark_suite": "liability",
+      "arm_id": "arm_2",
+      "expected_action": "RETRIEVE_CONTEXT"
+    },
+    "evaluation_outcomes": [
+      {
+        "action_type": "ANSWER_DIRECTLY",
+        "completed": false,
+        "realized_reward": 0.0,
+        "expected_reward": 0.0,
+        "realized_cost": 0.0,
+        "expected_cost": 0.0
+      },
+      {
+        "action_type": "RETRIEVE_CONTEXT",
+        "completed": true,
+        "realized_reward": 1.0,
+        "expected_reward": 1.0,
+        "realized_cost": 0.0,
+        "expected_cost": 0.0,
+        "information_gain": 0.07035201317652101
+      }
+    ],
+    "competitor_results": [
+      {
+        "system": "Velvet Certified Max-DE",
+        "system_version": "1.0.0",
+        "adapter_kind": "native",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "completed",
+        "decision": "inspect",
+        "certificate_supported": true,
+        "certificate_outcome": "inspect",
+        "blocked": false,
+        "skipped": false,
+        "liability_cost": 0.0,
+        "evidence_url": "docs/math/certified_max_de_theorem.txt",
+        "skip_reason": null
+      },
+      {
+        "system": "epsilon_greedy",
+        "system_version": "local_baseline",
+        "adapter_kind": "algorithmic",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "completed",
+        "decision": "greedy_skip",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": 1.0,
+        "evidence_url": "src/velvet/research/policies.py",
+        "skip_reason": null
+      },
+      {
+        "system": "myopic_delight_gate",
+        "system_version": "local_baseline",
+        "adapter_kind": "algorithmic",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "completed",
+        "decision": "skip",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": 1.0,
+        "evidence_url": "src/velvet/research/policies.py",
+        "skip_reason": null
+      },
+      {
+        "system": "thompson_sampling",
+        "system_version": "local_baseline",
+        "adapter_kind": "algorithmic",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "completed",
+        "decision": "stochastic_no_certificate",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": false,
+        "liability_cost": 0.5,
+        "evidence_url": "src/velvet/research/policies.py",
+        "skip_reason": null
+      },
+      {
+        "system": "ucb_fixed_threshold",
+        "system_version": "local_baseline",
+        "adapter_kind": "algorithmic",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "completed",
+        "decision": "threshold_skip",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": 1.0,
+        "evidence_url": "benchmarks/liability",
+        "skip_reason": null
+      },
+      {
+        "system": "OpenAI Agents SDK guardrails",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud_or_optional",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://openai.github.io/openai-agents-python/ref/guardrail/",
+        "skip_reason": "optional SDK adapter not installed in deterministic fixture"
+      },
+      {
+        "system": "NVIDIA NeMo Guardrails",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud_or_optional",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://docs.nvidia.com/nemo/guardrails/0.17.0/user-guides/guardrails-process.html",
+        "skip_reason": "optional SDK adapter not installed in deterministic fixture"
+      },
+      {
+        "system": "Guardrails AI",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud_or_optional",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://guardrailsai.com/docs/concepts/validators/",
+        "skip_reason": "optional SDK adapter not installed in deterministic fixture"
+      },
+      {
+        "system": "Amazon Bedrock Guardrails",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://docs.aws.amazon.com/en_us/bedrock/latest/userguide/guardrails.html",
+        "skip_reason": "requires AWS_REGION, BEDROCK_GUARDRAIL_ID, and BEDROCK_GUARDRAIL_VERSION"
+      },
+      {
+        "system": "Azure AI Content Safety",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://learn.microsoft.com/en-us/azure/ai-services/content-safety/",
+        "skip_reason": "requires AZURE_CONTENT_SAFETY_ENDPOINT and AZURE_CONTENT_SAFETY_KEY"
+      },
+      {
+        "system": "Lakera Guard",
+        "system_version": "surveyed_docs",
+        "adapter_kind": "cloud",
+        "case_id": "false_lockout_beta_1_2",
+        "status": "skipped",
+        "decision": "not_run",
+        "certificate_supported": false,
+        "certificate_outcome": null,
+        "blocked": false,
+        "skipped": true,
+        "liability_cost": null,
+        "evidence_url": "https://docs.lakera.ai/docs/api/guard",
+        "skip_reason": "requires LAKERA_API_KEY"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "action_type": "ANSWER_DIRECTLY",
+      "description": "Greedy host action that would prematurely stop inspection.",
+      "expected_improvement": 0.02,
+      "novelty": 1.0,
+      "confidence": 1.0,
+      "cost_overrides": {
+        "tokens": 0.0,
+        "latency": 0.0,
+        "context_pollution": 0.0
+      },
+      "risk_overrides": {
+        "hallucination_risk": 0.0,
+        "user_trust_risk": 0.0
+      }
+    },
+    {
+      "action_type": "RETRIEVE_CONTEXT",
+      "description": "Recoverable Beta(1,2) arm with one early failure.",
+      "certificate": {
+        "family": "beta_bernoulli",
+        "arm_id": "arm_2",
+        "baseline": 0.55,
+        "lookback_horizon": 3,
+        "delight_scale": 1.0,
+        "lambda": 0.06,
+        "threshold": 0.06,
+        "expected_improvement": 0.030375,
+        "lower_certificate": 0.07035201317652101,
+        "upper_certificate": 0.11225469081352345,
+        "outcome": "inspect",
+        "liability_mode": "false_lockout",
+        "compensator_step": {
+          "arm": 1,
+          "baseline": 0.55,
+          "horizon": 3,
+          "z_current": 0.11225469081352345,
+          "expected_z_next": 0.0998164219697644,
+          "increment": 0.012438268843759051,
+          "initial_optionality": 0.08187969081352345,
+          "cumulative_increment": 0.012438268843759051
+        },
+        "theorem_refs": [
+          "docs/math/lower_certificates_for_max_de_inspection_theorem.txt",
+          "docs/math/certified_max_de_theorem.txt",
+          "docs/math/beta_1_2_recovery_window_final_theorem.txt"
+        ]
+      },
+      "cost_overrides": {
+        "tokens": 0.0,
+        "latency": 0.0,
+        "compute": 0.0,
+        "context_pollution": 0.0
+      },
+      "risk_overrides": {
+        "privacy_risk": 0.0,
+        "hallucination_risk": 0.0,
+        "source_quality_risk": 0.0,
+        "user_trust_risk": 0.0
+      }
+    }
+  ]
+}

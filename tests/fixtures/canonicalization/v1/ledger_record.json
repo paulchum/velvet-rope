@@ -1,0 +1,41 @@
+{
+  "signature": "ledger-signature",
+  "record_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "canonicalization": "velvet.canonical_json.v1.sha256",
+  "contract": "velvet.ledger",
+  "contract_revision": 1,
+  "record_id": "lr_vector_001",
+  "tenant_id": "tenant-a",
+  "environment": "prod",
+  "sequence_number": 7,
+  "recorded_at": "2026-05-27T19:01:00Z",
+  "previous_record_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "warrant_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "seal_id": "seal_001",
+  "thread_id": "thread_001",
+  "product_surface": "velvet_inline_gateway.mcp",
+  "action_type": "CALL_TOOL",
+  "decision": "execute",
+  "upstream_execution_status": "forwarded",
+  "reason": "Allowed by policy chain.",
+  "tool_key": "servicenow/search_change_requests",
+  "request_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "policy_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "tool_schema_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "arguments_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "selected_warrant": {
+    "warrant_id": "wrnt_vector_001",
+    "decision": "execute",
+    "reason_codes": [
+      "cost_ceiling.allow"
+    ],
+    "approval_required": false
+  },
+  "redaction_summary": {
+    "redaction_count": 1,
+    "redacted_fields": [
+      "body"
+    ]
+  },
+  "label": "mcp_authorization"
+}

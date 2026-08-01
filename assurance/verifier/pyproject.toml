@@ -1,0 +1,13 @@
+[project]
+name = "velvet-assurance-verifier"
+version = "0.1.0"
+description = "Offline verifier for Velvet assurance attestations."
+requires-python = ">=3.10"
+dependencies = ["cryptography>=41"]
+
+[project.scripts]
+velvet-assurance-verify = "velvet_assurance_verifier.verifier:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

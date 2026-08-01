@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openai-tunnel-velvet-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openai-tunnel-velvet-sidecar
+  template:
+    metadata:
+      labels:
+        app: openai-tunnel-velvet-sidecar
+    spec:
+      containers:
+        - name: tunnel-client
+          image: openai-secure-mcp-tunnel-client:latest
+          env:
+            - name: MCP_UPSTREAM_URL
+              value: http://127.0.0.1:8791/mcp
+        - name: velvet-rope-proxy
+          image: velvet-mcp-proxy:latest
+          args: ["--config", "/etc/velvet/velvet-config.yaml"]
+          ports:
+            - containerPort: 8791
+          envFrom:
+            - secretRef:
+                name: velvet-mcp-proxy
+          volumeMounts:
+            - name: config
+              mountPath: /etc/velvet
+              readOnly: true
+            - name: ledger
+              mountPath: /var/lib/velvet/ledger
+      volumes:
+        - name: config
+          configMap:
+            name: velvet-openai-tunnel-config
+        - name: ledger
+          persistentVolumeClaim:
+            claimName: velvet-ledger

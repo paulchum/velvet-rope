@@ -1,0 +1,38 @@
+{
+  "manifest_uri": "local://tenant-a/manifests/manifest_vector_001.json",
+  "signature": {
+    "type": "local_sha256_attestation",
+    "signer_id": "test-signer",
+    "payload_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "signed_at": "2026-05-27T19:05:05Z"
+  },
+  "manifest_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "manifest_id": "manifest_vector_001",
+  "schema_version": "velvet.evidence_manifest.v1",
+  "tenant_id": "tenant-a",
+  "generated_at": "2026-05-27T19:05:00Z",
+  "artifacts": [
+    {
+      "store": "local_filesystem",
+      "uri": "local://tenant-a/ledger_segment_binary/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_type": "ledger_segment_binary",
+      "tenant_id": "tenant-a",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size_bytes": 128,
+      "created_at": "2026-05-27T19:05:01Z",
+      "metadata": {
+        "seal_id": "seal_001"
+      }
+    },
+    {
+      "store": "local_filesystem",
+      "uri": "local://tenant-a/replay_report/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "artifact_type": "replay_report",
+      "tenant_id": "tenant-a",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size_bytes": 256,
+      "created_at": "2026-05-27T19:05:02Z",
+      "metadata": {}
+    }
+  ]
+}

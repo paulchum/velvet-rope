@@ -1,0 +1,251 @@
+{
+  "artifact": "oap_aport_pinned_schema_fixture_evidence",
+  "binding_depth": {
+    "passed": false,
+    "present": {
+      "/admission_evidence/authority/authority_budget_after": false,
+      "/admission_evidence/authority/authority_budget_before": false,
+      "/admission_evidence/bindings/request_hash": false,
+      "/admission_evidence/ledger_state/previous_record_hash": false,
+      "/admission_evidence/policy/policy_hash": false,
+      "/admission_evidence/raw_action/raw_action_hash": false,
+      "/admission_evidence/tool/arguments_hash": false,
+      "/admission_evidence/tool/tool_schema_hash": false,
+      "/canonical_action/arguments_hash": false,
+      "/canonical_action/read_set_hash": false,
+      "/canonical_action_hash": false
+    },
+    "required_pointers": [
+      "/canonical_action_hash",
+      "/canonical_action/read_set_hash",
+      "/canonical_action/arguments_hash",
+      "/admission_evidence/raw_action/raw_action_hash",
+      "/admission_evidence/tool/arguments_hash",
+      "/admission_evidence/tool/tool_schema_hash",
+      "/admission_evidence/policy/policy_hash",
+      "/admission_evidence/authority/authority_budget_before",
+      "/admission_evidence/authority/authority_budget_after",
+      "/admission_evidence/ledger_state/previous_record_hash",
+      "/admission_evidence/bindings/request_hash"
+    ]
+  },
+  "deterministic_runs": [
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    },
+    {
+      "decision": "allow",
+      "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+      "policy_id": "velvet.mcp.call.v1"
+    }
+  ],
+  "drift_rejection": {
+    "passed": false,
+    "reason": "Fixture emits a decision object but no execution-permit claim gate."
+  },
+  "generated_at": "1970-01-01T00:00:00Z",
+  "oap_decision": {
+    "agent_id": "550e8400-e29b-41d4-a716-446655440011",
+    "allow": true,
+    "assurance_level": "L2",
+    "created_at": "1970-01-01T00:00:00Z",
+    "decision_id": "550e8400-e29b-41d4-a716-446655440012",
+    "expires_in": 300,
+    "kid": "oap:registry:velvet-local-fixture",
+    "owner_id": "org_velvet_fixture",
+    "passport_digest": "sha256:a3ea1e77af10a86e19f81cd531030b4a2451b4652dbd8190147e90dc03d9c5f2",
+    "policy_id": "velvet.mcp.call.v1",
+    "reasons": [
+      {
+        "code": "oap.allow",
+        "message": "Fixture decision before execution."
+      }
+    ],
+    "signature": "ed25519:Ewho8mjwFGBvKeRawJgNs4IqOc2RMTqrh+Jn+CVRJEWOkmfFQHVotalvu6kYlxaxDFPOsQdnnygU14mH9vBUAQ=="
+  },
+  "oap_schema_path": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/decision-schema.json",
+  "oap_spec_lock": {
+    "commit": "a706c64b0b7ef4bcff9756a926f9a278e577e8b0",
+    "path": "third_party/oap/OAP_SPEC_LOCK.json",
+    "repo": "https://github.com/aporthq/aport-spec",
+    "sha256": "df7763f92ca09f776217916a6b91d5e2c4c4779a1b370908a0474f8bc412b575"
+  },
+  "passport_view": {
+    "agent_id": "550e8400-e29b-41d4-a716-446655440011",
+    "assurance_level": "L2",
+    "capabilities": [
+      "mcp.call"
+    ],
+    "owner_id": "org_velvet_fixture",
+    "passport_id": "550e8400-e29b-41d4-a716-446655440010"
+  },
+  "profile": {
+    "adapter_id": "oap_aport_pinned_schema",
+    "adapter_kind": "pinned_schema_fixture",
+    "measurement_boundary": "local OAP-shaped fixture, not hosted APort",
+    "public_claim_status": "not_claimable_against_live_product",
+    "source_urls": [
+      "third_party/oap/OAP_SPEC_LOCK.json",
+      "https://sandbox.aport.io/spec/spec/oap/oap-spec.md/"
+    ],
+    "system": "OAP/APort pinned schema fixture",
+    "system_version": "pinned_a706c64"
+  },
+  "public_verification": {
+    "passed": true
+  },
+  "request": {
+    "context": {
+      "environment": "production",
+      "tenant_id": "tenant-a"
+    },
+    "logical_step": 1,
+    "proposed_action": {
+      "actor_id": "platform-lead@example.com",
+      "agent_id": "release-agent",
+      "arguments": {
+        "query": "service=payments state=open"
+      },
+      "environment": "production",
+      "operation": "call_tool",
+      "server": "servicenow",
+      "surface": "mcp",
+      "tenant_id": "tenant-a",
+      "timestamp_input": "1970-01-01T00:00:00.000Z",
+      "tool": "search_change_requests"
+    },
+    "replay_id": "agent_auth_comparison",
+    "request_id": "cmp-search-change-requests"
+  },
+  "schema_validation": {
+    "errors": [
+      "<root>: 'passport_id' is a required property",
+      "<root>: 'issued_at' is a required property",
+      "<root>: 'expires_at' is a required property"
+    ],
+    "passed": false
+  },
+  "schema_version": "velvet.agent_authorization.comparison.v0.1",
+  "signature_record": {
+    "algorithm": "Ed25519",
+    "key_id": "demo-not-for-production",
+    "key_version": "demo-v1",
+    "metadata": {
+      "demo_only": true,
+      "non_production": true,
+      "verification_tier": "demo",
+      "warning": "Demo Ed25519 key is committed test material, not production."
+    },
+    "payload_hash": "sha256:8ccc03ee3633bf0ba9c641ecd8dd4e6e2031a15d26d4e5532be6c907aff54566",
+    "provider_name": "velvet_ed25519",
+    "public_verification_material": {
+      "encoding": "pem+raw-base64",
+      "key_id": "demo-not-for-production",
+      "public_key_base64": "VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\n-----END PUBLIC KEY-----\n",
+      "verification_tier": "demo"
+    },
+    "purpose": "velvet.agent_authorization.comparison_fixture.v0.1",
+    "schema_version": "velvet.signature.v2",
+    "signature": "Ewho8mjwFGBvKeRawJgNs4IqOc2RMTqrh+Jn+CVRJEWOkmfFQHVotalvu6kYlxaxDFPOsQdnnygU14mH9vBUAQ==",
+    "signed_at": "1970-01-01T00:00:00Z",
+    "tenant_id": "velvet-demo-tenant"
+  },
+  "system": "OAP/APort pinned schema fixture",
+  "tamper_check": {
+    "field_mutated": "/allow",
+    "passed": true
+  }
+}

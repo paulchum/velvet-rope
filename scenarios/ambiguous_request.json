@@ -1,0 +1,15 @@
+{
+  "state": {
+    "user_request": "Make it better.",
+    "available_context": [],
+    "freshness_required": false,
+    "ambiguous": true,
+    "missing_critical_info": true,
+    "expected_action": "ASK_USER"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "SEARCH_WEB", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "ASK_USER", "metadata": { "budget_affecting": false, "non_budget_affecting": true } }
+  ]
+}

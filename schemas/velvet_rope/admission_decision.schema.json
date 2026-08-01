@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/admission_decision.schema.json",
+  "title": "Velvet Rope AdmissionDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "candidate_action_id",
+    "gate_name",
+    "gate_version",
+    "admission",
+    "reason_code",
+    "decision_timestamp",
+    "clearance_score",
+    "entry_price",
+    "expected_upside",
+    "risk_penalty",
+    "budget_pressure",
+    "scarcity_pressure",
+    "policy_passed",
+    "budget_passed",
+    "jurisdiction_passed",
+    "consent_passed",
+    "tool_allowlisted",
+    "requires_refinement",
+    "requires_concierge_review",
+    "warrant_id",
+    "seal_id",
+    "adapter_notes"
+  ],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 1 },
+    "candidate_action_id": { "type": "string", "minLength": 1 },
+    "gate_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Legacy schema v1 field. For Velvet-native artifacts this should be \"Velvet Rope\"; non-native adapters may use a generic gate label."
+    },
+    "gate_version": { "type": "string", "minLength": 1 },
+    "admission": {
+      "enum": [
+        "admit",
+        "deny",
+        "defer",
+        "inspect",
+        "lockout",
+        "refine",
+        "escalate_to_concierge",
+        "denied_at_rope"
+      ]
+    },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "decision_timestamp": { "type": "string", "minLength": 1 },
+    "clearance_score": { "type": "number" },
+    "entry_price": { "type": "number" },
+    "expected_upside": { "type": "number" },
+    "risk_penalty": { "type": "number" },
+    "budget_pressure": { "type": "number" },
+    "scarcity_pressure": { "type": "number" },
+    "policy_passed": { "type": "boolean" },
+    "budget_passed": { "type": "boolean" },
+    "jurisdiction_passed": { "type": "boolean" },
+    "consent_passed": { "type": "boolean" },
+    "tool_allowlisted": { "type": "boolean" },
+    "requires_refinement": { "type": "boolean" },
+    "requires_concierge_review": { "type": "boolean" },
+    "warrant_id": { "type": ["string", "null"] },
+    "seal_id": { "type": ["string", "null"] },
+    "adapter_notes": { "type": "string" }
+  }
+}

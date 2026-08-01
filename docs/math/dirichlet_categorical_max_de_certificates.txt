@@ -1,0 +1,344 @@
+Dirichlet-Categorical Max-DE Certificates
+
+Setup.
+Let
+
+    p = (p_1, ..., p_K) ~ Dirichlet(alpha_1, ..., alpha_K),
+    alpha_0 = sum_k alpha_k,
+
+and let u = (u_1, ..., u_K) be a bounded payoff vector. Define the
+posterior-random expected payoff
+
+    mu(p) = u^T p = sum_k u_k p_k,
+
+and, for scalar baseline v,
+
+    X_v = (u^T p - v)^+.
+
+The expected-improvement and second-moment certificates are
+
+    m_v = E[X_v],
+    s_v = E[X_v^2].
+
+
+1. Payoff-level aggregation.
+
+Let the distinct payoff levels be
+
+    c_1 < ... < c_J,
+
+and define grouped Dirichlet masses
+
+    gamma_j = sum_{k: u_k = c_j} alpha_k.
+
+If
+
+    W_j = sum_{k: u_k = c_j} p_k,
+
+then Dirichlet aggregation gives
+
+    W = (W_1, ..., W_J) ~ Dirichlet(gamma_1, ..., gamma_J),
+
+and
+
+    u^T p = sum_j c_j W_j.
+
+Thus all Max-DE certificates depend on the original K categories only through
+the distinct payoff levels c_j and grouped masses gamma_j.
+
+For q in {1,2}, define
+
+    G_q(gamma,c;v)
+    =
+    E[(sum_j c_j W_j - v)_+^q].
+
+Then
+
+    m_v = G_1(gamma,c;v),
+    s_v = G_2(gamma,c;v).
+
+
+2. Recursive Beta aggregation.
+
+For J > 1, split off the largest payoff level c_J and let
+
+    Gamma_- = sum_{j=1}^{J-1} gamma_j.
+
+Then
+
+    T = W_J ~ Beta(gamma_J, Gamma_-),
+
+and conditionally on T,
+
+    R_j = W_j / (1-T), j = 1, ..., J-1,
+
+satisfies
+
+    R ~ Dirichlet(gamma_1, ..., gamma_{J-1}).
+
+Moreover,
+
+    sum_j c_j W_j
+    =
+    T c_J + (1-T) sum_{j=1}^{J-1} c_j R_j.
+
+Therefore
+
+    G_q^(J)(gamma,c;v)
+    =
+    E_T[
+        (1-T)^q
+        G_q^(J-1)(
+            gamma_{1:J-1},
+            c_{1:J-1};
+            (v - T c_J)/(1-T)
+        )
+    ].
+
+Equivalently,
+
+    G_q^(J)(gamma,c;v)
+    =
+    1 / B(gamma_J,Gamma_-)
+    int_0^1
+        t^(gamma_J-1)
+        (1-t)^(Gamma_-+q-1)
+        G_q^(J-1)(
+            gamma_{1:J-1},
+            c_{1:J-1};
+            (v - t c_J)/(1-t)
+        )
+    dt.
+
+The base case is
+
+    G_q^(1)(gamma_1,c_1;v) = (c_1 - v)_+^q.
+
+For J > 2, expected improvement is generally not a single incomplete-beta
+expression. A single unconditional Beta tail occurs only for two payoff levels.
+
+
+3. Boundary cases.
+
+If v >= c_J, then
+
+    G_q(gamma,c;v) = 0.
+
+If v <= c_1, the positive part never truncates. Let
+
+    Gamma = sum_j gamma_j.
+
+Then
+
+    E[mu] = sum_j gamma_j c_j / Gamma,
+
+and
+
+    E[mu^2]
+    =
+    [(sum_j gamma_j c_j)^2 + sum_j gamma_j c_j^2]
+    /
+    [Gamma (Gamma+1)].
+
+Hence
+
+    G_1(gamma,c;v) = E[mu] - v,
+
+and
+
+    G_2(gamma,c;v) = E[mu^2] - 2 v E[mu] + v^2.
+
+
+4. Two-payoff-level closed form.
+
+Suppose J = 2, with
+
+    c_1 < c_2,
+    d = c_2 - c_1.
+
+Then W_2 ~ Beta(gamma_2,gamma_1), and
+
+    mu = c_1 + d W_2.
+
+Set
+
+    a = gamma_2,
+    b = gamma_1,
+    t = (v - c_1) / d.
+
+For 0 < t < 1,
+
+    (mu - v)^+ = d (W_2 - t)^+.
+
+Therefore
+
+    G_1(gamma,c;v)
+    =
+    d [
+        a/(a+b) * (1 - I_t(a+1,b))
+        -
+        t * (1 - I_t(a,b))
+    ].
+
+For the second moment,
+
+    G_2(gamma,c;v)
+    =
+    d^2 [
+        a(a+1)/((a+b)(a+b+1)) * (1 - I_t(a+2,b))
+        -
+        2t a/(a+b) * (1 - I_t(a+1,b))
+        +
+        t^2 * (1 - I_t(a,b))
+    ].
+
+
+5. Dirichlet-categorical martingale.
+
+Let hypothetical future observations satisfy
+
+    Y_1, Y_2, ... | p iid Categorical(p),
+
+and let N_{n,k} be the count of category k in the first n observations. Then
+
+    p | F_n ~ Dirichlet(alpha_1 + N_{n,1}, ..., alpha_K + N_{n,K}),
+
+and
+
+    P(Y_{n+1}=k | F_n) = (alpha_k + N_{n,k}) / (alpha_0+n).
+
+Define
+
+    M_n = E[X_v | F_n] = G_1(alpha+N_n,u;v).
+
+Since M_n is the conditional expectation of the same bounded random variable
+X_v, (M_n) is a bounded nonnegative martingale.
+
+At the grouped payoff-level scale, if D_{n,j} counts observations whose payoff
+level is c_j, then
+
+    M_n = G_1(gamma+D_n,c;v),
+
+and
+
+    P(next payoff level = c_j | F_n)
+    =
+    (gamma_j + D_{n,j}) / (Gamma+n).
+
+Thus, for every current grouped parameter vector a,
+
+    G_1(a,c;v)
+    =
+    sum_j a_j / sum_i a_i * G_1(a+e_j,c;v).
+
+This harmonic identity is the basic implementation check.
+
+
+6. Finite-horizon lower certificate.
+
+The pathwise finite-horizon lower certificate is
+
+    L_v^(r)
+    =
+    E[max_{0 <= n <= r} M_n],
+
+so
+
+    L_v^(r) <= Phi_v := E[sup_{n >= 0} M_n],
+
+and L_v^(r) increases to Phi_v by monotone convergence.
+
+The running maximum depends on observation order, not only on the final count
+vector. Therefore the exact dynamic program carries the current running maximum.
+Let
+
+    m(a) = G_1(a,c;v).
+
+For the pathwise certificate, define
+
+    V_0(a,z) = z,
+
+and, for h >= 1,
+
+    V_h(a,z)
+    =
+    sum_j a_j / sum_i a_i *
+        V_{h-1}(a+e_j, max{z, m(a+e_j)}).
+
+Then
+
+    L_v^(r) = V_r(gamma, m(gamma)).
+
+For production, Velvet uses the terminal-augmented lower certificate
+
+    L_{v,r}^+
+    =
+    E[max{X_v, M_0, ..., M_r}],
+
+which is at least as strong and remains below Phi_v. The same dynamic program is
+used with terminal base case
+
+    V_0^+(a,z) = z + G_1(a,c;v+z).
+
+
+7. Horizon-free O(1) upper certificate.
+
+Let
+
+    u_max = max_k u_k,
+    B_v = (u_max - v)^+.
+
+Because p lies in the simplex,
+
+    0 <= X_v <= B_v.
+
+If B_v = 0 or m_v = 0, all certificates vanish. Otherwise,
+
+    Phi_v
+    <=
+    min{
+        B_v,
+        m_v * (1 + log(B_v/m_v)),
+        m_v + 2 sqrt(s_v - m_v^2)
+    }.
+
+The first bound is boundedness. The second follows from integrating Doob's
+maximal inequality for the nonnegative martingale M_n. The third follows from
+Doob L^2 applied to the centered martingale M_n - m_v and the L^2 convergence
+M_n -> X_v.
+
+
+8. Bernoulli reduction.
+
+With the original Bernoulli convention
+
+    p = (theta, 1-theta) ~ Dirichlet(a,b),
+    u = (1,0),
+
+we have theta ~ Beta(a,b). The grouped levels are
+
+    c_1 = 0,
+    c_2 = 1,
+    gamma_1 = b,
+    gamma_2 = a.
+
+The two-level formula gives
+
+    EI_v
+    =
+    a/(a+b) * (1 - I_v(a+1,b))
+    -
+    v * (1 - I_v(a,b)),
+
+and the second moment becomes
+
+    s_v
+    =
+    a(a+1)/((a+b)(a+b+1)) * (1 - I_v(a+2,b))
+    -
+    2v a/(a+b) * (1 - I_v(a+1,b))
+    +
+    v^2 * (1 - I_v(a,b)).
+
+Thus M_n, lower certificates, B_v, m_v, s_v, and the O(1) upper certificate
+reduce exactly to the Beta-Bernoulli Max-DE certificates.

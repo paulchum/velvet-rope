@@ -1,0 +1,62 @@
+{
+  "artifact": "velvet_verdict_measurements",
+  "certificate_expiry": {
+    "expires_at": "1970-01-01T01:00:00Z",
+    "fresh_status": "accepted",
+    "measurement": "Same signed certificate verified twice against the pinned public key: within TTL it is accepted; past expires_at verification reports expired with verdict_expired_recertification_required and licenses nothing.",
+    "passed": true,
+    "stale_reason": "verdict_expired_recertification_required",
+    "stale_status": "expired"
+  },
+  "fleet_false_lockout_accounting": {
+    "budget_state": {
+      "delta": 0.05,
+      "executed": 1,
+      "k_max": 2,
+      "registered": 2,
+      "remaining": 0
+    },
+    "measurement": "Declared decision window {k_max, delta} with per-decision e-BH threshold_used and budget accounting recorded for executed and gated_out proposals.",
+    "passed": true,
+    "records": [
+      {
+        "decision_id": "dec-0",
+        "e_value": 120.0,
+        "executed_count_after": 1,
+        "threshold_used": 40.0,
+        "verdict": "executed"
+      },
+      {
+        "decision_id": "dec-1",
+        "e_value": 3.0,
+        "executed_count_after": 1,
+        "threshold_used": 20.0,
+        "verdict": "gated_out"
+      },
+      {
+        "decision_id": "dec-2",
+        "e_value": 90.0,
+        "executed_count_after": 1,
+        "threshold_used": null,
+        "verdict": "refused"
+      }
+    ],
+    "window": {
+      "delta": 0.05,
+      "k_max": 2
+    }
+  },
+  "generated_at": "1970-01-01T00:00:00Z",
+  "priced_inspection": {
+    "expected_rounds_to_gate_crossing": 4.0,
+    "measurement": "Certificate quotes the inspection alternative in native units (expected rounds to gate crossing); dollar figures appear only with an explicit dollars_source.",
+    "passed": true,
+    "units": "rounds"
+  },
+  "refusal_as_output": {
+    "measurement": "Over-budget proposal returned a structured refusal verdict with a machine reason code rather than an exception, timeout, or silent allow.",
+    "passed": true,
+    "reason_code": "budget_exhausted",
+    "verdict": "refused"
+  }
+}

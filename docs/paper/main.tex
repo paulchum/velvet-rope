@@ -1,0 +1,147 @@
+\documentclass[11pt]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2191}{$\uparrow$}
+\DeclareUnicodeCharacter{2248}{$\approx$}
+\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{03BC}{$\mu$}
+\DeclareUnicodeCharacter{2208}{$\in$}
+\DeclareUnicodeCharacter{03BB}{$\lambda$}
+\DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
+\DeclareUnicodeCharacter{0394}{$\Delta$}
+\DeclareUnicodeCharacter{03A9}{$\Omega$}
+\DeclareUnicodeCharacter{03A3}{$\Sigma$}
+\DeclareUnicodeCharacter{03C1}{$\rho$}
+\DeclareUnicodeCharacter{03B5}{$\epsilon$}
+\DeclareUnicodeCharacter{2265}{$\geq$}
+\else
+\usepackage{fontspec}
+\fi
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage[margin=1in]{geometry}
+
+\input{generated/macros.tex}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+
+\title{Max-DE Certified Authorization for Agent Actions}
+\author{Paul Chumbe}
+% TODO(maintainer): optional affiliation line.
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Autonomous agents increasingly propose actions before a human or host system can inspect their consequences. We study certified pre-execution authorization for such actions in a posterior-typed setting. The contribution is a synthesis: computable two-sided decision certificates for action admission, an inspect--lockout--refinement trichotomy, and a formal gap between myopic posterior mean improvement and the martingale supremum value. We implement the certificates in Velvet for Beta--Bernoulli candidates, report the Agent Authorization Benchmark v\BenchmarkVersion{}, and validate the numerical certificate bracket by Monte-Carlo estimates generated from the repository.
+\end{abstract}
+
+\section{Problem}
+
+The operational question is not whether an agent can answer a task, but whether a proposed action should be authorized before execution. A pre-execution authority layer must distinguish actions that should proceed, actions that should be blocked, and actions whose value of inspection remains unresolved. It should also leave an artifact that can be replayed, verified, and checked for tampering after the fact.
+
+This paper focuses on posterior-typed action candidates. The canonical example is a Bernoulli arm with unknown success parameter and a host baseline. The action is worth inspecting only if the optionality of future observations clears a price threshold. The benchmark section evaluates the artifact side of this question: certificate emission, determinism across \BenchmarkRepeatCount{} identical runs, replayability, independent verifiability, and tamper-evidence.
+
+\section{System Context}
+
+The repository implements Velvet as a local admission and evidence layer for autonomous-agent actions, with the public surface summarized in \texttt{README.md} and \texttt{IMPLEMENTATION\_STATUS.md}. The admission pipeline takes a typed candidate action, evaluates it through a policy chain, produces an admission decision, and records signed evidence before executable dispatch. On the MCP path, \texttt{docs/mcp\_proxy/evidence.md} describes the proxy evidence artifact as an OAP Decision plus a Velvet-signed Max-DE Certificate Envelope, with ledger records binding request, argument, tool-schema, and policy hashes. The same documentation and \texttt{docs/execution-permits.md} distinguish admission evidence from execution authority: a warrant or proof envelope explains why an action was admitted, while an Execution Permit authorizes one dispatch chain only after the pre-execution record is durable.
+
+Execution Permits are short-lived, single-use authority artifacts bound to the exact request, canonical action, arguments, tool schema, policy hash and version, identity context, audience, signed decision artifact, supporting proof lineage, and durable pre-execution ledger record. Before dispatch, Velvet recomputes the request binding and atomically claims the permit; drift in request, arguments, policy, schema, audience, tenant, environment, or identity context rejects the dispatch. Execution Receipts are signed observations about what the executor or substrate saw after a claimed dispatch, with conservative outcomes such as succeeded, rejected, failed before dispatch, or indeterminate. The receipt contract is deliberately weaker than a business-level side-effect proof; \texttt{docs/execution-permits.md} states that a gateway-observed receipt proves gateway observation rather than final business outcome.
+
+The Vault evidence plane extends ledger records with RFC-6962-style Merkle roots over ordered record hashes, Signed Tree Heads, inclusion proofs, consistency proofs, anchor receipts, and retention tombstones as documented in \texttt{docs/vault.md}. Verification recomputes frame hashes, record hashes, semantic chain links, Merkle roots, inclusion proofs, Signed Tree Head signatures, and optional consistency against a previous tree head. Consistency proofs and single-use execution authority are strictly stronger evidence structures than an append-only hash chain alone because a verifier can check both record inclusion in a signed tree and tree growth between checkpoints, while the permit claim path rejects reuse before dispatch.
+
+\section{Formal Model}
+
+Let $\theta \sim \mathrm{Beta}(\alpha,\beta)$ and fix a baseline $v \in (0,1)$. Define the posterior improvement payoff
+\[
+    Y=(\theta-v)^+.
+\]
+Let $(\mathcal{F}_n)_{n\geq 0}$ be the filtration generated by hypothetically sampling the same Bernoulli arm and let
+\[
+    M_n=\mathbb{E}[Y\mid \mathcal{F}_n].
+\]
+The Max-DE value is the martingale-supremum value
+\[
+    \Phi_v(\alpha,\beta)=\mathbb{E}\left[\sup_{n\geq 0} M_n\right].
+\]
+The myopic posterior expected improvement is only $M_0$. The gap $\Phi_v-M_0$ is the pick-me mass: the value of future posterior paths that may make an action admissible even when the current posterior mean improvement is below price.
+
+Given a delight scale $L$ and action price $\lambda$, write $c=\lambda/L$. The implementation computes a lower certificate $L_v^{(r)}(\alpha,\beta)$ and an upper certificate $U_v(\alpha,\beta)$ from \texttt{src/velvet/research/bernoulli.py}. The admission rule is:
+\[
+\begin{array}{ll}
+\text{inspect} & \text{if } L_v^{(r)}(\alpha,\beta)\geq c,\\
+\text{lockout} & \text{if } U_v(\alpha,\beta)<c,\\
+\text{refine} & \text{otherwise.}
+\end{array}
+\]
+
+\section{Certificates and Proof Sources}
+
+The proof ingredients are classical. Ville's inequality gives the logarithmic maximal envelope, Doob's $L^2$ maximal inequality gives the quadratic envelope, and the layer-cake/Markov-chain hitting argument gives the exact supremum representation. The contribution here is not those tools; it is the computable synthesis into a two-sided certificate interface for action admission.
+
+\begin{theorem}[Two-sided certified gate]
+For each finite horizon $r$, the generated lower certificate and production upper certificate satisfy
+\[
+    L_v^{(r)}(\alpha,\beta)\leq \Phi_v(\alpha,\beta)\leq U_v(\alpha,\beta).
+\]
+Therefore the inspect and lockout branches above are sound, while the remaining region is a refinement zone rather than evidence for permanent rejection.
+\end{theorem}
+
+The theorem and supporting notes are transcribed verbatim from the eight files in \texttt{docs/math/} in Appendix~\ref{app:proofs}. The generated source audit records the SHA-256 of each proof source and of \texttt{src/velvet/research/bernoulli.py}.
+
+\section{Empirical Artifact Benchmark}
+
+The Agent Authorization Benchmark v\BenchmarkVersion{} contains \BenchmarkSystemCount{} seeded system rows. It is generated from the repository's liability benchmark adapters plus Velvet replay and signing checks. Not-run entries identify missing packages or credentials and are not treated as competitor failures. The pass\textsuperscript{k} reliability reporting follows tau-bench~(\href{https://arxiv.org/abs/2406.12045}{arXiv:2406.12045}), estimating the probability that all sampled repeated runs are successful; PolicyGuard~(\href{https://arxiv.org/abs/2606.32004}{arXiv:2606.32004}) applies the same estimator to document-compliance policy review.
+
+\begin{center}
+\small
+\input{generated/benchmark_table.tex}
+\end{center}
+
+Velvet does not win every seeded liability-cost row. The generated non-win table records \BenchmarkNonWinCount{} rows where another local baseline matches or beats Velvet on the benchmark cost scalar while lacking the certificate/seal evidence measured above.
+
+\begin{center}
+\scriptsize
+\input{generated/non_win_table.tex}
+\end{center}
+
+\section{Numerical Certificate Validation}
+
+The figure and table below are generated by \texttt{docs/paper/generate\_assets.py}. For each Beta--Bernoulli setting, the script computes the analytic lower certificate with horizon \LowerCertificateHorizon{}, the production upper certificate from \texttt{src/velvet/research/bernoulli.py}, and a Monte-Carlo estimate $\hat{\Phi}$ using \MonteCarloPathCount{} posterior-predictive paths of horizon \MonteCarloHorizon{} with fixed seeds. The generated script fails if any point estimate falls outside its certificate bracket.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figures/mc_bounds.pdf}
+    \caption{Repository-generated Monte-Carlo estimates of the Max-DE martingale-supremum value bracketed by analytic lower and upper certificates.}
+\end{figure}
+
+\begin{center}
+\small
+\input{generated/mc_bounds_table.tex}
+\end{center}
+
+\section{Limitations}
+
+The formal certificates in this paper apply to posterior-typed Bernoulli candidates. They do not certify arbitrary tool calls, arbitrary code execution, model truthfulness, or production compliance. The Agent Authorization Benchmark measures authorization artifacts rather than end-task success. External adapters in the seeded run are not live provider evaluations when optional packages or credentials are absent. HMAC signatures remain local-dev only and are not used for independent public verification claims.
+
+The Monte-Carlo validation is numerical evidence against transcription and implementation mistakes, not a replacement for the analytic proof. The estimate uses a large finite horizon and terminal payoff sample; the certificate comparison is the rigorous object.
+
+\section{Reproducibility}
+
+The paper assets are generated from repository files, not hand-entered benchmark or figure values. The relevant commands are:
+
+\input{generated/reproducibility_commands.tex}
+
+The benchmark package is under \texttt{benchmarks/agent\_authorization/}. The seal-conformance suite is \texttt{tests/test\_seal\_conformance.py}. The generated audit file is \texttt{docs/paper/generated/source\_audit.json}.
+
+\appendix
+\input{generated/math_appendix.tex}
+
+\end{document}

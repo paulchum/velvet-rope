@@ -1,0 +1,68 @@
+{
+  "benchmark_version": "0.4.0",
+  "commit_hash": "37c94176e6315a810c0d16d81fd60a851d266829",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "repeat_count": 20,
+  "schema_version": "velvet.agent_authorization.comparison.v0.1",
+  "system_result": {
+    "adapter_kind": "gateway_contract_fixture",
+    "capabilities": {
+      "binding_depth": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture response does not bind the required action, policy, budget, ledger, and raw-action fields.",
+        "status": "fail",
+        "value": false
+      },
+      "deterministic_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Identical allowlist fixture response across N=20 runs.",
+        "status": "pass",
+        "value": true
+      },
+      "drift_rejection": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action.",
+        "status": "fail",
+        "value": false
+      },
+      "pre_execution_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Static allowlist decision was computed before simulated dispatch.",
+        "status": "pass",
+        "value": true
+      },
+      "public_verification": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture response has no public-key verification material.",
+        "status": "fail",
+        "value": false
+      },
+      "replayable_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture response has no replay command or stable seal reproduction contract.",
+        "status": "fail",
+        "value": false
+      },
+      "signed_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture response is not a signed decision artifact.",
+        "status": "fail",
+        "value": false
+      },
+      "tamper_evidence": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+        "measurement": "Fixture response has no signature or hash-chain check bound to the decision.",
+        "status": "fail",
+        "value": false
+      }
+    },
+    "evidence_path": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+    "measurement_boundary": "local static allowlist fixture, not a gateway vendor",
+    "public_claim_status": "fixture_baseline_only",
+    "source_urls": [
+      "benchmarks/agent_authorization/comparison/fixtures/competitor_profiles.json"
+    ],
+    "system": "Gateway allowlist baseline",
+    "system_version": "fixture"
+  }
+}

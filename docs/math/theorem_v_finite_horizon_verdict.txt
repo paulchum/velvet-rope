@@ -1,0 +1,133 @@
+Theorem V: Host-Aware Finite-Horizon Verdict on the Actual Kernel
+=================================================================
+
+Claim currency: [BP] — Bayesian-predictive at issue time under the exact
+one-arm-per-round policy-weighted host-override kernel, robustified to [BP+TV] over a
+declared bounded one-step TV drift class. The freeze lemma alone is [MATH] (pathwise,
+reward-law-free). No fixed-mean frequentist content anywhere; none may be inferred.
+
+Setting.
+--------
+State x = ((alpha_i, beta_i))_i, independent integer-shape Beta posteriors; posterior
+means m_i; host h(x) = argmax_i m_i(x) with deterministic tie-break; candidate-excluded
+baseline V^a(x) = max_{b != a} m_b(x); moving certificate
+N^a(x) = psi(Pi_a(x), V^a(x)) = E[(theta_a - V^a)^+]. Policy
+p_{t,i} = (1 - eps_t) 1{i = h} + eps_t q_{t,i}, eps_t = M/(M+t), with a measurable
+Markov override rule q. Weak gate convention: override-eligible iff N >= c.
+
+The certified event is the HOST-AWARE rescue set over the window of offsets {0..H}
+from issue:
+
+    R_H^{a,c} = { exists r in {0..H}: N^a(X_{t+r}) >= c  or  h(X_{t+r}) = a }.
+
+The gate-only crossing C_H = {exists r: N^a(X_{t+r}) >= c} is a strict subset of R_H.
+
+Theorem V (verdict contract).
+-----------------------------
+Inputs: state x, candidate a, horizon H, gate c > 0 (value scale), tolerance delta in
+(0,1] (probability scale; c and delta are never interchanged), declared drift class
+D(e0, eps_d): reward means may deviate from the realized bookkeeping posterior means
+by at most eta_r = e0 + r*eps_d, predictably. Certified quantities:
+
+    p_H = P(R_H^{a,c} | X_t = x)  exactly, by the stopped DP with stopping set
+          S_R = {N^a >= c} u {h = a}          (method exact_dp), or a certified
+          upper bound u >= P(R_inf | x)       (method certified_upper_bound),
+    b_H = min(1, e0*H + eps_d*H*(H-1)/2),     B_H = min(1, p_H + b_H).
+
+Exactly one verdict is returned:
+
+  refusal              iff a refusal condition holds (R1-R10: invalid drift inputs,
+                       unstable arm set, exogenous moving baseline, ungated override
+                       rule where the no-touch claim is requested, budget exhaustion
+                       with no certified oracle, uncertifiable numerics, evaluation
+                       past expiry, kernel mismatch). Refusal claims nothing.
+  safe_kill            iff no refusal condition holds and B_H < delta. Then for EVERY
+                       law Q in D(e0, eps_d): Q(R_H | x) <= p_H + b_H < delta
+                       [BP+TV]; and pathwise on the complement of R_H, under the
+                       gated-override-support hypothesis (G), the candidate is pulled
+                       at no round of [t, t+H), its posterior is frozen, and it is
+                       never host and never gate-eligible at any offset [MATH].
+                       Combined: with probability >= 1 - delta under every declared
+                       law, the policy does not touch the candidate for H rounds.
+  required_inspection  iff no refusal condition holds and B_H >= delta: the requested
+                       certificate did not pass. In exact mode with zero declared
+                       drift this is literally P(R_H | x) >= delta [BP]. It is NOT a
+                       danger claim.
+
+Expiry: all claims are windowed to offsets {0..H}; rounds are the authoritative
+clock (expiry_date is a deterministic calendar projection with no probabilistic
+content). Early termination is conservative (R_{H'} subset R_H for H' <= H); horizon
+extension is invalid. Past expiry the only sound outputs are refusal or a fresh issue
+on the current state — a fresh issue is a new decision with a new certificate.
+
+Prices.
+-------
+price_of_inspection.expected_rounds_to_gate_crossing is the exact [BP] diagnostic
+E[min(tau_gate, H)] under continued play — a rescue-time primitive, never a
+frequentist audit bill. price_of_tail carries (probability_bound B_H,
+crossing_probability p_H, drift_penalty b_H, posterior_expected_shortfall N^a(x));
+dollars appear only as caller-sourced linear projections.
+
+Exact separation instance (why host-aware is mandatory).
+--------------------------------------------------------
+arms = [(2,1), (251,249)], candidate = 1, c = 1/100, delta = 1/20, H = 1: the
+gate-only crossing probability is exactly P(C_1) = 0 (a gate-only rule would emit
+safe_kill; key value psi(Beta(251,249), 1/2) < 1/100), while the host-aware rescue
+probability is exactly P(R_1) = 1/3 > delta — the candidate becomes host and is
+sampled without ever gating. At H = 3: P(C_3) ~ 0.1675 < P(R_3) = 2/5. A second
+failure mode: the candidate can be host AT ISSUE and be pulled with probability 1 at
+the first round while P(C_1) = 0. The gate-only value is a diagnostic (Corollary
+V.2), never the certificate.
+
+Obstruction catalogue (highlights; each with an exact mechanical witness).
+--------------------------------------------------------------------------
+- No fixed-mu transfer. arms [(40,10),(1,1)], candidate 1, c = 1/5, H = 31: exact
+  host-aware P(R_31) = 1.9e-14 < delta, yet under mu_host = 0 rescue fires
+  deterministically at offset 31. An honest declaration (e0 >= 4/5) gives b_31 = 1
+  and certifies nothing. safe_kill is never a ground-truth claim.
+- No horizon extension. P(C_H) grows from 2/5 (H = 3) to 236/495 (H = 10) on the
+  pinned instance; delta = 0.45 certifies H = 3 and is violated at H' = 10.
+- The drift penalty b_H cannot be dropped: the class supremum attains p_H + b_H
+  exactly at H = 1.
+- (G) is necessary for the no-touch reading: an ungated override rule can pull the
+  candidate with probability 1 while P(R_1) = 0.
+- No Ville certificate on N^a directly: N^a is neither a super- nor submartingale
+  under the actual kernel (exact one-step drifts +1/144 and -5/144); the exact DP
+  strictly dominates any supermartingale majorant at finite horizon.
+- The TV drift class D(e0, eps_d) and the latent-centered D(rho) class of
+  drift_expiry_certificates.txt must never be merged; parameters do not transfer in
+  either direction.
+
+Hypotheses (carried by every safe_kill).
+----------------------------------------
+(A) integer-shape independent Beta posteriors, stable arm set over the window,
+posterior candidate-excluded baseline; (K) the verdict engine and the deployed
+selector evaluate bit-identical h, N, eps, q; (G) gated override support (needed only
+for the no-touch claims; the event claims survive without it); (D) the declared drift
+class; (NUM) exact rationals or outward-directed rounding, else refusal; (U) a
+certified oracle bound for the upper-bound branch.
+
+Not claimed.
+------------
+No fixed-mu or ground-truth correctness; nothing beyond the window or expiry; no
+fleet or multiple-decision claim (see fleet_flr_ebh_selection_closure.txt); no
+calendar-time guarantee; no optimality or regret repair for unmodified greedy-host
+DE; refusal is neither a safety claim nor a danger claim.
+
+Verification status.
+--------------------
+52/52 exact-rational checks (stdlib fractions): stopped DP vs exhaustive path
+enumeration, pathwise freeze over all paths, window monotonicity, adversarial drift
+DP against p_H + b_H, both separation witnesses, the fixed-mu and horizon-extension
+obstructions, the exact doctrine drifts, and a float-vs-exact parity report. Velvet
+port battery: tests/test_verdict_finite_horizon.py (12 tests) plus golden-numeric
+pins in tests/test_verdict_upstream_parity.py.
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d; Theorem V proved and mechanically verified
+in the Max-DE math packs (pack 01, work/RESULT.md, 2026-07-08), with the host-aware
+stopping set landed in maxde-response research helpers at the same commit and the
+verdict surface ported from maxde-replay @ fc2f082; implementation:
+src/velvet/verdict/finite_horizon.py; tests: tests/test_verdict_finite_horizon.py.

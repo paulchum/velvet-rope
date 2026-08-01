@@ -1,0 +1,68 @@
+{
+  "description": "Frozen sealed decision fixtures that must replay to the same stable contract fields on current builds.",
+  "fixtures": [
+    {
+      "chain": "mcp_demo",
+      "expected": {
+        "decision": "block",
+        "seal_id": "seal_4a3bee177f856698",
+        "selected_action": "CALL_TOOL"
+      },
+      "id": "launch-demo-execute",
+      "policy_dir": "examples/mcp/policies",
+      "replay": "thread",
+      "replay_seal_id": "seal_e92e25ab30d9273e",
+      "source": "reports/launch/mcp_thread.jsonl#seal_0067193cde356bef",
+      "thread": "launch_demo_execute.thread.jsonl"
+    },
+    {
+      "chain": "mcp_demo",
+      "expected": {
+        "decision": "block",
+        "seal_id": "seal_velvet_mcp.block_3bc19f88183e1042",
+        "selected_action": "CALL_TOOL"
+      },
+      "id": "launch-demo-block",
+      "mcp_list": "launch_demo_mcp_list.json",
+      "policy_dir": "examples/mcp/policies",
+      "replay": "mcp_authorize",
+      "request": "launch_demo_block.request.json",
+      "source": "reports/launch/velvet_ledger.vledger#seal_velvet_mcp.block_3bc19f88183e1042"
+    },
+    {
+      "chain": "mcp_demo",
+      "expected": {
+        "decision": "escalate",
+        "seal_id": "seal_03002a22b0cad38b",
+        "selected_action": "CALL_TOOL"
+      },
+      "id": "launch-demo-escalate",
+      "policy_dir": "examples/mcp/policies",
+      "replay": "thread",
+      "replay_seal_id": "seal_9f8f50aafbb0f795",
+      "source": "reports/launch/mcp_thread.jsonl#seal_d99b0e6ebc05d8ff",
+      "thread": "launch_demo_escalate.thread.jsonl"
+    },
+    {
+      "certificate_outcome": "lockout",
+      "chain": "default",
+      "expected": {
+        "decision": "block",
+        "seal_id": "seal_f40c1775c7f015a5",
+        "selected_action": "RETRIEVE_CONTEXT"
+      },
+      "id": "max-de-certified-lockout",
+      "policy_dir": "policies",
+      "replay": "thread",
+      "replay_seal_id": "seal_a133d10dbd44fddb",
+      "source": "reports/investor_demos/max-de-cost-lockout/thread.jsonl#seal_cfe2b3a746f215ec",
+      "thread": "max_de_certified_lockout.thread.jsonl"
+    }
+  ],
+  "schema_version": "velvet.golden_seals.v1",
+  "stable_contract_fields": [
+    "decision",
+    "selected_action",
+    "seal_id"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "artifact": "velvet_replay_measurement",
+  "case_id": "false_lockout_beta_1_2",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "passed": true,
+  "replay_report": {
+    "chain": "default",
+    "decision": "escalate",
+    "expected_seal_id": "seal_bcb8b87d453f47ff",
+    "expected_selected_action": "ANSWER_DIRECTLY",
+    "policy_dir": "policies",
+    "reason": "Escalation gate deferred candidate action.",
+    "seal_id": "seal_bcb8b87d453f47ff",
+    "sealed_seal_id": "seal_bcb8b87d453f47ff",
+    "sealed_selected_action": "ANSWER_DIRECTLY",
+    "status": "pass",
+    "thread_id": "thread_liability_false_lockout_beta_1_2",
+    "thread_path": "benchmarks/agent_authorization/liability_harness/liability_thread.jsonl"
+  },
+  "seal_id": "seal_bcb8b87d453f47ff"
+}

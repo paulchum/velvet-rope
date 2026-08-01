@@ -1,0 +1,79 @@
+[
+  {
+    "id": "write_etc",
+    "command": ["sh", "-lc", "echo blocked >/etc/velvet_probe"],
+    "expected_violation": "filesystem_denied",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "write_proc_sys",
+    "command": ["sh", "-lc", "echo 1 >/proc/sys/kernel/randomize_va_space"],
+    "expected_violation": "filesystem_denied",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "docker_socket",
+    "command": ["sh", "-lc", "test -S /var/run/docker.sock && echo socket"],
+    "expected_violation": "filesystem_denied",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "fork_bomb",
+    "command": ["sh", "-lc", ":(){ :|:& };:"],
+    "expected_violation": "process_count",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "memory_exhaustion",
+    "command": ["python3", "-c", "x=[]\nwhile True: x.append('x'*1048576)"],
+    "expected_violation": "memory",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "cpu_exhaustion",
+    "command": ["python3", "-c", "while True: pass"],
+    "expected_violation": "cpu",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "filesystem_exfiltration",
+    "command": ["sh", "-lc", "cat /etc/passwd"],
+    "expected_violation": "filesystem_denied",
+    "applies_to": ["container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "dns_exfiltration",
+    "command": ["sh", "-lc", "nslookup example.com"],
+    "expected_violation": "network_denied",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "tcp_exfiltration",
+    "command": ["sh", "-lc", "nc -z example.com 443"],
+    "expected_violation": "network_denied",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "wall_clock",
+    "command": ["python3", "-c", "import time; time.sleep(60)"],
+    "expected_violation": "wall_clock_exceeded",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  },
+  {
+    "id": "stdout_flood",
+    "command": ["python3", "-c", "print('x'*1000000)"],
+    "expected_violation": "stdout_exceeded",
+    "applies_to": ["lightweight", "container"],
+    "bounded_ms": 2000
+  }
+]

@@ -1,0 +1,22 @@
+[Unit]
+Description=Velvet MCP Proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=velvet
+Group=velvet
+EnvironmentFile=/etc/velvet/mcp-proxy.env
+ExecStart=/usr/local/bin/velvet-rope-proxy --config /etc/velvet/mcp-proxy.yaml
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/velvet
+
+[Install]
+WantedBy=multi-user.target
+

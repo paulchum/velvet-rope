@@ -1,0 +1,34 @@
+name: Results correction
+description: Report a specific benchmark row or evidence-field correction.
+title: "results: "
+labels:
+  - correction
+body:
+  - type: input
+    id: row
+    attributes:
+      label: Row
+      description: System row or result file that needs correction.
+    validations:
+      required: true
+  - type: input
+    id: field
+    attributes:
+      label: Field
+      description: Capability cell, metadata field, or evidence pointer.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Claimed error
+      description: Describe the exact value that appears wrong and the proposed corrected value.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link committed evidence, command output, package metadata, or source material that supports the correction.
+    validations:
+      required: true

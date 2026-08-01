@@ -1,0 +1,107 @@
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: pii_guard
+  version: 1
+spec:
+  type: pii_guard
+  config:
+    default_mode: redact
+    per_action_mode: {}
+    list_context_keys:
+      - own_email
+      - account_email
+    enabled_detectors:
+      - email
+      - ssn
+      - phone
+      - credit_card
+      - iban
+      - postal_code
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: prompt_injection_detector
+  version: 1
+spec:
+  type: prompt_injection_detector
+  config:
+    default_action: block
+    source_rules:
+      default:
+        - id: ignore_previous_instructions
+          pattern: '(?i)\b(ignore|disregard|forget)\b.{0,40}\b(previous|prior|system|developer)\b.{0,30}\b(instruction|message|prompt)s?\b'
+          severity: error
+    embedding_threshold: 0.86
+    distance_metric: cosine
+    pid_classifier_path: null
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: cost_ceiling
+  version: 1
+spec:
+  type: cost_ceiling
+  config:
+    per_task_usd_limit: null
+    per_user_daily_usd_limit: null
+    per_org_monthly_usd_limit: null
+    soft_ceiling_fraction: 0.8
+    cost_model: {}
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: rate_limiter
+  version: 1
+spec:
+  type: rate_limiter
+  config:
+    aggregate:
+      window_ms: 60000
+      max_requests: 1000000000
+      sustained_per_second: 1000000.0
+      burst_multiplier: 1.5
+    per_action: {}
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: escalation_gate
+  version: 1
+spec:
+  type: escalation_gate
+  config:
+    cost_threshold_usd: 25.0
+    confidence_threshold: 0.2
+    novelty_threshold: 0.98
+    repeated_failure_threshold: 3
+    sensitive_actions:
+      - EXECUTE_CODE
+    targets:
+      concierge_review:
+        target_type: velvet_concierge_queue
+        target: local://velvet-concierge
+        mode: sync
+        fallback: deny
+      model_escalation:
+        target_type: escalation_model
+        target: local://model-escalation
+        mode: sync
+        fallback: deny
+    default_fallback: deny
+---
+apiVersion: velvet.io/v1alpha1
+kind: PolicyChain
+metadata:
+  name: mcp_demo
+  version: 1
+spec:
+  policies:
+    - pii_guard
+    - prompt_injection_detector
+    - cost_ceiling
+    - rate_limiter
+    - escalation_gate

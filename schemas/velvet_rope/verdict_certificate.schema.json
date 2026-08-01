@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/verdict_certificate.schema.json",
+  "title": "Velvet Verdict Certificate",
+  "description": "A signed certified decision for one irreversible action on an agent, tool route, variant, or expert. The verdict is delta-bounded under the stated hypotheses in exactly one claim currency, carries priced alternatives, and expires; an expired certificate licenses nothing and forces required_inspection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonicalization",
+    "certificate_id",
+    "issuer",
+    "tenant_id",
+    "environment",
+    "subject",
+    "verdict",
+    "claim_currency",
+    "parameters",
+    "hypotheses",
+    "prices",
+    "validity",
+    "fleet",
+    "evidence",
+    "certificate_hash",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": { "const": "velvet.verdict_certificate.v1" },
+    "canonicalization": {
+      "const": "velvet.canonical_json.v1.sha256.unsigned_payload"
+    },
+    "certificate_id": {
+      "type": "string",
+      "pattern": "^vverdict_[0-9a-f]{32,64}$"
+    },
+    "issuer": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "environment": { "type": "string", "minLength": 1 },
+    "subject": { "$ref": "#/$defs/subject" },
+    "verdict": { "enum": ["safe_kill", "required_inspection", "refusal"] },
+    "reason_code": { "type": "string" },
+    "refusal_reason": { "type": ["string", "null"] },
+    "claim_currency": {
+      "description": "Exactly one claim currency; currencies are never blended. BP = Bayesian-predictive under the modeled kernel; BP_TV = BP robustified over a declared bounded-drift class; FM = fixed-mean frequentist.",
+      "enum": ["BP", "BP_TV", "FM"]
+    },
+    "parameters": { "$ref": "#/$defs/parameters" },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "prices": { "$ref": "#/$defs/prices" },
+    "validity": { "$ref": "#/$defs/validity" },
+    "fleet": {
+      "oneOf": [{ "$ref": "#/$defs/fleet" }, { "type": "null" }]
+    },
+    "evidence": { "$ref": "#/$defs/evidence" },
+    "certificate_hash": { "$ref": "#/$defs/hash" },
+    "signature": {
+      "allOf": [
+        { "$ref": "#/$defs/signature" },
+        {
+          "type": "object",
+          "properties": {
+            "purpose": { "const": "velvet.verdict_certificate.v1" }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3,9})?Z$"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "decision_class", "target_id_hash"],
+      "properties": {
+        "decision_id": { "type": "string", "minLength": 1 },
+        "decision_class": {
+          "enum": [
+            "retire_tool_route",
+            "retire_agent",
+            "retire_variant",
+            "retire_expert",
+            "permanent_lockout"
+          ]
+        },
+        "target_id_hash": { "$ref": "#/$defs/hash" },
+        "posterior_state_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["delta", "gate_c", "rho", "method", "baseline_mode"],
+      "properties": {
+        "delta": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "delta_tail": {
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "gate_c": { "type": "number", "minimum": 0 },
+        "rho": { "type": "number", "minimum": 0 },
+        "horizon_H": { "type": ["integer", "null"], "minimum": 0 },
+        "exploration_mass": { "type": ["number", "null"], "minimum": 0 },
+        "method": {
+          "enum": [
+            "exact_dp",
+            "certified_upper_bound",
+            "anchor_tail_stationary",
+            "drift_windowed"
+          ]
+        },
+        "baseline_mode": { "const": "posterior_candidate_excluded" }
+      }
+    },
+    "prices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inspection", "tail"],
+      "properties": {
+        "inspection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["expected_rounds_to_gate_crossing"],
+          "dependentRequired": { "dollars": ["dollars_source"] },
+          "properties": {
+            "expected_rounds_to_gate_crossing": { "type": "number", "minimum": 0 },
+            "dollars": { "type": ["number", "null"], "minimum": 0 },
+            "dollars_source": { "type": ["string", "null"] }
+          }
+        },
+        "tail": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "probability_bound",
+            "crossing_probability",
+            "drift_penalty",
+            "posterior_expected_shortfall"
+          ],
+          "dependentRequired": { "dollars": ["dollars_source"] },
+          "properties": {
+            "probability_bound": { "type": "number", "minimum": 0 },
+            "crossing_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "drift_penalty": { "type": "number", "minimum": 0 },
+            "posterior_expected_shortfall": { "type": "number", "minimum": 0 },
+            "dollars": { "type": ["number", "null"], "minimum": 0 },
+            "dollars_source": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "validity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issued_at",
+        "not_before",
+        "expires_at",
+        "horizon_rounds",
+        "rounds_remaining",
+        "recertification"
+      ],
+      "properties": {
+        "issued_at": { "$ref": "#/$defs/timestamp" },
+        "not_before": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "horizon_rounds": { "type": "number", "minimum": 0 },
+        "rounds_remaining": { "type": "number", "minimum": 0 },
+        "t_hat": { "type": ["number", "null"], "minimum": 0 },
+        "rounds_per_day": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "recertification": { "const": "required_inspection_on_expiry" }
+      }
+    },
+    "fleet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "window_id",
+        "e_process_id",
+        "log_e_value",
+        "k_max",
+        "delta_fleet",
+        "budget_snapshot_hash"
+      ],
+      "properties": {
+        "window_id": { "type": "string", "minLength": 1 },
+        "e_process_id": { "type": "string", "minLength": 1 },
+        "log_e_value": { "type": "number" },
+        "k_max": { "type": "integer", "minimum": 1 },
+        "delta_fleet": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "budget_snapshot_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs_hash", "theorem_refs"],
+      "properties": {
+        "inputs_hash": { "$ref": "#/$defs/hash" },
+        "max_de_certificate_hash": {
+          "oneOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }]
+        },
+        "prior_certificate_hash": {
+          "oneOf": [{ "$ref": "#/$defs/hash" }, { "type": "null" }]
+        },
+        "theorem_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "provider_name",
+        "algorithm",
+        "key_id",
+        "key_version",
+        "purpose",
+        "tenant_id",
+        "payload_hash",
+        "signature",
+        "signed_at",
+        "metadata"
+      ],
+      "properties": {
+        "schema_version": { "enum": ["velvet.signature.v1", "velvet.signature.v2"] },
+        "provider_name": { "type": "string", "minLength": 1 },
+        "algorithm": { "type": "string", "minLength": 1 },
+        "key_id": { "type": "string", "minLength": 1 },
+        "key_version": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "payload_hash": { "$ref": "#/$defs/hash" },
+        "signature": { "type": "string", "minLength": 1 },
+        "signed_at": { "$ref": "#/$defs/timestamp" },
+        "public_verification_material": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

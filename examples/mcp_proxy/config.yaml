@@ -1,0 +1,166 @@
+transport: fake
+mode: strict
+oap:
+  enabled: true
+  policy_id: velvet.mcp.call.v1
+  require_max_de_certificate: true
+  require_max_de_for_all_tool_calls: true
+  allow_missing_max_de_in_development: false
+  transport_context:
+    kind: mcp
+    openai_secure_mcp_tunnel:
+      enabled: false
+upstream:
+  server: servicenow
+  command: null
+  args: []
+  endpoint: null
+policy:
+  dir: examples/mcp_proxy/policies
+  chain: mcp_demo
+  bundle_manifest: examples/mcp_proxy/policy-bundle.yaml
+  require_signature: false
+tools:
+  - server: servicenow
+    name: search_change_requests
+    approved_schema_hash: sha256:48442d7230ed0475b36dd565b58250279e571b9415eaf79f6820c9d51364479f
+    risk_class: low
+    approval_tier: auto_approve
+    destructive: false
+    destructive_approval: null
+    expected_improvement: 0.9
+    novelty: 0.62
+    confidence: 0.78
+    usd_estimate: null
+    max_de:
+      v: "0.900000"
+      lambda: "0.200000"
+      L: "1.000000"
+      alpha: "9.000000"
+      beta: "1.000000"
+      L_cert: "0.900000"
+      U_cert: "0.950000"
+      decision: inspect
+      theorem_ref: docs/math/certified_max_de_theorem.txt
+      maxde_version: maxde/1.0
+    metadata: {}
+  - server: servicenow
+    name: create_change_request
+    approved_schema_hash: sha256:ac415086810efb418dba1f53d3a02dfb25990f2e3fb7c50e1032543364750b40
+    risk_class: high
+    approval_tier: concierge_review
+    destructive: false
+    destructive_approval: null
+    expected_improvement: 0.84
+    novelty: 0.62
+    confidence: 0.78
+    usd_estimate: 75.0
+    max_de:
+      v: "0.150000"
+      lambda: "0.200000"
+      L: "1.000000"
+      alpha: "3.000000"
+      beta: "7.000000"
+      L_cert: "0.100000"
+      U_cert: "0.300000"
+      decision: refinement
+      theorem_ref: docs/math/certified_max_de_theorem.txt
+      maxde_version: maxde/1.0
+    metadata: {}
+  - server: servicenow
+    name: delete_change_request
+    approved_schema_hash: sha256:e4416e581ae2538317ea21f38f615aa0899b81d5f40fc8994aad3ceb1677c0ca
+    risk_class: high
+    approval_tier: blocked
+    destructive: true
+    destructive_approval: null
+    expected_improvement: 0.3
+    novelty: 0.62
+    confidence: 0.78
+    usd_estimate: 100.0
+    max_de:
+      v: "0.050000"
+      lambda: "0.200000"
+      L: "1.000000"
+      alpha: "1.000000"
+      beta: "9.000000"
+      L_cert: "0.050000"
+      U_cert: "0.100000"
+      decision: lockout
+      theorem_ref: docs/math/certified_max_de_theorem.txt
+      maxde_version: maxde/1.0
+    metadata: {}
+method_dispositions:
+  resources: block
+  prompts: block
+  tasks: block
+  notifications: block
+  unknown: block
+  methods: {}
+ledger_path: reports/mcp_proxy/velvet_ledger.vledger
+thread_path: reports/mcp_proxy/mcp_thread.jsonl
+inventory_path: reports/mcp_proxy/inventory.json
+schema_drift_action: deny
+http:
+  bind: 127.0.0.1:8791
+  endpoint_path: /mcp
+  allowed_origins: []
+  supported_protocol_versions:
+    - 2025-11-25
+    - 2025-06-18
+    - 2025-03-26
+  sse_enabled: true
+  sse_replay_buffer_events: 256
+  sse_replay_ttl_seconds: 300
+  sse_keepalive_seconds: 15
+demo_requests:
+  - id: 1
+    jsonrpc: "2.0"
+    method: initialize
+    params:
+      capabilities: {}
+      clientInfo:
+        name: velvet-demo
+        version: 1.0.0
+      protocolVersion: 2025-11-25
+  - id: 2
+    jsonrpc: "2.0"
+    method: tools/list
+    params: {}
+  - id: 3
+    jsonrpc: "2.0"
+    method: tools/call
+    params:
+      _meta:
+        user_request: Find open production payment-service changes.
+      arguments:
+        query: service=payments state=open
+      name: search_change_requests
+  - id: 4
+    jsonrpc: "2.0"
+    method: tools/call
+    params:
+      _meta:
+        user_request: Open a production change request.
+      arguments:
+        service: payments
+        summary: Approve routing fix
+      name: create_change_request
+  - id: 5
+    jsonrpc: "2.0"
+    method: tools/call
+    params:
+      _meta:
+        user_request: Remove the stale production change request.
+      arguments:
+        change_id: CHG0042007
+      name: delete_change_request
+  - id: 6
+    jsonrpc: "2.0"
+    method: tools/call
+    params:
+      _meta:
+        user_request: Drop the production database.
+      arguments:
+        database: prod
+      name: drop_database

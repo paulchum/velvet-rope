@@ -1,0 +1,26 @@
+name: fuzz
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 8 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Install nightly fuzz toolchain
+        run: rustup toolchain install nightly-2025-11-21 --profile minimal
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked --version 0.13.1
+      - name: Run decode ledger fuzz target
+        working-directory: crates/velvet-rope-proxy
+        run: cargo +nightly-2025-11-21 fuzz run decode_ledger -- -max_total_time=120 -max_len=4096
+      - name: Run verify ledger fuzz target
+        working-directory: crates/velvet-rope-proxy
+        run: cargo +nightly-2025-11-21 fuzz run verify_ledger -- -max_total_time=120 -max_len=4096

@@ -1,0 +1,336 @@
+Moving-Baseline Hard Shutoff for Max-DE Certificates
+======================================================
+
+Theorem
+-------
+
+Consider a finite Bernoulli bandit with independent Beta priors. For each arm a,
+
+    theta_a ~ Beta(alpha_{a,0}, beta_{a,0}),
+
+with alpha_{a,0}, beta_{a,0} > 0. Let F_t denote the observed bandit filtration, and let
+
+    theta_a | F_t ~ Beta(alpha_a(t), beta_a(t)),
+
+where
+
+    alpha_a(t) = alpha_{a,0} + S_a(t),
+    beta_a(t)  = beta_{a,0} + F_a(t),
+    n_a(t)     = S_a(t) + F_a(t).
+
+Let the moving DE baseline be
+
+    v_t = max_b \bar theta_b(t),
+
+where
+
+    \bar theta_b(t)
+    =
+    alpha_b(t) / (alpha_b(t) + beta_b(t))
+
+is the posterior mean of arm b.
+
+For a fixed arm a, define
+
+    m_{v_t}(alpha_a(t), beta_a(t))
+    =
+    E_t[(theta_a - v_t)^+],
+
+and
+
+    s_{v_t}(alpha_a(t), beta_a(t))
+    =
+    E_t[((theta_a - v_t)^+)^2].
+
+Assume that, on an event E, the following two conditions hold:
+
+1. Infinite resolution of arm a:
+
+       n_a(t) -> infinity.
+
+2. Moving-baseline separation: there exist delta > 0 and a finite random time T_delta such that, for all t >= T_delta,
+
+       v_t >= mu_a + delta.
+
+Then, on E,
+
+    m_{v_t}(alpha_a(t), beta_a(t)) -> 0,
+
+and
+
+    s_{v_t}(alpha_a(t), beta_a(t)) -> 0.
+
+Consequently,
+
+    U_log,v_t(alpha_a(t), beta_a(t)) -> 0,
+
+    U_2,v_t(alpha_a(t), beta_a(t)) -> 0,
+
+and for any production upper certificate satisfying
+
+    0 <= U_prod,v_t <= min{U_log,v_t, U_2,v_t},
+
+we have
+
+    U_prod,v_t(alpha_a(t), beta_a(t)) -> 0.
+
+Therefore, for every fixed lambda > 0 and finite L > 0,
+
+    L U_prod,v_t(alpha_a(t), beta_a(t)) < lambda
+
+eventually on E.
+
+Thus Max-DE admits a hard shutoff certificate for any resolved arm whose posterior concentrates below a separated moving baseline.
+
+
+Proof
+-----
+
+Because n_a(t) -> infinity, the reward sequence observed from arm a is an infinite i.i.d. Bernoulli(mu_a) subsequence indexed by the pull count of arm a. Hence, by the strong law of large numbers,
+
+    S_a(t) / n_a(t) -> mu_a
+
+almost surely on E.
+
+The posterior mean of theta_a is
+
+    \bar theta_a(t)
+    =
+    (alpha_{a,0} + S_a(t))
+    /
+    (alpha_{a,0} + beta_{a,0} + n_a(t)).
+
+Therefore,
+
+    \bar theta_a(t) -> mu_a.
+
+The posterior variance is
+
+    Var_t(theta_a)
+    =
+    \bar theta_a(t)(1 - \bar theta_a(t))
+    /
+    (alpha_a(t) + beta_a(t) + 1).
+
+Since alpha_a(t) + beta_a(t) -> infinity, we have
+
+    Var_t(theta_a) -> 0.
+
+Therefore,
+
+    E_t[(theta_a - mu_a)^2]
+    =
+    Var_t(theta_a) + (\bar theta_a(t) - mu_a)^2
+    -> 0.
+
+In particular, the posterior distribution of theta_a concentrates at mu_a.
+
+Now use the baseline separation assumption. For all sufficiently large t,
+
+    v_t >= mu_a + delta.
+
+Hence,
+
+    (theta_a - v_t)^+ > 0
+    implies
+    theta_a > v_t >= mu_a + delta.
+
+Because 0 <= (theta_a - v_t)^+ <= 1, we have
+
+    (theta_a - v_t)^+
+    <=
+    1{theta_a >= mu_a + delta}.
+
+Similarly,
+
+    ((theta_a - v_t)^+)^2
+    <=
+    1{theta_a >= mu_a + delta}.
+
+Taking posterior expectations gives
+
+    m_{v_t}
+    <=
+    P_t(theta_a >= mu_a + delta),
+
+and
+
+    s_{v_t}
+    <=
+    P_t(theta_a >= mu_a + delta).
+
+By posterior concentration,
+
+    P_t(theta_a >= mu_a + delta) -> 0.
+
+Therefore,
+
+    m_{v_t} -> 0,
+
+and
+
+    s_{v_t} -> 0.
+
+This proves the collapse of the first and second positive-part moments.
+
+Now define the logarithmic maximal envelope by
+
+    U_log,v
+    =
+    min{
+        1 - v,
+        m_v [1 + log((1 - v) / m_v)]
+    },
+
+with the convention that the second term is 0 when m_v = 0.
+
+Since 0 <= m_v <= 1 - v <= 1, whenever m_v > 0,
+
+    m_v [1 + log((1 - v) / m_v)]
+    <=
+    m_v [1 + log(1 / m_v)].
+
+As x downarrow 0,
+
+    x [1 + log(1 / x)] -> 0.
+
+Since m_{v_t} -> 0, it follows that
+
+    U_log,v_t -> 0.
+
+Next define the L^2 maximal envelope by
+
+    U_2,v
+    =
+    min{
+        1 - v,
+        m_v + 2 sqrt(s_v - m_v^2)
+    }.
+
+Since
+
+    m_{v_t} -> 0
+
+and
+
+    s_{v_t} -> 0,
+
+and since
+
+    0 <= s_{v_t} - m_{v_t}^2 <= s_{v_t},
+
+we obtain
+
+    m_{v_t} + 2 sqrt(s_{v_t} - m_{v_t}^2) -> 0.
+
+Therefore,
+
+    U_2,v_t -> 0.
+
+Finally, if
+
+    0 <= U_prod,v_t <= min{U_log,v_t, U_2,v_t},
+
+then
+
+    U_prod,v_t -> 0.
+
+Thus for every fixed lambda > 0 and finite L > 0, there exists a finite random time T_lambda such that, for all t >= T_lambda,
+
+    L U_prod,v_t(alpha_a(t), beta_a(t)) < lambda.
+
+This proves the moving-baseline hard shutoff theorem.
+
+
+Corollary: Eventual Optimal Host Implies Baseline Separation
+------------------------------------------------------------
+
+Suppose the optimal arm is unique, with
+
+    mu_* > mu_a,
+
+and suppose
+
+    v_t -> mu_*.
+
+Let
+
+    Delta_a = mu_* - mu_a > 0.
+
+Choose any delta satisfying
+
+    0 < delta < Delta_a.
+
+Then eventually,
+
+    v_t >= mu_a + delta.
+
+Therefore, if n_a(t) -> infinity, the conclusions of the theorem hold:
+
+    m_{v_t} -> 0,
+    s_{v_t} -> 0,
+    U_log,v_t -> 0,
+    U_2,v_t -> 0,
+    U_prod,v_t -> 0,
+
+and hence
+
+    L U_prod,v_t < lambda
+
+eventually for every fixed lambda > 0.
+
+
+High-Probability Variant
+------------------------
+
+At any finite time t, suppose
+
+    v_t >= mu_a + delta
+
+and
+
+    E_t[(theta_a - mu_a)^2] <= r_t.
+
+Then Chebyshev's inequality gives
+
+    P_t(theta_a >= mu_a + delta)
+    <=
+    P_t(|theta_a - mu_a| >= delta)
+    <=
+    r_t / delta^2.
+
+Consequently,
+
+    m_{v_t} <= r_t / delta^2,
+
+and
+
+    s_{v_t} <= r_t / delta^2.
+
+Thus, on any high-probability event where r_t -> 0 and baseline separation holds, the Max-DE upper certificates vanish. Sharper Beta-tail or Chernoff bounds may replace Chebyshev when explicit exponential rates are desired.
+
+
+Interpretation
+--------------
+
+Max-DE prevents premature lockout, not permanent exploration.
+
+Once an arm is statistically resolved below a separated moving baseline, posterior mass above that baseline disappears. Since the Max-DE certificates are controlled by positive-part posterior moments above the baseline, their values collapse to zero. Therefore every fixed exploration price lambda / L is eventually too high for the resolved suboptimal arm to clear.
+
+This is the hard-shutoff property under moving baselines.
+
+
+Failure Modes
+-------------
+
+The theorem can fail if any of the following occurs:
+
+1. The host baseline does not stabilize or does not separate from mu_a.
+
+2. The optimal arm is not unique, so no positive gap exists.
+
+3. The gap Delta_a = mu_* - mu_a is positive but very small, making shutoff asymptotically valid but potentially slow.
+
+4. The suboptimal arm is not sampled infinitely often, so its posterior may remain diffuse.
+
+5. The greedy host stabilizes on the wrong arm, so v_t may converge to a value that does not dominate mu_a by a positive margin.

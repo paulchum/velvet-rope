@@ -1,0 +1,50 @@
+name: New SUT submission
+description: Submit a system-under-test row for benchmark review.
+title: "sut: "
+labels:
+  - submission
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System name
+      description: Name exactly as it should appear in the row.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Boundary description
+      description: State whether this is a local fixture or a live product run, and what evidence is committed.
+      placeholder: "local example-shaped fixture, not a live Example product evaluation"
+    validations:
+      required: true
+  - type: dropdown
+    id: run_type
+    attributes:
+      label: Fixture or live
+      options:
+        - Fixture
+        - Live run
+    validations:
+      required: true
+  - type: checkboxes
+    id: evidence
+    attributes:
+      label: Evidence-pointer checklist
+      options:
+        - label: Every capability cell has a repo-relative evidence pointer.
+          required: true
+        - label: No evidence pointer uses an absolute local path.
+          required: true
+        - label: Fixture rows say they are local fixtures, not live product evaluations.
+          required: true
+        - label: `aab-validate` passes for the submitted result files.
+          required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Link the result JSON, evidence JSON, adapter code, and validation output.
+    validations:
+      required: true

@@ -1,0 +1,70 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "api_version": "v2",
+          "operation": "set_customer_status"
+        },
+        "event_type": "rest_request",
+        "route_id": "alternate_api"
+      }
+    ],
+    "effect_events": [
+      {
+        "actor": "alternate_api_service",
+        "after_status": "disabled",
+        "before_status": "active",
+        "customer_id": "synthetic-alternate_api",
+        "route_id": "alternate_api"
+      }
+    ],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-alternate_api",
+  "dispatch": {
+    "api_version": "v2",
+    "kind": "http_api",
+    "response": {
+      "status": "disabled"
+    }
+  },
+  "effect_attribution": "attributed",
+  "effect_fingerprint": "sha256:08b5c393aefb624daed8de5c6526b5622106a37caab8d813a39fcddba5233351",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "customer status service",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "alternate REST API v2",
+    "intermediates": [
+      "local HTTP server",
+      "alternate API handler"
+    ],
+    "label": "Alternate API",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "alternate_api"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-alternate_api"
+}

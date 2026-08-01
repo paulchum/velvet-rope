@@ -1,0 +1,133 @@
+Drift-Expiry Certificates for Windowed Delta-Safe Lockout
+=========================================================
+
+Claim currency: [BP] — Bayesian-predictive at issue time under the stated posterior
+model and drift class, WINDOWED ONLY. The structural containment lemma is [MATH]
+(pathwise, reward-law-free). No fixed-mean frequentist claim is made anywhere in this
+note, and none may be inferred. Nothing is claimed past the expiry horizon.
+
+Setting.
+--------
+Actual host-override kernel, weak gate convention (override-eligible iff N >= c);
+candidate a with issue preconditions h(X_t) != a and N^a(X_t) < c. Rescue on the
+window [t, t+W]:
+
+    R = { exists s in [t, t+W]: N^a(X_s) >= c  or  h(X_s) = a }.
+
+Protected floor r_c(x, a) = max{ z_c(Pi_a(x)), m_a(x) }. Drift model D(rho):
+Bernoulli means with |mu_i(s+1) - mu_i(s)| <= rho; certificate law at issue: latents
+theta_b ~ Beta(alpha_b, beta_b) independent across arms, drift paths latent-aware
+predictable with mu_b(t) = theta_b. Route A (ordinary conjugate Beta counting) is the
+only certifying route.
+
+Lemma C [MATH] (structural containment; drift-independent). On any path, up to the
+first rescue the candidate is never pulled — its posterior is frozen — and every
+rescue path forces ALL other arms' posterior means to or below the issue-time
+protected floor r_c. No reward law, drift path, or latent enters the proof.
+
+Theorem T1.1 (windowed delta-safe lockout under drift; pure-tail form).
+-----------------------------------------------------------------------
+Let the window anchor set be S_W(x, a) = { b != a : m_b(x) > r_c + rho*W and
+min(alpha_b, beta_b) >= 1 } (the shape filter applies at rho > 0 only; ineligible
+anchors are dropped and DISCLOSED — drops are conservative and can only weaken the
+certificate, possibly flipping it into refusal). If
+
+    e_c^{prod,W}(x, a) = exp{ - sum_{b in S_W} I_{alpha_b, beta_b}(r_c + rho*W) }
+                       <= delta,
+
+then P(rescue in [t, t+W] | F_t) <= delta, uniformly over all latent-aware
+predictable allocations and admissible drift paths. The threshold is delta directly
+on the probability scale — no c*delta conversion (that conversion belongs to the
+value-scale Snell route; see truncation_anchor_tail_certificate.txt). At rho = 0 the
+bound reduces EXACTLY to the stationary product exponential tail, valid for all
+prior shapes with no filter.
+
+Necessary shape hypothesis (Lemma D-).
+--------------------------------------
+min(alpha_b, beta_b) >= 1 for every included anchor is NECESSARY at rho > 0, not
+caution: with a Beta(1, beta) anchor, r = 0.5, rho = 0.1, W = 2, one admissible
+drifted pull manufactures Q(SIM) >= 0.1 while the certified bound is 3.007e-3 at
+beta = 1e-8 — violation factor 33.3, diverging as beta -> 0. The spec's original
+sketch ("replace r_c by r_c + rho*W inside the rate") is false as stated without the
+hypothesis; the amendment is content, not caution.
+
+Theorem T1.2 (computable expiry horizon; recertification is mandatory).
+-----------------------------------------------------------------------
+The certified exponent collapses to a finite sum of continuous nonincreasing
+functions of W over a FIXED eligible set (rate-zero terms absorb set-membership
+changes; no discontinuity), so the expiry horizon T* = max{ W : certified tail <=
+delta_tail } is well-posed and computed by integer bisection; if even W = 0 fails,
+T* is undefined and the implementation MUST refuse (degenerate window). The
+implementation reports a conservative T-hat <= T*: all numeric error is pushed toward
+refusal (rates undershot, z_c padded upward).
+
+  (i)  W <= T-hat: the certified tail is <= delta_tail, so the windowed [BP] lockout
+       claim holds through W.
+  (ii) W > T-hat: the CERTIFIED tail exceeds delta_tail, so CertifiedSafe must be
+       refused — Expired for an outstanding certificate past its date,
+       UncertifiedNeedsRefinement for a fresh over-long request. This does NOT prove
+       the true rescue probability exceeds delta_tail; only that this certificate
+       cannot vouch. Past expiry the certified answer is refusal — in Velvet,
+       required_inspection on expiry followed by a fresh issue on the current state —
+       never a stale number, and never a danger claim.
+
+Monotonicity (corrected trio): T* is nonincreasing in rho; NONDECREASING under adding
+successes to eligible anchors and NONINCREASING under adding failures (the spec's
+"nondecreasing in anchor counts" is false as written — a single failure can collapse
+T* from defined to undefined, pinned by regression); and nondecreasing under
+proportional evidence growth at fixed mean.
+
+Convention A (predictive rescue adjudication; resolves spec O2.1).
+------------------------------------------------------------------
+For every executed retirement, the adjudication horizon is H_j := W_j, the
+certificate's accepted window, EXACTLY. Horizon extension is invalid: a tight W = 1
+certificate with u = 1/5 has P(A^2) = 1/3, giving adjudication ratio 5/3 > 1. The
+finalized e-value hat_E_j = 1{A_j^{W_j}} / u_j (0/0 := 0) is settled when the window
+closes. Stationary tails are carried as a SEPARATE predictable charge L_R — a
+late-rescue COUNT bound on its own terms, never folded into the FLR fraction. Drift
+tails past expiry are refused, not numbered. Under drift, execution is allowed only
+when W_j <= T-hat_j.
+
+Route B (discounted posteriors) is BARRED from certification: no discounted-posterior
+martingale substitute exists (open upstream); Route B remains diagnostic-only and
+must never emit CertifiedSafe.
+
+Also proved: an opt-in event-level staggered-crossing sharpening (Theorem T2) that
+always dominates the product tail and lengthens the horizon computed AT ISSUE
+(e.g. K = 10, rho = 1e-3: T-hat 11 -> 87). Both bounds are quoted on every verdict;
+the default remains product-only. This is issue-time computation, not post-issue
+horizon extension.
+
+Hypotheses (consumer checklist, per invocation). Genuine Beta issue-time posteriors
+with min(alpha_b, beta_b) >= 1 for every included anchor at rho > 0; anchor set fixed
+at issue (deletions conservative, no mid-window additions); drift balls centered on
+the latents with latent-aware predictable allocation and drift; the one-pull-per-
+round clock with ordinary counting; floor r and inflation rho*W on the posterior-mean
+scale.
+
+Not claimed. No fixed-mu correctness anywhere — if the candidate's true mean is
+actually high, nothing here detects it; the certificate controls only the policy's
+own bookkeeping rescuing it. Nothing past t + W; no calibration against pre-issue
+drift; no claim that anchor posteriors track drifted truth; no joint
+delta_win + delta_tail budget accounting (both budgets are quoted; only pure-tail is
+claimed); T-hat is not the true T*, and expiry is not a danger onset.
+
+Verification status.
+--------------------
+Upstream battery: 55 tests across the drift-expiry suites; executed falsification F1
+(revision r1, n = 400 seeds/cell): A1 91/91 certified cells PASS (19 powered; max
+CP-UCB 0.0326 vs delta = 0.05), powered companion grid 12/12 PASS with real rescue
+mass, 0 burn-in precondition failures; A2 sharpness ratios downgrade T-hat to an
+internal bound on K = 50 ramp geometries without touching validity. Velvet port
+batteries: tests/test_verdict_drift_expiry.py (26 tests),
+tests/test_verdict_drift_expiry_t2.py (15), tests/test_verdict_drift_expiry_f1.py
+(14), tests/test_verdict_rescue_adjudication.py (21).
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d (drift_expiry.md,
+predictive_rescue_adjudication.md); implementation:
+src/velvet/verdict/drift_expiry.py and src/velvet/verdict/rescue_adjudication.py;
+tests: tests/test_verdict_drift_expiry.py, tests/test_verdict_drift_expiry_t2.py,
+tests/test_verdict_drift_expiry_f1.py, tests/test_verdict_rescue_adjudication.py.

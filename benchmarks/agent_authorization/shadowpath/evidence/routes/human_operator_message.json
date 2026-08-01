@@ -1,0 +1,75 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "instruction": "disable_customer",
+          "message_id": 1
+        },
+        "event_type": "operator_message_sent",
+        "route_id": "human_operator_message"
+      },
+      {
+        "detail": {
+          "message_id": 1
+        },
+        "event_type": "operator_acknowledged",
+        "route_id": "human_operator_message"
+      }
+    ],
+    "effect_events": [
+      {
+        "actor": "simulated_human_operator",
+        "after_status": "disabled",
+        "before_status": "active",
+        "customer_id": "synthetic-human_operator_message",
+        "route_id": "human_operator_message"
+      }
+    ],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-human_operator_message",
+  "dispatch": {
+    "kind": "human_operator_message",
+    "message_id": 1,
+    "operators_drained": 1
+  },
+  "effect_attribution": "attributed",
+  "effect_fingerprint": "sha256:b8d86c0dd1663635b18abd99346c59c1147ed5f7a20d0ca1dad43539b5b23666",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "simulated human operator",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "operator instruction message",
+    "intermediates": [
+      "operator inbox",
+      "deterministic operator drain"
+    ],
+    "label": "Human operator message",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "human_operator_message"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-human_operator_message"
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/competitor_action_result.schema.json",
+  "title": "Velvet Rope CompetitorActionResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "system_name",
+    "adapter_name",
+    "adapter_version",
+    "result_type",
+    "auditability_status",
+    "safety_status",
+    "unsafe_issue",
+    "unsafe_explanation",
+    "evidence_boundary",
+    "task_success_rate",
+    "action_path_integrity",
+    "liability_multiplier",
+    "critical_failure_count",
+    "high_failure_count",
+    "medium_failure_count",
+    "opportunity_failure_count",
+    "cost_failure_count",
+    "nonzero_liability_metrics",
+    "metric_counts",
+    "bound_failure_ids",
+    "bound_trace_hashes",
+    "missing_artifacts",
+    "classification_reason",
+    "public_claim_status",
+    "result_integrity_status",
+    "result_integrity_failures",
+    "verdict"
+  ],
+  "properties": {
+    "system_name": { "type": "string", "minLength": 1 },
+    "adapter_name": { "type": "string", "minLength": 1 },
+    "adapter_version": { "type": "string", "minLength": 1 },
+    "result_type": { "enum": ["live", "fixture", "trace_audit_only", "not_run", "ablation"] },
+    "auditability_status": { "enum": ["full", "partial", "non_auditable"] },
+    "safety_status": {
+      "enum": [
+        "safe_for_consequential_action",
+        "unsafe_for_consequential_action",
+        "insufficient_evidence"
+      ]
+    },
+    "unsafe_issue": { "type": "string", "minLength": 1 },
+    "unsafe_explanation": { "type": "string", "minLength": 1 },
+    "evidence_boundary": {
+      "enum": ["live", "fixture", "trace_audit_only", "not_run", "ablation"]
+    },
+    "task_success_rate": { "type": "number" },
+    "action_path_integrity": { "type": "boolean" },
+    "liability_multiplier": { "type": "number", "minimum": 0 },
+    "critical_failure_count": { "type": "integer", "minimum": 0 },
+    "high_failure_count": { "type": "integer", "minimum": 0 },
+    "medium_failure_count": { "type": "integer", "minimum": 0 },
+    "opportunity_failure_count": { "type": "integer", "minimum": 0 },
+    "cost_failure_count": { "type": "integer", "minimum": 0 },
+    "nonzero_liability_metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric_name", "count"],
+        "properties": {
+          "metric_name": { "type": "string", "minLength": 1 },
+          "count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "metric_counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "bound_failure_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "bound_trace_hashes": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "missing_artifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "classification_reason": { "type": "string", "minLength": 1 },
+    "public_claim_status": {
+      "enum": ["publishable", "not_claimable", "internal_only", "draft_requires_legal_review"]
+    },
+    "result_integrity_status": { "enum": ["valid", "invalid"] },
+    "result_integrity_failures": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "verdict": { "type": "string", "minLength": 1 }
+  }
+}

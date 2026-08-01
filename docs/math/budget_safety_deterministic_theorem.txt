@@ -1,0 +1,78 @@
+Budget Safety Deterministic Theorem
+===================================
+
+Theorem 1 (deterministic hard-cap spend safety).
+
+All authority-bearing budget values in this theorem are nonnegative integers
+denominated in microusd. Floating USD values may be carried for display or
+pricing heuristics, but they are not budget authority.
+
+Let S_t = sum_{i <= t} C_i be realized committed spend in microusd. Fix an
+integer budget B >= 0. Before action t is executed, the runtime has a
+nonnegative integer value u_t satisfying:
+
+(H1) Hard-cap measurability and truth. u_t is F_{t-1}-measurable and is a true
+almost-sure upper bound on realized action cost in microusd: 0 <= C_t <= u_t.
+
+(H2) Single-writer atomic admission and debit. The admission check observes the
+true committed S_{t-1}, and the admission/debit step is serialized so two
+actions cannot both commit against the same ledger sequence.
+
+The deterministic admission rule is:
+
+    admit action t only if S_{t-1} + u_t <= B.
+
+Then, on every execution path and for every prefix t, S_t <= B. The action
+sequence may be adaptive; no distributional assumptions or floating epsilon
+tolerances are required.
+
+Proof.
+
+The proof is induction over admitted actions. Initially S_0 = 0 <= B. Suppose
+the invariant holds before action t. If action t is rejected, no new spend is
+committed and the invariant remains true. If action t is admitted, the rule gives
+S_{t-1} + u_t <= B. By (H1), C_t <= u_t, so
+
+    S_t = S_{t-1} + C_t <= S_{t-1} + u_t <= B.
+
+Thus the invariant holds after every step.
+
+Why H1 is mandatory.
+
+An estimate is not a cap. With B = 10,000,000 microusd and candidate
+usd_estimate = 1.00 USD, a myopic estimate gate admits because
+0 + 1,000,000 <= 10,000,000. If the true realized cost is 11,000,000 microusd
+with probability 0.02 and 1,000,000 microusd otherwise, then P(S_1 > B) = 0.02.
+The deterministic certificate is therefore not constructible from estimate-only
+inputs.
+
+Edge cases.
+
+If u_t > B and S_{t-1} >= 0, the rule admits nothing unless prior spend is
+negative, which is forbidden. No spend is added.
+
+The state S_{t-1} > B is unreachable under the rule from S_0 = 0. This is
+exactly the induction invariant.
+
+If concurrency is unserialized, the guarantee is void. Two actions can both read
+the same S_{t-1}, both pass S_{t-1} + u_t <= B, and together exceed B. Such a
+certificate is advisory only and must not authorize or block as a certified
+budget proof.
+
+If the only input is an estimate, the certificate is non-certifying. It may fall
+back to the soft legacy cost-ceiling policy, but it cannot claim deterministic
+spend safety.
+
+Runtime obligations.
+
+Every deterministic certificate must carry integer microusd authority fields and
+machine-checkable obligations:
+
+    record_realized_cost_after_execution
+    action_hash_match_required
+    atomic_commit_required
+    ledger_sequence_match_required
+
+The gateway or executor must discharge these obligations and commit only through
+a single-writer atomic ledger method that requires the full certification
+predicate before treating the certificate as budget authority.

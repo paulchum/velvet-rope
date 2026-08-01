@@ -1,0 +1,70 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "surface": "admin"
+        },
+        "event_type": "browser_form_submitted",
+        "route_id": "admin_console"
+      }
+    ],
+    "effect_events": [
+      {
+        "actor": "admin_browser_session",
+        "after_status": "disabled",
+        "before_status": "active",
+        "customer_id": "synthetic-admin_console",
+        "route_id": "admin_console"
+      }
+    ],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-admin_console",
+  "dispatch": {
+    "driver": "playwright",
+    "engine": "chromium",
+    "kind": "browser",
+    "page_result": "disabled",
+    "selector": "#admin-disable",
+    "surface": "admin"
+  },
+  "effect_attribution": "attributed",
+  "effect_fingerprint": "sha256:0ccb91a83175a4b60dd87968c1e1237bc14e222bf96fa7f268fbba58cc71fa4c",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "customer status service",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "Playwright-driven privileged admin console",
+    "intermediates": [
+      "admin browser session",
+      "admin form handler"
+    ],
+    "label": "Admin console access",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "admin_console"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-admin_console"
+}

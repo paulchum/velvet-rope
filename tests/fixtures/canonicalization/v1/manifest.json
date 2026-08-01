@@ -1,0 +1,61 @@
+{
+  "canonicalization": "velvet.canonical_json.v1.sha256",
+  "vectors": [
+    {
+      "expected_canonical": "{\"approval_required\":false,\"decision\":\"execute\",\"environment\":\"prod\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"2026-05-27T19:00:00Z\",\"issuer\":\"velvet\",\"obligations\":[\"forward_upstream\"],\"policy_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"reason\":\"Clearance score cleared the entry price.\",\"reason_codes\":[\"cost_ceiling.allow\",\"pii_guard.allow\"],\"request_hash\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"tenant_id\":\"tenant-a\",\"tool_name\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"warrant_id\":\"wrnt_vector_001\"}",
+      "file": "warrant_payload.json",
+      "name": "warrant_payload",
+      "sha256": "sha256:12055a5a68b434b77ba256659ad5903ba7b33c47acb93ac2d0574884c23ac3ee",
+      "type": "warrant"
+    },
+    {
+      "expected_canonical": "{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"canonicalization\":\"velvet.canonical_json.v1.sha256\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"execute\",\"environment\":\"prod\",\"label\":\"mcp_authorization\",\"policy_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"previous_record_hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"product_surface\":\"velvet_inline_gateway.mcp\",\"reason\":\"Allowed by policy chain.\",\"record_id\":\"lr_vector_001\",\"recorded_at\":\"2026-05-27T19:01:00Z\",\"redaction_summary\":{\"redacted_fields\":[\"body\"],\"redaction_count\":1},\"request_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"seal_id\":\"seal_001\",\"selected_warrant\":{\"approval_required\":false,\"decision\":\"execute\",\"reason_codes\":[\"cost_ceiling.allow\"],\"warrant_id\":\"wrnt_vector_001\"},\"sequence_number\":7,\"tenant_id\":\"tenant-a\",\"thread_id\":\"thread_001\",\"tool_key\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"upstream_execution_status\":\"forwarded\",\"warrant_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "file": "ledger_record.json",
+      "name": "ledger_record",
+      "sha256": "sha256:946eeb8b2d2445ae903509297583ed927be56e71b47274097bd94e7a0ee8b96f",
+      "type": "ledger"
+    },
+    {
+      "expected_canonical": "{\"bundle_id\":\"policy_bundle_default\",\"canonicalization\":\"velvet.canonical_json.v1.sha256\",\"generated_at\":\"2026-05-27T19:02:00Z\",\"policies\":[{\"config\":{\"hard_ceiling_usd\":\"250.00\",\"max_calls\":40,\"soft_ceiling_fraction\":\"0.8000\"},\"name\":\"cost_ceiling\",\"version\":\"v1\"},{\"config\":{\"enabled\":true,\"mode\":\"detect_and_redact\"},\"name\":\"pii_guard\",\"version\":\"v1\"}],\"schema_version\":\"velvet.policy_bundle.v1\"}",
+      "file": "policy_bundle.json",
+      "name": "policy_bundle",
+      "sha256": "sha256:70ef1bc4735f5a95b8f34aaf88752f245db17c8f07a3f9331630b0f968fa47c9",
+      "type": "policy"
+    },
+    {
+      "expected_canonical": "{\"canonicalization\":\"velvet.canonical_json.v1.sha256\",\"generated_at\":\"2026-05-27T19:03:00Z\",\"input_schema\":{\"properties\":{\"query\":{\"maxLength\":200,\"type\":\"string\"},\"\ud83d\ude00\":{\"description\":\"Emoji key\",\"type\":\"string\"},\"\ufb33\":{\"description\":\"Hebrew compatibility key\",\"type\":\"string\"}},\"required\":[\"query\"],\"type\":\"object\"},\"owner\":\"platform\",\"schema_version\":\"velvet.tool_schema.v1\",\"tool_id\":\"mcp:servicenow/search_change_requests\"}",
+      "file": "tool_schema.json",
+      "name": "tool_schema",
+      "sha256": "sha256:e28e0e2b59593de044ec73dc8f98853de56425961b9f6eed6a0a08cab17001c3",
+      "type": "tool_schema"
+    },
+    {
+      "expected_canonical": "{\"approver\":\"change-manager@example.com\",\"bound_seal_id\":\"seal_001\",\"canonicalization\":\"velvet.canonical_json.v1.sha256\",\"conditions\":[\"execute before 20:00Z\"],\"decided_at\":\"2026-05-27T19:04:00Z\",\"metadata\":{\"ticket\":\"CHG-123\"},\"reason\":\"Approved for the release window.\",\"receipt_id\":\"receipt_vector_001\",\"request_id\":\"appr_vector_001\",\"status\":\"approved\",\"warrant_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
+      "file": "approval_receipt.json",
+      "name": "approval_receipt",
+      "sha256": "sha256:e8770b8dbdc9e2a6d76d797ff67e3f2a56de71b4f573cdadc23742af5a08231e",
+      "type": "approval"
+    },
+    {
+      "expected_canonical": "{\"artifacts\":[{\"artifact_type\":\"ledger_segment_binary\",\"created_at\":\"2026-05-27T19:05:01Z\",\"metadata\":{\"seal_id\":\"seal_001\"},\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"size_bytes\":128,\"store\":\"local_filesystem\",\"tenant_id\":\"tenant-a\",\"uri\":\"local://tenant-a/ledger_segment_binary/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},{\"artifact_type\":\"replay_report\",\"created_at\":\"2026-05-27T19:05:02Z\",\"metadata\":{},\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"size_bytes\":256,\"store\":\"local_filesystem\",\"tenant_id\":\"tenant-a\",\"uri\":\"local://tenant-a/replay_report/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}],\"generated_at\":\"2026-05-27T19:05:00Z\",\"schema_version\":\"velvet.evidence_manifest.v1\",\"tenant_id\":\"tenant-a\"}",
+      "file": "evidence_manifest.json",
+      "name": "evidence_manifest",
+      "sha256": "sha256:6512eda2f94b740cfc5354c4b38adacb3d6368a17858c61bc2bdd69e4e8f37b5",
+      "type": "evidence_manifest"
+    },
+    {
+      "expected_canonical": "{\"audience\":\"mcp:servicenow\",\"canonicalization\":\"velvet.canonical_json.v1.sha256.unsigned_payload\",\"constraints\":{\"claim_before_dispatch\":true,\"deny_on_scope_drift\":true,\"idempotency_key\":\"vdispatch_0123456789abcdef0123456789abcdef\",\"receipt_required\":true,\"single_use\":true},\"environment\":\"prod\",\"issuer\":\"velvet\",\"lineage\":{\"decision_artifact\":{\"artifact_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"artifact_id\":\"dec_vector_001\",\"artifact_type\":\"oap_decision\"},\"pre_execution_record\":{\"artifact_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"artifact_id\":\"lr_vector_001\",\"artifact_type\":\"ledger_record\"},\"supporting_artifacts\":[{\"artifact_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"artifact_id\":\"wrnt_vector_001\",\"artifact_type\":\"warrant\"}]},\"obligations\":[\"verify_trusted_signature\",\"verify_scope\",\"verify_lineage\",\"claim_before_dispatch\",\"record_execution_receipt\"],\"permit_id\":\"vpermit_0123456789abcdef0123456789abcdef\",\"policy\":{\"policy_hash\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"policy_version\":\"default\"},\"schema_version\":\"velvet.execution_permit.v1\",\"scope\":{\"arguments_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"canonical_action_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"method\":\"tools/call\",\"operation\":\"search_change_requests\",\"read_set_hash\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"request_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"resource\":{\"id_hash\":\"sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"kind\":\"change_request\"},\"surface\":\"velvet_rope_proxy.mcp\",\"tool_key\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"},\"subject\":{\"agent_id_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"client_id_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"session_id_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"subject_id_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"tenant_id\":\"tenant-a\",\"validity\":{\"expires_at\":\"2026-05-27T19:06:30Z\",\"expires_at_logical_step\":8,\"issued_at\":\"2026-05-27T19:06:00Z\",\"issued_at_logical_step\":7,\"not_before\":\"2026-05-27T19:06:00Z\"}}",
+      "file": "execution_permit.json",
+      "name": "execution_permit",
+      "sha256": "sha256:a367fccad52771a739f9201a71919b2b3b5f8597c6774b1e7939569e0b956e43",
+      "type": "execution_permit"
+    },
+    {
+      "expected_canonical": "{\"canonical_action_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"canonicalization\":\"velvet.canonical_json.v1.sha256.unsigned_payload\",\"completed_at\":\"2026-05-27T19:06:03Z\",\"dispatch_attempted\":true,\"dispatch_claim_record_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"executor\":{\"attestation_level\":\"gateway_observed\",\"audience\":\"mcp:servicenow\",\"executor_id\":\"velvet-rope-proxy\"},\"outcome\":\"succeeded\",\"permit_hash\":\"sha256:a367fccad52771a739f9201a71919b2b3b5f8597c6774b1e7939569e0b956e43\",\"permit_id\":\"vpermit_0123456789abcdef0123456789abcdef\",\"pre_execution_record_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"receipt_id\":\"vreceipt_0123456789abcdef0123456789abcdef\",\"request_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"schema_version\":\"velvet.execution_receipt.v1\",\"started_at\":\"2026-05-27T19:06:02Z\",\"upstream_response_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}",
+      "file": "execution_receipt.json",
+      "name": "execution_receipt",
+      "sha256": "sha256:f0cda6a16053d24734fa88705da11adcd04595956152cf450d463e1593e8b31a",
+      "type": "execution_receipt"
+    }
+  ]
+}

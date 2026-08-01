@@ -1,0 +1,23 @@
+name: ShadowPath
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  effect-paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: paulchum/velvet-rope/shadowpath-action@main
+        with:
+          project: shadowpath.json
+          output-dir: reports/shadowpath
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: shadowpath-evidence
+          path: reports/shadowpath

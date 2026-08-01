@@ -1,0 +1,42 @@
+{
+  "$id": "https://velvet.example/schemas/shadowpath/agent-protocol.v0.1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "properties": {
+        "event": {
+          "enum": [
+            "start",
+            "tool_call",
+            "tool_result",
+            "finish"
+          ]
+        },
+        "run_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "velvet.shadowpath.agent.v0.1"
+        },
+        "sequence": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "trial_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "event",
+        "run_id",
+        "trial_id",
+        "sequence"
+      ]
+    }
+  ],
+  "title": "ShadowPath interactive JSONL event",
+  "type": "object"
+}

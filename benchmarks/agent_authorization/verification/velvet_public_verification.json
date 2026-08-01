@@ -1,0 +1,17 @@
+{
+  "artifact": "velvet_public_verification_measurement",
+  "decision_certificate_path": "benchmarks/agent_authorization/verification/velvet_decision_certificate.json",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "passed": true,
+  "payload_hash": "sha256:e22cd454ac98f9de59c8e4eb4efd2920e9aaf1c6e1cb08a1055aa5924b670115",
+  "public_key_path": "tests/fixtures/keys/velvet_demo_ed25519.pub",
+  "tamper_check": {
+    "artifact": "velvet_tamper_measurement",
+    "artifact_path": "benchmarks/agent_authorization/verification/velvet_decision_certificate.json",
+    "field_mutated": "decision",
+    "generated_at": "1970-01-01T00:00:00Z",
+    "original_hash": "sha256:e22cd454ac98f9de59c8e4eb4efd2920e9aaf1c6e1cb08a1055aa5924b670115",
+    "passed": true,
+    "tampered_hash": "sha256:174bcabbd481979574b17fd1766983d2e8c8db7737f0701af9c4cf939b1a4cdb"
+  }
+}

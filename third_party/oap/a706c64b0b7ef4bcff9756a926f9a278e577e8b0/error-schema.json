@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OAP Error Response Schema",
+  "description": "Standardized error response format for Open Agent Passport API",
+  "type": "object",
+  "required": ["error", "timestamp"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Machine-readable error code",
+          "enum": [
+            "validation_failed",
+            "unauthorized",
+            "forbidden",
+            "not_found",
+            "conflict",
+            "rate_limit_exceeded",
+            "internal_server_error",
+            "service_unavailable",
+            "invalid_passport",
+            "invalid_signature",
+            "timestamp_expired",
+            "nonce_reused",
+            "policy_denied",
+            "capability_insufficient",
+            "assurance_insufficient",
+            "limit_exceeded",
+            "region_restricted",
+            "passport_suspended",
+            "passport_revoked",
+            "idempotency_conflict",
+            "invalid_policy",
+            "passport_not_found",
+            "decision_expired",
+            "signature_verification_failed",
+            "transport_error"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message"
+        },
+        "details": {
+          "type": "object",
+          "description": "Additional error details",
+          "additionalProperties": true
+        },
+        "field": {
+          "type": "string",
+          "description": "Field that caused the validation error"
+        },
+        "value": {
+          "description": "Value that caused the validation error"
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "Suggested fix for the error"
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the error occurred"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "Unique identifier for the request that caused the error"
+    },
+    "path": {
+      "type": "string",
+      "description": "API path that caused the error"
+    },
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      "description": "HTTP method that caused the error"
+    },
+    "status_code": {
+      "type": "integer",
+      "minimum": 400,
+      "maximum": 599,
+      "description": "HTTP status code"
+    },
+    "retry_after": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Seconds to wait before retrying (for rate limit errors)"
+    },
+    "rate_limit_info": {
+      "type": "object",
+      "description": "Rate limiting information (for rate limit errors)",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "description": "Rate limit threshold"
+        },
+        "remaining": {
+          "type": "integer",
+          "description": "Remaining requests in current window"
+        },
+        "reset": {
+          "type": "integer",
+          "description": "Unix timestamp when rate limit resets"
+        },
+        "window": {
+          "type": "integer",
+          "description": "Rate limit window duration in seconds"
+        }
+      }
+    },
+    "documentation_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to relevant documentation"
+    },
+    "support_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to support or help"
+    }
+  },
+  "examples": [
+    {
+      "error": {
+        "code": "validation_failed",
+        "message": "Name is required and must be between 1-100 characters",
+        "field": "name",
+        "value": "",
+        "suggestion": "Provide a valid agent name between 1 and 100 characters"
+      },
+      "timestamp": "2025-01-16T10:30:00Z",
+      "request_id": "req_123456789",
+      "path": "/api/passports",
+      "method": "POST",
+      "status_code": 400
+    },
+    {
+      "error": {
+        "code": "rate_limit_exceeded",
+        "message": "Too many requests, please try again later"
+      },
+      "timestamp": "2025-01-16T10:30:00Z",
+      "request_id": "req_123456790",
+      "path": "/api/verify/ap_a2d10232c6534523812423eec8a1425c",
+      "method": "GET",
+      "status_code": 429,
+      "retry_after": 3600,
+      "rate_limit_info": {
+        "limit": 1000,
+        "remaining": 0,
+        "reset": 1640998800,
+        "window": 3600
+      }
+    },
+    {
+      "error": {
+        "code": "passport_not_found",
+        "message": "Passport with ID ap_a2d10232c6534523812423eec8a1425c not found",
+        "details": {
+          "passport_id": "ap_a2d10232c6534523812423eec8a1425c",
+          "suggestion": "Verify the passport ID is correct and the passport exists"
+        }
+      },
+      "timestamp": "2025-01-16T10:30:00Z",
+      "request_id": "req_123456791",
+      "path": "/api/verify/ap_a2d10232c6534523812423eec8a1425c",
+      "method": "GET",
+      "status_code": 404
+    },
+    {
+      "error": {
+        "code": "policy_denied",
+        "message": "Agent lacks required capabilities for this policy",
+        "details": {
+          "policy_id": "finance.payment.refund.v1",
+          "required_capabilities": ["finance.payment.refund"],
+          "agent_capabilities": ["data.export"]
+        }
+      },
+      "timestamp": "2025-01-16T10:30:00Z",
+      "request_id": "req_123456792",
+      "path": "/api/verify/policy/finance.payment.refund.v1",
+      "method": "POST",
+      "status_code": 403
+    }
+  ]
+}

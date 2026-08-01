@@ -1,0 +1,40 @@
+{
+  "artifact_hash": "sha256:e22cd454ac98f9de59c8e4eb4efd2920e9aaf1c6e1cb08a1055aa5924b670115",
+  "assumptions": [
+    "Beta-Bernoulli posterior candidate",
+    "fixed price threshold",
+    "committed deterministic demo key"
+  ],
+  "contract": "velvet.agent_authorization.decision_certificate",
+  "contract_revision": 1,
+  "decision": "inspect",
+  "evidence": "docs/math/certified_max_de_theorem.txt",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "seal_id": "seal_agent_auth_demo_v0_1",
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "demo-not-for-production",
+    "key_version": "demo-v1",
+    "metadata": {
+      "demo_only": true,
+      "non_production": true,
+      "verification_tier": "demo",
+      "warning": "Demo Ed25519 key is committed test material, not production."
+    },
+    "payload_hash": "sha256:e22cd454ac98f9de59c8e4eb4efd2920e9aaf1c6e1cb08a1055aa5924b670115",
+    "provider_name": "velvet_ed25519",
+    "public_verification_material": {
+      "encoding": "pem+raw-base64",
+      "key_id": "demo-not-for-production",
+      "public_key_base64": "VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\n-----END PUBLIC KEY-----\n",
+      "verification_tier": "demo"
+    },
+    "purpose": "velvet.agent_authorization.decision_certificate.v0.1",
+    "schema_version": "velvet.signature.v2",
+    "signature": "M+iytGO5RTClJi88AiPkbQBvzt39uRva2twmjuTcRUJFfGjfLNmKNeyV4H6H82j0jS3NMCaR6vJC5Qk9F5JyDQ==",
+    "signed_at": "1970-01-01T00:00:00Z",
+    "tenant_id": "velvet-demo-tenant"
+  },
+  "system": "Velvet Certified Max-DE"
+}

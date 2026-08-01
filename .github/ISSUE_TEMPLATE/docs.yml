@@ -1,0 +1,27 @@
+name: Docs improvement
+description: Report missing, stale, or confusing launch documentation.
+title: "docs: "
+labels:
+  - documentation
+body:
+  - type: textarea
+    id: page
+    attributes:
+      label: Page or section
+      description: Link or name the page, heading, command, or generated artifact.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: Describe the stale claim, unclear instruction, broken command, or missing context.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Suggested change
+      description: Optional wording or command that would make the docs clearer.
+    validations:
+      required: false

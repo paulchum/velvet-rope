@@ -1,0 +1,2139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Velvet Offline Proof Verifier</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --ink: #111827;
+      --muted: #5b6675;
+      --line: #d8dee8;
+      --line-strong: #b8c1cf;
+      --pass: #13795b;
+      --pass-bg: #e9f7f1;
+      --fail: #b42318;
+      --fail-bg: #fff0ed;
+      --warn: #9a6700;
+      --code: #20242a;
+      --focus: #2f6fed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(12px);
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 20px; line-height: 1.1; font-weight: 760; }
+    h2 { font-size: 16px; line-height: 1.2; font-weight: 720; }
+    h3 { font-size: 13px; line-height: 1.2; font-weight: 720; color: var(--muted); text-transform: uppercase; }
+    code, pre, textarea, input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    button, input, textarea { font: inherit; }
+    .offline { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--pass); box-shadow: 0 0 0 3px var(--pass-bg); }
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      width: min(1440px, calc(100vw - 32px));
+      margin: 18px auto 30px;
+    }
+    .panel { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; }
+    .left { display: grid; gap: 14px; align-content: start; }
+    .section { padding: 16px; }
+    .section + .section { border-top: 1px solid var(--line); }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 680; margin-bottom: 6px; }
+    textarea, input {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--code);
+      outline: none;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    textarea:focus, input:focus, button:focus-visible { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(47,111,237,0.16); }
+    textarea { min-height: 210px; resize: vertical; }
+    #ledgerInput { min-height: 170px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    button {
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 680;
+      cursor: pointer;
+    }
+    button.primary { background: #13233a; border-color: #13233a; color: #fff; }
+    button.good { color: var(--pass); border-color: #a9d8c4; background: #f3fbf7; }
+    button.bad { color: var(--fail); border-color: #f0afa8; background: #fff7f6; }
+    .drop {
+      margin-top: 10px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .drop.drag { border-color: var(--focus); background: #edf4ff; }
+    .right { display: grid; gap: 14px; align-content: start; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .status-card { padding: 16px; min-height: 132px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); }
+    .status-card.pass { border-color: var(--pass); background: var(--pass-bg); }
+    .status-card.fail { border-color: var(--fail); background: var(--fail-bg); }
+    .status-title { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 12px; }
+    .status-word { font-size: 30px; line-height: 1; font-weight: 820; }
+    .pass .status-word { color: var(--pass); }
+    .fail .status-word { color: var(--fail); }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .kv { border: 1px solid var(--line); background: #fff; border-radius: 6px; min-height: 70px; padding: 9px; }
+    .kv span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+    .kv strong { display: block; overflow-wrap: anywhere; font-size: 12px; }
+    .breakdown { display: grid; gap: 8px; }
+    .row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 74px; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .row:last-child { border-bottom: 0; }
+    .row .label { color: var(--muted); font-weight: 680; }
+    .row .value { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 780; text-transform: uppercase; }
+    .badge.pass { color: var(--pass); background: var(--pass-bg); }
+    .badge.fail { color: var(--fail); background: var(--fail-bg); }
+    .badge.warn { color: var(--warn); background: #fff7df; }
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 340px;
+      overflow: auto;
+      background: #101722;
+      color: #eef5ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 9px 8px; overflow-wrap: anywhere; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; background: var(--surface-2); }
+    tr.bad td { background: var(--fail-bg); }
+    .issue-list { display: grid; gap: 8px; }
+    .issue { border: 1px solid #f0afa8; background: var(--fail-bg); color: #6f1d16; border-radius: 6px; padding: 10px; font-size: 12px; overflow-wrap: anywhere; }
+    .muted { color: var(--muted); }
+    @media (max-width: 980px) {
+      main, .split, .status-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .row { grid-template-columns: 1fr; gap: 4px; }
+      header { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Velvet Offline Proof Verifier</h1>
+      <p class="muted">Offline verifier for legacy/internal Velvet Warrant evidence and hash-chain records. For MCP proxy interop, the external artifact is OAP Decision + Velvet-signed Max-DE Certificate Envelope.</p>
+    </div>
+    <div class="offline"><span class="dot"></span><span>single-file client-side verifier - no network calls</span></div>
+  </header>
+  <main>
+    <div class="left">
+      <div class="panel">
+        <div class="section">
+          <label for="publicKeyInput">Ed25519 public key</label>
+          <input id="publicKeyInput" autocomplete="off" spellcheck="false">
+          <div class="controls">
+            <button class="good" id="loadValid">Valid demo</button>
+            <button class="bad" id="loadTampered">Tampered demo</button>
+            <button id="clearInputs">Clear</button>
+          </div>
+        </div>
+        <div class="section">
+          <label for="recordInput">Internal Warrant or single ledger record JSON</label>
+          <textarea id="recordInput" spellcheck="false"></textarea>
+          <div class="controls"><button class="primary" id="verifyRecord">Verify record</button></div>
+        </div>
+        <div class="section">
+          <label for="ledgerInput">Exported ledger records JSON</label>
+          <textarea id="ledgerInput" spellcheck="false"></textarea>
+          <div class="drop" id="dropZone">Paste exported ledger record JSON here; use `velvet ledger verify` for .vledger files</div>
+          <div class="controls"><button class="primary" id="verifyLedger">Verify ledger excerpt</button></div>
+        </div>
+        <div class="section">
+          <label for="sthInput">Signed Tree Head JSON</label>
+          <textarea id="sthInput" spellcheck="false"></textarea>
+          <label for="inclusionProofInput" style="margin-top:10px">Merkle inclusion proof JSON</label>
+          <textarea id="inclusionProofInput" spellcheck="false"></textarea>
+          <div class="controls"><button class="primary" id="verifySTHProof">Verify STH proof</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="status-grid">
+        <div class="status-card" id="recordStatus"><div class="status-title"><h2>Record</h2><span id="recordArtifact" class="badge warn">idle</span></div><div id="recordWord" class="status-word">IDLE</div><p id="recordNote" class="muted">Load an example or paste an internal Warrant.</p></div>
+        <div class="status-card" id="ledgerStatus"><div class="status-title"><h2>Ledger Chain</h2><span id="ledgerArtifact" class="badge warn">idle</span></div><div id="ledgerWord" class="status-word">IDLE</div><p id="ledgerNote" class="muted">The chain starts at the Velvet genesis hash.</p></div>
+        <div class="status-card" id="vaultStatus"><div class="status-title"><h2>Vault Proof</h2><span id="vaultArtifact" class="badge warn">idle</span></div><div id="vaultWord" class="status-word">IDLE</div><p id="vaultNote" class="muted">Verify one record against an anchored STH.</p></div>
+      </div>
+      <div class="panel section">
+        <h2>Verification Breakdown</h2>
+        <div class="summary-grid" id="summaryGrid"></div>
+      </div>
+      <div class="panel section">
+        <h2>Checks</h2>
+        <div class="breakdown" id="checks"></div>
+      </div>
+      <div class="split">
+        <div class="panel section">
+          <h2>Canonical Payload Bytes</h2>
+          <p class="muted" id="canonicalCaption">Exact canonical string hashed by this verifier.</p>
+          <pre id="canonicalPayload"></pre>
+        </div>
+        <div class="panel section">
+          <h2>Signing Payload</h2>
+          <p class="muted">Canonical signing message passed to Ed25519 verification.</p>
+          <pre id="signingPayload"></pre>
+        </div>
+      </div>
+      <div class="panel section">
+        <h2>Hash Chain</h2>
+        <div style="overflow:auto"><table><thead><tr><th>Seq</th><th>Previous hash</th><th>Stored record hash</th><th>Recomputed hash</th><th>Offending field</th></tr></thead><tbody id="chainRows"></tbody></table></div>
+      </div>
+      <div class="panel section">
+        <h2>Issues</h2>
+        <div class="issue-list" id="issues"><p class="muted">No verification has run yet.</p></div>
+      </div>
+    </div>
+  </main>
+  <script>
+/* BEGIN VELVET_VERIFIER_CORE */
+window.VelvetVerifierCore = (() => {
+
+const BUNDLED_EXAMPLES = {
+  "publicKeyBase64": "VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=",
+  "validWarrantJson": "{\n  \"action_type\": \"CALL_TOOL\",\n  \"actor_user_id\": null,\n  \"agent_id\": null,\n  \"approval_request_id\": null,\n  \"approval_required\": true,\n  \"arguments_hash\": \"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\n  \"bound_seal_id\": \"seal_d99b0e6ebc05d8ff\",\n  \"clearance_score\": 0.3156,\n  \"clears_rope\": false,\n  \"confidence\": 0.76,\n  \"cost_penalty\": 0.0434,\n  \"data_class\": null,\n  \"decision\": \"escalate\",\n  \"entry_price\": 0.353,\n  \"environment\": \"local_demo\",\n  \"expected_upside\": 0.84,\n  \"expires_at\": \"9999-12-31T23:59:59Z\",\n  \"final_lambda\": 0.353,\n  \"issued_at\": \"1970-01-01T00:00:00Z\",\n  \"issuer\": \"velvet\",\n  \"jurisdiction_evidence\": [\n    {\n      \"details\": {\n        \"action_snapshot\": {\n          \"key\": \"anonymous:CALL_TOOL\",\n          \"limit\": 1000000000,\n          \"now_unix_ms\": 0,\n          \"request_count\": 0,\n          \"window_start_unix_ms\": -60000\n        },\n        \"aggregate_snapshot\": {\n          \"key\": \"anonymous:*\",\n          \"limit\": 1000000000,\n          \"now_unix_ms\": 0,\n          \"request_count\": 0,\n          \"window_start_unix_ms\": -60000\n        }\n      },\n      \"evidence_type\": \"rate_limit_snapshot\",\n      \"message\": \"Rate limiter allowed request from supplied deterministic snapshots.\",\n      \"rule_id\": \"rate_limiter.allowed_snapshot\"\n    },\n    {\n      \"details\": {\n        \"threshold\": 25.0,\n        \"usd_estimate\": 75.0\n      },\n      \"evidence_type\": \"cost_threshold\",\n      \"message\": \"Escalation trigger threshold matched.\",\n      \"rule_id\": \"escalation_gate.cost_threshold\"\n    }\n  ],\n  \"ledger_record_hash\": null,\n  \"mcp_server\": \"servicenow\",\n  \"mcp_tool\": \"create_change_request\",\n  \"obligations\": [\n    \"await_approval_before_execution\"\n  ],\n  \"policy_hash\": \"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\n  \"policy_reasons\": [\n    \"rate_limiter.allowed\",\n    \"escalation_gate.cost_threshold\"\n  ],\n  \"policy_statuses\": [\n    \"pii_guard:allow\",\n    \"prompt_injection_detector:allow\",\n    \"cost_ceiling:allow\",\n    \"rate_limiter:modify\",\n    \"escalation_gate:defer\"\n  ],\n  \"policy_version\": \"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\n  \"pricing_status\": \"policy_short_circuit_priced\",\n  \"product_surface\": \"velvet_mcp\",\n  \"reason\": \"Escalation gate deferred candidate action.\",\n  \"reason_codes\": [\n    \"rate_limiter.allowed\",\n    \"escalation_gate.cost_threshold\"\n  ],\n  \"request_hash\": \"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\n  \"request_id\": null,\n  \"risk_class\": \"high\",\n  \"risk_penalty\": 0.0879,\n  \"scarcity_pressure\": 0.0,\n  \"seal_id\": \"seal_d99b0e6ebc05d8ff\",\n  \"selected\": true,\n  \"session_id\": null,\n  \"signature\": {\n    \"algorithm\": \"Ed25519\",\n    \"key_id\": \"demo-not-for-production\",\n    \"key_version\": \"demo-v1\",\n    \"metadata\": {\n      \"demo_only\": true,\n      \"non_production\": true,\n      \"verification_tier\": \"demo\",\n      \"warning\": \"Demo Ed25519 key is committed test material, not production.\"\n    },\n    \"payload_hash\": \"sha256:7380441afde9daebddd61282ef790637b974773e91cc614499a4be9a5bcf40e7\",\n    \"provider_name\": \"velvet_ed25519\",\n    \"public_verification_material\": {\n      \"encoding\": \"pem+raw-base64\",\n      \"key_id\": \"demo-not-for-production\",\n      \"public_key_base64\": \"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\n      \"public_key_pem\": \"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\n      \"verification_tier\": \"demo\"\n    },\n    \"purpose\": \"velvet.warrant\",\n    \"schema_version\": \"velvet.signature.v2\",\n    \"signature\": \"sCyZkLxgpNZ69JaYNSrz2JtBiiwvjp3Gw6IUZRyKpVxS+7dE4eCMHpV/82lxzaP2CpgKK72kb+t6+QdvHd0kDA==\",\n    \"signed_at\": \"2026-05-28T19:33:09Z\",\n    \"tenant_id\": \"velvet-demo-tenant\"\n  },\n  \"signing_algorithm\": \"Ed25519\",\n  \"signing_key_id\": \"demo-not-for-production\",\n  \"signing_key_version\": \"demo-v1\",\n  \"signing_provider\": \"velvet_ed25519\",\n  \"surprisal\": 0.7,\n  \"tenant_id\": \"velvet-demo-tenant\",\n  \"thread_id\": null,\n  \"tool_key\": \"servicenow/create_change_request\",\n  \"tool_name\": \"servicenow/create_change_request\",\n  \"tool_schema_hash\": \"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\n  \"warrant_hash\": \"sha256:7380441afde9daebddd61282ef790637b974773e91cc614499a4be9a5bcf40e7\",\n  \"warrant_id\": \"wrnt_3335082cd695dd6fa29dd64813eaa1b9\"\n}",
+  "tamperedWarrantJson": "{\n  \"action_type\": \"CALL_TOOL\",\n  \"actor_user_id\": null,\n  \"agent_id\": null,\n  \"approval_request_id\": null,\n  \"approval_required\": true,\n  \"arguments_hash\": \"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\n  \"bound_seal_id\": \"seal_d99b0e6ebc05d8ff\",\n  \"clearance_score\": 0.3156,\n  \"clears_rope\": false,\n  \"confidence\": 0.76,\n  \"cost_penalty\": 0.0434,\n  \"data_class\": null,\n  \"decision\": \"escalate\",\n  \"entry_price\": 0.353,\n  \"environment\": \"local_demo\",\n  \"expected_upside\": 0.84,\n  \"expires_at\": \"9999-12-31T23:59:59Z\",\n  \"final_lambda\": 0.353,\n  \"issued_at\": \"1970-01-01T00:00:00Z\",\n  \"issuer\": \"velvet\",\n  \"jurisdiction_evidence\": [\n    {\n      \"details\": {\n        \"action_snapshot\": {\n          \"key\": \"anonymous:CALL_TOOL\",\n          \"limit\": 1000000000,\n          \"now_unix_ms\": 0,\n          \"request_count\": 0,\n          \"window_start_unix_ms\": -60000\n        },\n        \"aggregate_snapshot\": {\n          \"key\": \"anonymous:*\",\n          \"limit\": 1000000000,\n          \"now_unix_ms\": 0,\n          \"request_count\": 0,\n          \"window_start_unix_ms\": -60000\n        }\n      },\n      \"evidence_type\": \"rate_limit_snapshot\",\n      \"message\": \"Rate limiter allowed request from supplied deterministic snapshots.\",\n      \"rule_id\": \"rate_limiter.allowed_snapshot\"\n    },\n    {\n      \"details\": {\n        \"threshold\": 25.0,\n        \"usd_estimate\": 75.0\n      },\n      \"evidence_type\": \"cost_threshold\",\n      \"message\": \"Escalation trigger threshold matched.\",\n      \"rule_id\": \"escalation_gate.cost_threshold\"\n    }\n  ],\n  \"ledger_record_hash\": null,\n  \"mcp_server\": \"servicenow\",\n  \"mcp_tool\": \"create_change_request\",\n  \"obligations\": [\n    \"await_approval_before_execution\"\n  ],\n  \"policy_hash\": \"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\n  \"policy_reasons\": [\n    \"rate_limiter.allowed\",\n    \"escalation_gate.cost_threshold\"\n  ],\n  \"policy_statuses\": [\n    \"pii_guard:allow\",\n    \"prompt_injection_detector:allow\",\n    \"cost_ceiling:allow\",\n    \"rate_limiter:modify\",\n    \"escalation_gate:defer\"\n  ],\n  \"policy_version\": \"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\n  \"pricing_status\": \"policy_short_circuit_priced\",\n  \"product_surface\": \"velvet_mcp\",\n  \"reason\": \"Escalation gate deferred candidate action. [tampered]\",\n  \"reason_codes\": [\n    \"rate_limiter.allowed\",\n    \"escalation_gate.cost_threshold\"\n  ],\n  \"request_hash\": \"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\n  \"request_id\": null,\n  \"risk_class\": \"high\",\n  \"risk_penalty\": 0.0879,\n  \"scarcity_pressure\": 0.0,\n  \"seal_id\": \"seal_d99b0e6ebc05d8ff\",\n  \"selected\": true,\n  \"session_id\": null,\n  \"signature\": {\n    \"algorithm\": \"Ed25519\",\n    \"key_id\": \"demo-not-for-production\",\n    \"key_version\": \"demo-v1\",\n    \"metadata\": {\n      \"demo_only\": true,\n      \"non_production\": true,\n      \"verification_tier\": \"demo\",\n      \"warning\": \"Demo Ed25519 key is committed test material, not production.\"\n    },\n    \"payload_hash\": \"sha256:7380441afde9daebddd61282ef790637b974773e91cc614499a4be9a5bcf40e7\",\n    \"provider_name\": \"velvet_ed25519\",\n    \"public_verification_material\": {\n      \"encoding\": \"pem+raw-base64\",\n      \"key_id\": \"demo-not-for-production\",\n      \"public_key_base64\": \"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\n      \"public_key_pem\": \"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\n      \"verification_tier\": \"demo\"\n    },\n    \"purpose\": \"velvet.warrant\",\n    \"schema_version\": \"velvet.signature.v2\",\n    \"signature\": \"sCyZkLxgpNZ69JaYNSrz2JtBiiwvjp3Gw6IUZRyKpVxS+7dE4eCMHpV/82lxzaP2CpgKK72kb+t6+QdvHd0kDA==\",\n    \"signed_at\": \"2026-05-28T19:33:09Z\",\n    \"tenant_id\": \"velvet-demo-tenant\"\n  },\n  \"signing_algorithm\": \"Ed25519\",\n  \"signing_key_id\": \"demo-not-for-production\",\n  \"signing_key_version\": \"demo-v1\",\n  \"signing_provider\": \"velvet_ed25519\",\n  \"surprisal\": 0.7,\n  \"tenant_id\": \"velvet-demo-tenant\",\n  \"thread_id\": null,\n  \"tool_key\": \"servicenow/create_change_request\",\n  \"tool_name\": \"servicenow/create_change_request\",\n  \"tool_schema_hash\": \"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\n  \"warrant_hash\": \"sha256:7380441afde9daebddd61282ef790637b974773e91cc614499a4be9a5bcf40e7\",\n  \"warrant_id\": \"wrnt_3335082cd695dd6fa29dd64813eaa1b9\"\n}",
+  "validLedgerRecordsJson": "{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:6e4532787af25043897090e18677bc94f0b2cd20834cfc5de9a68f46975117b0\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"execute\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:6c0b70d8649be5115019b005fa3f0f0abef6e32427689125288776897f7cd27a\",\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"previous_record_hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Clearance score cleared the entry price.\",\"record_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"record_id\":\"lr_7c3377c0d92346c1b7309e4dd1e96d78\",\"recorded_at\":\"2026-05-28T19:33:09.856427Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:9bd56550a6aff25f4f090a5de19cd21989e628a8aefa1cc04ff1a94bf8ef3816\",\"seal_id\":\"seal_0067193cde356bef\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":false,\"clearance_score\":0.3182,\"decision\":\"execute\",\"entry_price\":0.297,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"action_snapshot\":{\"key\":\"anonymous:CALL_TOOL\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000},\"aggregate_snapshot\":{\"key\":\"anonymous:*\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000}},\"evidence_type\":\"rate_limit_snapshot\",\"message\":\"Rate limiter allowed request from supplied deterministic snapshots.\",\"rule_id\":\"rate_limiter.allowed_snapshot\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"search_change_requests\",\"obligations\":[\"forward_upstream\"],\"policy_hash\":\"sha256:6c0b70d8649be5115019b005fa3f0f0abef6e32427689125288776897f7cd27a\",\"policy_reasons\":[\"rate_limiter.allowed\"],\"policy_statuses\":[\"pii_guard:allow\",\"prompt_injection_detector:allow\",\"cost_ceiling:allow\",\"rate_limiter:modify\",\"escalation_gate:allow\"],\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"pricing_status\":\"priced\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Clearance score cleared the entry price.\",\"reason_codes\":[\"rate_limiter.allowed\"],\"request_hash\":\"sha256:9bd56550a6aff25f4f090a5de19cd21989e628a8aefa1cc04ff1a94bf8ef3816\",\"risk_class\":\"low\",\"risk_penalty\":0.0315,\"scarcity_pressure\":0.0,\"seal_id\":\"seal_0067193cde356bef\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/search_change_requests\",\"tool_name\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:7a75238d8dcfba2227efa4b9a48975bf89a115146dff9e9b5593ce181c73a5ad\",\"warrant_id\":\"wrnt_8136784ce85a30c4183aacd19556cc28\"},\"sequence_number\":1,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"5Cu25UPsgs6hVEwHIR5E9v1Uz1s+y4R975SEuIMUVMw0S0LF7gDgMi7EIdibtibW9bKv/Q+dCDsBsDnC3opvCg==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:7a75238d8dcfba2227efa4b9a48975bf89a115146dff9e9b5593ce181c73a5ad\",\"upstream_execution_status\":\"forwarded\",\"warrant_hash\":\"sha256:e1fcb947704d0d38a881be11e3651bc5d44b0b5fc0819ed9b9aa974aae995f9b\"}\n{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:172fc86032ef375a479b5e8ab3af4cd709a1c6648f5fbfe7649c748ee35c9a7e\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"block\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:dfe4b315198ee572d0a0a5c3ad8b27d8744f56ae114fa78a352f0028f1bb6838\",\"policy_version\":\"unavailable\",\"previous_record_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"product_surface\":\"velvet_mcp\",\"reason\":\"MCP tool is not listed.\",\"record_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"record_id\":\"lr_dde30cd608974024b8dd1b6cb9aa3740\",\"recorded_at\":\"2026-05-28T19:33:09.858562Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:55c0eef7778b35eb347cade4b987a2387f029d37ea765b96096cde92a581c50a\",\"seal_id\":\"seal_velvet_mcp.block_3bc19f88183e1042\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":false,\"clearance_score\":null,\"decision\":\"block\",\"entry_price\":null,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"mcp_tool\":\"delete_change_request\",\"risk_class\":\"unlisted\",\"server\":\"servicenow\",\"tool\":\"servicenow/delete_change_request\"},\"evidence_type\":\"velvet_mcp\",\"message\":\"MCP tool is not listed.\",\"rule_id\":\"velvet_mcp.list\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"delete_change_request\",\"obligations\":[\"do_not_forward_upstream\"],\"policy_hash\":\"sha256:dfe4b315198ee572d0a0a5c3ad8b27d8744f56ae114fa78a352f0028f1bb6838\",\"policy_reasons\":[\"velvet_mcp.list\"],\"policy_statuses\":[\"velvet_mcp:block\"],\"policy_version\":null,\"pricing_status\":\"denied_at_rope\",\"product_surface\":\"velvet_mcp\",\"reason\":\"MCP tool is not listed.\",\"reason_codes\":[\"velvet_mcp.list\"],\"request_hash\":\"sha256:55c0eef7778b35eb347cade4b987a2387f029d37ea765b96096cde92a581c50a\",\"risk_class\":\"unlisted\",\"risk_penalty\":null,\"scarcity_pressure\":null,\"seal_id\":\"seal_velvet_mcp.block_3bc19f88183e1042\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/delete_change_request\",\"tool_name\":\"servicenow/delete_change_request\",\"tool_schema_hash\":\"sha256:f8f80db1d42fed85a50a4d5dfa1c5708cfd7935b11c51354ff1209b2e48b0ee7\",\"warrant_id\":\"wrnt_d3577ce96aaa9b9b09864a7a53d1cc74\"},\"sequence_number\":2,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"xh3BOCE5rxA4e/PT+ptLtqoCIp3cYVY/BB0K5PYoeYaAac46FHRhAe218ikYw/HdjlloP9s+7wRm0v8hhuLtBw==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/delete_change_request\",\"tool_schema_hash\":\"sha256:f8f80db1d42fed85a50a4d5dfa1c5708cfd7935b11c51354ff1209b2e48b0ee7\",\"upstream_execution_status\":\"not_forwarded\",\"warrant_hash\":\"sha256:9f143276a545eb2ab9162f6a32be2696d427d1342b794eddb43add47457c1f38\"}\n{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:f70c93d191c3d29b0a41a231cef8b1a7a86b57db908cd20d80df829077eda5f1\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"escalate\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"previous_record_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Escalation gate deferred candidate action.\",\"record_hash\":\"sha256:e7d40a7c216a1eb3815cc1c4477d6690aef73d15cd868522883479ad7518ab30\",\"record_id\":\"lr_f726b977679845afb9479cd6b56c998a\",\"recorded_at\":\"2026-05-28T19:33:09.861348Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\"seal_id\":\"seal_d99b0e6ebc05d8ff\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":true,\"clearance_score\":0.3156,\"decision\":\"escalate\",\"entry_price\":0.353,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"action_snapshot\":{\"key\":\"anonymous:CALL_TOOL\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000},\"aggregate_snapshot\":{\"key\":\"anonymous:*\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000}},\"evidence_type\":\"rate_limit_snapshot\",\"message\":\"Rate limiter allowed request from supplied deterministic snapshots.\",\"rule_id\":\"rate_limiter.allowed_snapshot\"},{\"details\":{\"threshold\":25.0,\"usd_estimate\":75.0},\"evidence_type\":\"cost_threshold\",\"message\":\"Escalation trigger threshold matched.\",\"rule_id\":\"escalation_gate.cost_threshold\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"create_change_request\",\"obligations\":[\"await_approval_before_execution\"],\"policy_hash\":\"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\"policy_reasons\":[\"rate_limiter.allowed\",\"escalation_gate.cost_threshold\"],\"policy_statuses\":[\"pii_guard:allow\",\"prompt_injection_detector:allow\",\"cost_ceiling:allow\",\"rate_limiter:modify\",\"escalation_gate:defer\"],\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"pricing_status\":\"policy_short_circuit_priced\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Escalation gate deferred candidate action.\",\"reason_codes\":[\"rate_limiter.allowed\",\"escalation_gate.cost_threshold\"],\"request_hash\":\"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\"risk_class\":\"high\",\"risk_penalty\":0.0879,\"scarcity_pressure\":0.0,\"seal_id\":\"seal_d99b0e6ebc05d8ff\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/create_change_request\",\"tool_name\":\"servicenow/create_change_request\",\"tool_schema_hash\":\"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\"warrant_id\":\"wrnt_3335082cd695dd6fa29dd64813eaa1b9\"},\"sequence_number\":3,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:e7d40a7c216a1eb3815cc1c4477d6690aef73d15cd868522883479ad7518ab30\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"vPw3ZR7rWNkRitDLqizRbiPDryUVFVZAI67+Io5gJUGQyhKLApELs1bBM0ACCSCX0raxUqGaNDhg7JxpliTjBA==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/create_change_request\",\"tool_schema_hash\":\"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\"upstream_execution_status\":\"pending_approval\",\"warrant_hash\":\"sha256:ecd33421707777e3ef226126730018d3c203b101fee269e7d0d62da532232d8d\"}\n",
+  "tamperedLedgerRecordsJson": "{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:6e4532787af25043897090e18677bc94f0b2cd20834cfc5de9a68f46975117b0\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"execute\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:6c0b70d8649be5115019b005fa3f0f0abef6e32427689125288776897f7cd27a\",\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"previous_record_hash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Clearance score cleared the entry price.\",\"record_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"record_id\":\"lr_7c3377c0d92346c1b7309e4dd1e96d78\",\"recorded_at\":\"2026-05-28T19:33:09.856427Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:9bd56550a6aff25f4f090a5de19cd21989e628a8aefa1cc04ff1a94bf8ef3816\",\"seal_id\":\"seal_0067193cde356bef\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":false,\"clearance_score\":0.3182,\"decision\":\"execute\",\"entry_price\":0.297,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"action_snapshot\":{\"key\":\"anonymous:CALL_TOOL\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000},\"aggregate_snapshot\":{\"key\":\"anonymous:*\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000}},\"evidence_type\":\"rate_limit_snapshot\",\"message\":\"Rate limiter allowed request from supplied deterministic snapshots.\",\"rule_id\":\"rate_limiter.allowed_snapshot\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"search_change_requests\",\"obligations\":[\"forward_upstream\"],\"policy_hash\":\"sha256:6c0b70d8649be5115019b005fa3f0f0abef6e32427689125288776897f7cd27a\",\"policy_reasons\":[\"rate_limiter.allowed\"],\"policy_statuses\":[\"pii_guard:allow\",\"prompt_injection_detector:allow\",\"cost_ceiling:allow\",\"rate_limiter:modify\",\"escalation_gate:allow\"],\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"pricing_status\":\"priced\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Clearance score cleared the entry price.\",\"reason_codes\":[\"rate_limiter.allowed\"],\"request_hash\":\"sha256:9bd56550a6aff25f4f090a5de19cd21989e628a8aefa1cc04ff1a94bf8ef3816\",\"risk_class\":\"low\",\"risk_penalty\":0.0315,\"scarcity_pressure\":0.0,\"seal_id\":\"seal_0067193cde356bef\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/search_change_requests\",\"tool_name\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:7a75238d8dcfba2227efa4b9a48975bf89a115146dff9e9b5593ce181c73a5ad\",\"warrant_id\":\"wrnt_8136784ce85a30c4183aacd19556cc28\"},\"sequence_number\":1,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"5Cu25UPsgs6hVEwHIR5E9v1Uz1s+y4R975SEuIMUVMw0S0LF7gDgMi7EIdibtibW9bKv/Q+dCDsBsDnC3opvCg==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/search_change_requests\",\"tool_schema_hash\":\"sha256:7a75238d8dcfba2227efa4b9a48975bf89a115146dff9e9b5593ce181c73a5ad\",\"upstream_execution_status\":\"forwarded\",\"warrant_hash\":\"sha256:e1fcb947704d0d38a881be11e3651bc5d44b0b5fc0819ed9b9aa974aae995f9b\"}\n{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:172fc86032ef375a479b5e8ab3af4cd709a1c6648f5fbfe7649c748ee35c9a7e\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"execute\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:dfe4b315198ee572d0a0a5c3ad8b27d8744f56ae114fa78a352f0028f1bb6838\",\"policy_version\":\"unavailable\",\"previous_record_hash\":\"sha256:107d94746e68146171cd826f7e70ec30e462ee2fef14e92b570777909d7b3d7e\",\"product_surface\":\"velvet_mcp\",\"reason\":\"MCP tool is not listed.\",\"record_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"record_id\":\"lr_dde30cd608974024b8dd1b6cb9aa3740\",\"recorded_at\":\"2026-05-28T19:33:09.858562Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:55c0eef7778b35eb347cade4b987a2387f029d37ea765b96096cde92a581c50a\",\"seal_id\":\"seal_velvet_mcp.block_3bc19f88183e1042\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":false,\"clearance_score\":null,\"decision\":\"execute\",\"entry_price\":null,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"mcp_tool\":\"delete_change_request\",\"risk_class\":\"unlisted\",\"server\":\"servicenow\",\"tool\":\"servicenow/delete_change_request\"},\"evidence_type\":\"velvet_mcp\",\"message\":\"MCP tool is not listed.\",\"rule_id\":\"velvet_mcp.list\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"delete_change_request\",\"obligations\":[\"do_not_forward_upstream\"],\"policy_hash\":\"sha256:dfe4b315198ee572d0a0a5c3ad8b27d8744f56ae114fa78a352f0028f1bb6838\",\"policy_reasons\":[\"velvet_mcp.list\"],\"policy_statuses\":[\"velvet_mcp:block\"],\"policy_version\":null,\"pricing_status\":\"denied_at_rope\",\"product_surface\":\"velvet_mcp\",\"reason\":\"MCP tool is not listed.\",\"reason_codes\":[\"velvet_mcp.list\"],\"request_hash\":\"sha256:55c0eef7778b35eb347cade4b987a2387f029d37ea765b96096cde92a581c50a\",\"risk_class\":\"unlisted\",\"risk_penalty\":null,\"scarcity_pressure\":null,\"seal_id\":\"seal_velvet_mcp.block_3bc19f88183e1042\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/delete_change_request\",\"tool_name\":\"servicenow/delete_change_request\",\"tool_schema_hash\":\"sha256:f8f80db1d42fed85a50a4d5dfa1c5708cfd7935b11c51354ff1209b2e48b0ee7\",\"warrant_id\":\"wrnt_d3577ce96aaa9b9b09864a7a53d1cc74\"},\"sequence_number\":2,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"xh3BOCE5rxA4e/PT+ptLtqoCIp3cYVY/BB0K5PYoeYaAac46FHRhAe218ikYw/HdjlloP9s+7wRm0v8hhuLtBw==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/delete_change_request\",\"tool_schema_hash\":\"sha256:f8f80db1d42fed85a50a4d5dfa1c5708cfd7935b11c51354ff1209b2e48b0ee7\",\"upstream_execution_status\":\"not_forwarded\",\"warrant_hash\":\"sha256:9f143276a545eb2ab9162f6a32be2696d427d1342b794eddb43add47457c1f38\"}\n{\"action_type\":\"CALL_TOOL\",\"arguments_hash\":\"sha256:f70c93d191c3d29b0a41a231cef8b1a7a86b57db908cd20d80df829077eda5f1\",\"contract\":\"velvet.ledger\",\"contract_revision\":1,\"decision\":\"escalate\",\"environment\":\"local\",\"label\":\"verifier_demo\",\"policy_hash\":\"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"previous_record_hash\":\"sha256:95ab99e61012250523bc73be12b75e4f862e73f3a100169c30987c3a7edd954f\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Escalation gate deferred candidate action.\",\"record_hash\":\"sha256:e7d40a7c216a1eb3815cc1c4477d6690aef73d15cd868522883479ad7518ab30\",\"record_id\":\"lr_f726b977679845afb9479cd6b56c998a\",\"recorded_at\":\"2026-05-28T19:33:09.861348Z\",\"redaction_summary\":{\"redacted_fields\":[],\"redaction_count\":0},\"request_hash\":\"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\"seal_id\":\"seal_d99b0e6ebc05d8ff\",\"selected_warrant\":{\"action_type\":\"CALL_TOOL\",\"approval_request_id\":null,\"approval_required\":true,\"clearance_score\":0.3156,\"decision\":\"escalate\",\"entry_price\":0.353,\"environment\":\"local\",\"expires_at\":\"9999-12-31T23:59:59Z\",\"issued_at\":\"1970-01-01T00:00:00Z\",\"issuer\":\"velvet\",\"jurisdiction_evidence\":[{\"details\":{\"action_snapshot\":{\"key\":\"anonymous:CALL_TOOL\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000},\"aggregate_snapshot\":{\"key\":\"anonymous:*\",\"limit\":1000000000,\"now_unix_ms\":0,\"request_count\":0,\"window_start_unix_ms\":-60000}},\"evidence_type\":\"rate_limit_snapshot\",\"message\":\"Rate limiter allowed request from supplied deterministic snapshots.\",\"rule_id\":\"rate_limiter.allowed_snapshot\"},{\"details\":{\"threshold\":25.0,\"usd_estimate\":75.0},\"evidence_type\":\"cost_threshold\",\"message\":\"Escalation trigger threshold matched.\",\"rule_id\":\"escalation_gate.cost_threshold\"}],\"mcp_server\":\"servicenow\",\"mcp_tool\":\"create_change_request\",\"obligations\":[\"await_approval_before_execution\"],\"policy_hash\":\"sha256:f9600eb1ccae61efa8a57180780c8b77621c2ff0a044b2d137413784fa18ee75\",\"policy_reasons\":[\"rate_limiter.allowed\",\"escalation_gate.cost_threshold\"],\"policy_statuses\":[\"pii_guard:allow\",\"prompt_injection_detector:allow\",\"cost_ceiling:allow\",\"rate_limiter:modify\",\"escalation_gate:defer\"],\"policy_version\":\"cost_ceiling@cost_ceiling_v1/1,escalation_gate@escalation_gate_v1/1,pii_guard@pii_guard_v1/1,prompt_injection_detector@prompt_injection_detector_v1/1,rate_limiter@rate_limiter_v1/1\",\"pricing_status\":\"policy_short_circuit_priced\",\"product_surface\":\"velvet_mcp\",\"reason\":\"Escalation gate deferred candidate action.\",\"reason_codes\":[\"rate_limiter.allowed\",\"escalation_gate.cost_threshold\"],\"request_hash\":\"sha256:9896db540f783766975c21198326a7f8a4fb09919fa8d45944073b85f0b05f1d\",\"risk_class\":\"high\",\"risk_penalty\":0.0879,\"scarcity_pressure\":0.0,\"seal_id\":\"seal_d99b0e6ebc05d8ff\",\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/create_change_request\",\"tool_name\":\"servicenow/create_change_request\",\"tool_schema_hash\":\"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\"warrant_id\":\"wrnt_3335082cd695dd6fa29dd64813eaa1b9\"},\"sequence_number\":3,\"signature\":{\"algorithm\":\"Ed25519\",\"key_id\":\"demo-not-for-production\",\"key_version\":\"demo-v1\",\"metadata\":{\"demo_only\":true,\"non_production\":true,\"verification_tier\":\"demo\",\"warning\":\"Demo Ed25519 key is committed test material, not production.\"},\"payload_hash\":\"sha256:e7d40a7c216a1eb3815cc1c4477d6690aef73d15cd868522883479ad7518ab30\",\"provider_name\":\"velvet_ed25519\",\"public_verification_material\":{\"encoding\":\"pem+raw-base64\",\"key_id\":\"demo-not-for-production\",\"public_key_base64\":\"VAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\",\"public_key_pem\":\"-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAVAuZdqVvyBgHk+VGugmziGUxinqlCkp2jRPthPUcnYY=\\n-----END PUBLIC KEY-----\\n\",\"verification_tier\":\"demo\"},\"purpose\":\"velvet.ledger.record\",\"schema_version\":\"velvet.signature.v2\",\"signature\":\"vPw3ZR7rWNkRitDLqizRbiPDryUVFVZAI67+Io5gJUGQyhKLApELs1bBM0ACCSCX0raxUqGaNDhg7JxpliTjBA==\",\"signed_at\":\"2026-05-28T19:33:09Z\",\"tenant_id\":\"velvet-demo-tenant\"},\"tenant_id\":\"velvet-demo-tenant\",\"thread_id\":null,\"tool_key\":\"servicenow/create_change_request\",\"tool_schema_hash\":\"sha256:45bc1d942e64bbf61c3d2f7d1e23e78a96f65cd8f95972c3c870fdce9048db14\",\"upstream_execution_status\":\"pending_approval\",\"warrant_hash\":\"sha256:ecd33421707777e3ef226126730018d3c203b101fee269e7d0d62da532232d8d\"}\n"
+};
+
+const SIGNATURE_SCHEMA_VERSION = "velvet.signature.v2";
+const SUPPORTED_SIGNATURE_SCHEMA_VERSIONS = new Set(["velvet.signature.v1", "velvet.signature.v2"]);
+const PURPOSE_WARRANT = "velvet.warrant";
+const PURPOSE_LEDGER_RECORD = "velvet.ledger.record";
+const PURPOSE_SIGNED_TREE_HEAD = "velvet.vault.sth.v1";
+const LEDGER_GENESIS_HASH = "sha256:" + "0".repeat(64);
+const SIGNED_TREE_HEAD_SCHEMA_VERSION = "velvet.vault.sth.v1";
+const MERKLE_INCLUSION_PROOF_SCHEMA_VERSION = "velvet.vault.merkle_inclusion_proof.v1";
+const DEMO_PUBLIC_KEY_BASE64 = BUNDLED_EXAMPLES.publicKeyBase64;
+const VELVET_CANONICAL_JSON_V1 = "velvet.canonical_json.v1.sha256";
+const VELVET_CANONICAL_JSON_V1_UNSIGNED_PAYLOAD = "velvet.canonical_json.v1.sha256.unsigned_payload";
+const SAFE_JSON_INTEGER_MIN = -(2 ** 53) + 1;
+const SAFE_JSON_INTEGER_MAX = (2 ** 53) - 1;
+const WARRANT_FIELDS = [
+  "warrant_id", "issued_at", "tenant_id", "environment", "request_hash", "policy_hash",
+  "tool_schema_hash", "tool_name", "decision", "reason", "reason_codes", "obligations",
+  "approval_required", "expires_at", "issuer",
+];
+const TIMESTAMP_FIELD_NAMES = new Set([
+  "timestamp", "issued_at", "created_at", "recorded_at", "generated_at", "decided_at",
+  "expires_at", "signed_at", "proposal_timestamp", "decision_timestamp", "execution_timestamp",
+]);
+const DECIMAL_FIELD_NAMES = new Set([
+  "admission_price", "budget_pressure", "clearance_score", "confidence", "cost_penalty",
+  "entry_price", "estimated_cost", "estimated_risk", "expected_upside", "final_lambda",
+  "hard_ceiling_usd", "liability_multiplier", "limit_usd", "novelty", "proposal_score",
+  "risk_penalty", "scarcity_pressure", "soft_ceiling_fraction", "spend_amount",
+]);
+const DECIMAL_FIELD_SUFFIXES = [
+  "_amount", "_ceiling", "_cost", "_fraction", "_lambda", "_limit", "_penalty",
+  "_price", "_risk", "_score", "_usd", "_upside",
+];
+const TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3,9})?Z$/;
+const DECIMAL_RE = /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/;
+
+class CanonicalizationError extends Error {
+  constructor(message) { super(message); this.name = "CanonicalizationError"; }
+}
+class JsonNumber {
+  constructor(raw) {
+    this.raw = raw;
+    this.isFloat = /[.eE]/.test(raw);
+    this.value = Number(raw);
+  }
+  valueOf() { return this.value; }
+  toString() { return String(this.value); }
+}
+function isJsonNumber(value) { return value instanceof JsonNumber; }
+function plain(value) {
+  if (isJsonNumber(value)) return value.value;
+  if (Array.isArray(value)) return value.map(plain);
+  if (value && typeof value === "object") {
+    const output = {};
+    for (const key of Object.keys(value)) output[key] = plain(value[key]);
+    return output;
+  }
+  return value;
+}
+function displayValue(value) {
+  const unwrapped = plain(value);
+  if (unwrapped === undefined) return "";
+  if (unwrapped === null) return "null";
+  if (typeof unwrapped === "object") return JSON.stringify(unwrapped);
+  return String(unwrapped);
+}
+
+function parseJsonStrict(text, options = {}) {
+  const source = String(text);
+  if (source.charCodeAt(0) === 0xfeff) throw new CanonicalizationError("UTF-8 BOM is not allowed");
+  let index = 0;
+  const preserveNumbers = options.preserveNumbers === true;
+  function error(message) { throw new CanonicalizationError(message + " at character " + index); }
+  function peek() { return source[index]; }
+  function consume(ch) { if (source[index] !== ch) error("expected " + ch); index += 1; }
+  function skipWs() { while (/\s/.test(source[index] || "")) index += 1; }
+  function parseValue(fieldName) {
+    skipWs();
+    const ch = peek();
+    if (ch === '"') return parseString();
+    if (ch === '{') return parseObject();
+    if (ch === '[') return parseArray(fieldName);
+    if (ch === 't' && source.slice(index, index + 4) === 'true') { index += 4; return true; }
+    if (ch === 'f' && source.slice(index, index + 5) === 'false') { index += 5; return false; }
+    if (ch === 'n' && source.slice(index, index + 4) === 'null') { index += 4; return null; }
+    if (ch === '-' || (ch >= '0' && ch <= '9')) return parseNumber();
+    error("unexpected JSON token");
+  }
+  function parseString() {
+    consume('"');
+    let out = "";
+    while (index < source.length) {
+      const ch = source[index++];
+      if (ch === '"') return out;
+      if (ch === '\\') {
+        const esc = source[index++];
+        if (esc === '"' || esc === '\\' || esc === '/') out += esc;
+        else if (esc === 'b') out += '\b';
+        else if (esc === 'f') out += '\f';
+        else if (esc === 'n') out += '\n';
+        else if (esc === 'r') out += '\r';
+        else if (esc === 't') out += '\t';
+        else if (esc === 'u') {
+          const hex = source.slice(index, index + 4);
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) error("invalid unicode escape");
+          index += 4;
+          const code = parseInt(hex, 16);
+          if (code >= 0xd800 && code <= 0xdbff) {
+            if (source[index] !== '\\' || source[index + 1] !== 'u') error("unpaired high surrogate");
+            index += 2;
+            const lowHex = source.slice(index, index + 4);
+            if (!/^[0-9a-fA-F]{4}$/.test(lowHex)) error("invalid unicode escape");
+            index += 4;
+            const low = parseInt(lowHex, 16);
+            if (low < 0xdc00 || low > 0xdfff) error("unpaired high surrogate");
+            out += String.fromCodePoint(0x10000 + ((code - 0xd800) << 10) + (low - 0xdc00));
+          } else if (code >= 0xdc00 && code <= 0xdfff) {
+            error("unpaired low surrogate");
+          } else {
+            out += String.fromCharCode(code);
+          }
+        } else error("invalid escape");
+      } else {
+        if (ch < ' ') error("unescaped control character");
+        const code = ch.charCodeAt(0);
+        if (code >= 0xd800 && code <= 0xdfff) error("lone surrogate is not valid Unicode");
+        out += ch;
+      }
+    }
+    error("unterminated string");
+  }
+  function parseNumber() {
+    const start = index;
+    if (peek() === '-') index += 1;
+    if (peek() === '0') index += 1;
+    else if (peek() >= '1' && peek() <= '9') while (peek() >= '0' && peek() <= '9') index += 1;
+    else error("invalid number");
+    if (peek() === '.') {
+      index += 1;
+      if (!(peek() >= '0' && peek() <= '9')) error("invalid number");
+      while (peek() >= '0' && peek() <= '9') index += 1;
+    }
+    if (peek() === 'e' || peek() === 'E') {
+      index += 1;
+      if (peek() === '+' || peek() === '-') index += 1;
+      if (!(peek() >= '0' && peek() <= '9')) error("invalid number");
+      while (peek() >= '0' && peek() <= '9') index += 1;
+    }
+    const raw = source.slice(start, index);
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new CanonicalizationError("unsupported JSON number: " + raw);
+    if (!/[.eE]/.test(raw) && (!Number.isSafeInteger(n))) throw new CanonicalizationError("integer is outside the JSON-safe range");
+    return preserveNumbers ? new JsonNumber(raw) : n;
+  }
+  function parseArray(fieldName) {
+    consume('[');
+    skipWs();
+    const arr = [];
+    if (peek() === ']') { index += 1; return arr; }
+    while (true) {
+      arr.push(parseValue(fieldName));
+      skipWs();
+      if (peek() === ']') { index += 1; return arr; }
+      consume(',');
+    }
+  }
+  function parseObject() {
+    consume('{');
+    skipWs();
+    const obj = {};
+    const seen = new Set();
+    if (peek() === '}') { index += 1; return obj; }
+    while (true) {
+      skipWs();
+      if (peek() !== '"') error("object key must be a string");
+      const key = parseString();
+      if (seen.has(key)) throw new CanonicalizationError("duplicate object key: " + key);
+      seen.add(key);
+      skipWs();
+      consume(':');
+      obj[key] = parseValue(key);
+      skipWs();
+      if (peek() === '}') { index += 1; return obj; }
+      consume(',');
+    }
+  }
+  const value = parseValue(null);
+  skipWs();
+  if (index !== source.length) error("trailing content");
+  return value;
+}
+function parseJsonObject(text, options = {}) {
+  const value = parseJsonStrict(text, options);
+  if (!value || typeof value !== "object" || Array.isArray(value) || isJsonNumber(value)) throw new CanonicalizationError("verification artifact must be a JSON object");
+  return value;
+}
+function parseJsonl(text, options = {}) {
+  const rows = [];
+  String(text).split(/\r?\n/).forEach((line, i) => {
+    if (!line.trim()) return;
+    const value = parseJsonObject(line, options);
+    rows.push({ line: i + 1, record: value });
+  });
+  return rows;
+}
+
+function isTimestampField(field) { return TIMESTAMP_FIELD_NAMES.has(field) || field.endsWith("_at") || field.endsWith("_timestamp"); }
+function isDecimalField(field) {
+  const normalized = field.toLowerCase();
+  return DECIMAL_FIELD_NAMES.has(normalized) || DECIMAL_FIELD_SUFFIXES.some((suffix) => normalized.endsWith(suffix));
+}
+function validateJsonString(value, path) {
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const low = value.charCodeAt(i + 1);
+      if (low < 0xdc00 || low > 0xdfff) throw new CanonicalizationError(path + ": lone surrogate is not valid Unicode");
+      i += 1;
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      throw new CanonicalizationError(path + ": lone surrogate is not valid Unicode");
+    }
+  }
+}
+function validateCanonicalJsonV1(value, path = "$", field = null) {
+  if (value === null || typeof value === "boolean") return;
+  if (isJsonNumber(value)) value = value.value;
+  if (Number.isInteger(value)) {
+    if (field && isDecimalField(field)) throw new CanonicalizationError(path + ": decimal fields must be canonical strings");
+    if (!Number.isSafeInteger(value)) throw new CanonicalizationError(path + ": integer is outside the JSON-safe range");
+    return;
+  }
+  if (typeof value === "number") throw new CanonicalizationError(path + ": non-integer JSON numbers are not supported");
+  if (typeof value === "string") {
+    validateJsonString(value, path);
+    if (field && isTimestampField(field) && !TIMESTAMP_RE.test(value)) throw new CanonicalizationError(path + ": timestamp must be RFC 3339 UTC with Z");
+    if (field && isDecimalField(field)) {
+      if (!DECIMAL_RE.test(value)) throw new CanonicalizationError(path + ": decimal string is not canonical");
+      if (value === "-0" || /^-0(?:\.0+)?$/.test(value)) throw new CanonicalizationError(path + ": negative zero is not canonical");
+    }
+    return;
+  }
+  if (Array.isArray(value)) { value.forEach((item, index) => validateCanonicalJsonV1(item, `${path}[${index}]`, null)); return; }
+  if (value && typeof value === "object") {
+    for (const key of Object.keys(value)) {
+      validateJsonString(key, `${path}.${key}`);
+      validateCanonicalJsonV1(value[key], `${path}.${key}`, key);
+    }
+    return;
+  }
+  throw new CanonicalizationError(path + ": unsupported JSON value type");
+}
+function quoteJsonString(value) {
+  let output = '"';
+  for (const ch of value) {
+    const code = ch.codePointAt(0);
+    if (ch === '"') output += '\\"';
+    else if (ch === '\\') output += '\\\\';
+    else if (ch === '\b') output += '\\b';
+    else if (ch === '\t') output += '\\t';
+    else if (ch === '\n') output += '\\n';
+    else if (ch === '\f') output += '\\f';
+    else if (ch === '\r') output += '\\r';
+    else if (code < 0x20) output += "\\u" + code.toString(16).padStart(4, "0");
+    else output += ch;
+  }
+  return output + '"';
+}
+function quoteJsonStringAscii(value) {
+  let output = '"';
+  for (const ch of value) {
+    const code = ch.codePointAt(0);
+    if (ch === '"') output += '\\"';
+    else if (ch === '\\') output += '\\\\';
+    else if (ch === '\b') output += '\\b';
+    else if (ch === '\t') output += '\\t';
+    else if (ch === '\n') output += '\\n';
+    else if (ch === '\f') output += '\\f';
+    else if (ch === '\r') output += '\\r';
+    else if (code < 0x20) output += "\\u" + code.toString(16).padStart(4, "0");
+    else if (code <= 0x7f) output += ch;
+    else if (code <= 0xffff) output += "\\u" + code.toString(16).padStart(4, "0");
+    else {
+      const adjusted = code - 0x10000;
+      output += "\\u" + (0xd800 + (adjusted >> 10)).toString(16).padStart(4, "0");
+      output += "\\u" + (0xdc00 + (adjusted & 0x3ff)).toString(16).padStart(4, "0");
+    }
+  }
+  return output + '"';
+}
+function sortKeys(keys) { return keys.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)); }
+function canonicalJsonV1Dumps(value) {
+  validateCanonicalJsonV1(value);
+  return serializeCanonicalJsonV1(value);
+}
+function serializeCanonicalJsonV1(value) {
+  if (isJsonNumber(value)) value = value.value;
+  if (value === null) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (Number.isInteger(value)) return String(value);
+  if (typeof value === "string") return quoteJsonString(value);
+  if (Array.isArray(value)) return "[" + value.map(serializeCanonicalJsonV1).join(",") + "]";
+  if (value && typeof value === "object") return "{" + sortKeys(Object.keys(value)).map((key) => quoteJsonString(key) + ":" + serializeCanonicalJsonV1(value[key])).join(",") + "}";
+  throw new CanonicalizationError("unsupported JSON value type");
+}
+function pythonFloatLexeme(value) {
+  let raw = value.raw;
+  if (/[eE]/.test(raw)) return Number(raw).toExponential().replace("e+", "e+").replace(/e(-?)0+(\d+)/, "e$1$2");
+  if (raw.includes(".")) {
+    let [whole, fraction] = raw.split(".");
+    fraction = fraction.replace(/0+$/, "");
+    if (fraction.length === 0) fraction = "0";
+    return whole + "." + fraction;
+  }
+  return raw;
+}
+function canonicalDumpsLegacy(value, ascii = true) {
+  if (isJsonNumber(value)) return value.isFloat ? pythonFloatLexeme(value) : String(Number(value.raw));
+  if (value === null) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new CanonicalizationError("non-finite JSON number");
+    if (Number.isInteger(value)) return String(value);
+    return String(value);
+  }
+  if (typeof value === "string") return ascii ? quoteJsonStringAscii(value) : quoteJsonString(value);
+  if (Array.isArray(value)) return "[" + value.map((item) => canonicalDumpsLegacy(item, ascii)).join(",") + "]";
+  if (value && typeof value === "object") return "{" + sortKeys(Object.keys(value)).map((key) => quoteJsonStringAscii(key) + ":" + canonicalDumpsLegacy(value[key], ascii)).join(",") + "}";
+  throw new CanonicalizationError("unsupported JSON value type");
+}
+function warrantUnsignedPayload(payload) {
+  if (WARRANT_FIELDS.every((field) => Object.prototype.hasOwnProperty.call(payload, field))) {
+    const out = {};
+    for (const field of WARRANT_FIELDS) out[field] = payload[field];
+    return out;
+  }
+  const out = {};
+  for (const key of Object.keys(payload)) if (key !== "warrant_hash" && key !== "signature") out[key] = payload[key];
+  return out;
+}
+function ledgerRecordHashPayload(record) {
+  const out = {};
+  for (const key of Object.keys(record)) if (!["record_hash", "signer", "signature", "signing_key_id"].includes(key)) out[key] = record[key];
+  return out;
+}
+function proofArtifactHash(artifactType, payload) {
+  const unsigned = artifactType === "warrant" ? warrantUnsignedPayload(payload) : payload;
+  const canonicalPayload = canonicalJsonV1Dumps(unsigned);
+  return { unsignedPayload: unsigned, canonicalPayload, hash: "sha256:" + sha256Hex(utf8Bytes(canonicalPayload)) };
+}
+function ledgerRecordHash(record) {
+  const unsignedPayload = ledgerRecordHashPayload(record);
+  const canonicalPayload = canonicalDumpsLegacy(unsignedPayload, true);
+  return { unsignedPayload, canonicalPayload, hash: "sha256:" + sha256Hex(utf8Bytes(canonicalPayload)) };
+}
+function signedTreeHeadUnsignedPayload(sth) {
+  const out = {};
+  for (const key of Object.keys(sth)) if (!["signature", "sth_hash"].includes(key)) out[key] = sth[key];
+  return out;
+}
+function signedTreeHeadHash(sth) {
+  const unsignedPayload = signedTreeHeadUnsignedPayload(sth);
+  const canonicalPayload = canonicalDumpsLegacy(unsignedPayload, true);
+  return { unsignedPayload, canonicalPayload, hash: "sha256:" + sha256Hex(utf8Bytes(canonicalPayload)) };
+}
+function signingMessage(block, payloadHash) {
+  const obj = {
+    schema_version: block.schema_version || SIGNATURE_SCHEMA_VERSION,
+    provider_name: block.provider_name,
+    algorithm: block.algorithm,
+    key_version: block.key_version,
+    key_id: block.key_id,
+    tenant_id: block.tenant_id,
+    purpose: block.purpose,
+    payload_hash: payloadHash,
+  };
+  return canonicalDumpsLegacy(obj, true);
+}
+
+function utf8Bytes(text) { return new TextEncoder().encode(text); }
+function bytesToHex(bytes) { return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""); }
+function hexToBytesStrict(hex) {
+  const text = String(hex || "");
+  if (!/^[0-9a-f]{64}$/.test(text)) throw new Error("expected 32-byte lowercase hex digest");
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i += 1) out[i] = parseInt(text.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+function sha256HashToBytes(value) {
+  const text = String(value || "");
+  if (!text.startsWith("sha256:")) throw new Error("expected sha256:<hex>");
+  return hexToBytesStrict(text.slice(7));
+}
+function concatBytesStrict(...arrays) {
+  let length = 0;
+  for (const array of arrays) length += array.length;
+  const out = new Uint8Array(length);
+  let offset = 0;
+  for (const array of arrays) {
+    out.set(array, offset);
+    offset += array.length;
+  }
+  return out;
+}
+function sha256Hex(bytes) { return bytesToHex(sha256(bytes)); }
+function rfc6962LeafHash(leafBytes) { return sha256(concatBytesStrict(new Uint8Array([0]), leafBytes)); }
+function rfc6962NodeHash(left, right) { return sha256(concatBytesStrict(new Uint8Array([1]), left, right)); }
+function inclusionRootFromPath(index, size, current, proof, offsetState) {
+  if (size === 1) return current;
+  const split = 1 << (Math.ceil(Math.log2(size)) - 1);
+  if (index < split) {
+    const left = inclusionRootFromPath(index, split, current, proof, offsetState);
+    if (offsetState.offset >= proof.length) throw new Error("inclusion proof is too short");
+    const right = proof[offsetState.offset];
+    offsetState.offset += 1;
+    return rfc6962NodeHash(left, right);
+  }
+  const right = inclusionRootFromPath(index - split, size - split, current, proof, offsetState);
+  if (offsetState.offset >= proof.length) throw new Error("inclusion proof is too short");
+  const left = proof[offsetState.offset];
+  offsetState.offset += 1;
+  return rfc6962NodeHash(left, right);
+}
+function verifyMerkleInclusionProofArtifact(proof, rootHash) {
+  if (!proof || typeof proof !== "object") return false;
+  if (proof.schema_version !== MERKLE_INCLUSION_PROOF_SCHEMA_VERSION) return false;
+  const treeSize = Number(proof.tree_size);
+  const leafIndex = Number(proof.leaf_index);
+  if (!Number.isSafeInteger(treeSize) || treeSize <= 0) return false;
+  if (!Number.isSafeInteger(leafIndex) || leafIndex < 0 || leafIndex >= treeSize) return false;
+  try {
+    const leaf = sha256HashToBytes(proof.leaf_hash);
+    const expectedRoot = sha256HashToBytes(rootHash);
+    const proofHashes = (proof.proof || []).map((item) => sha256HashToBytes(item));
+    const offsetState = { offset: 0 };
+    const computed = inclusionRootFromPath(leafIndex, treeSize, rfc6962LeafHash(leaf), proofHashes, offsetState);
+    return offsetState.offset === proofHashes.length && bytesToHex(computed) === bytesToHex(expectedRoot);
+  } catch (error) {
+    return false;
+  }
+}
+function sha256(message) {
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l = message.length;
+  const bitLen = l * 8;
+  const withOne = l + 1;
+  const padLen = (withOne % 64 <= 56 ? 56 - (withOne % 64) : 120 - (withOne % 64));
+  const data = new Uint8Array(l + 1 + padLen + 8);
+  data.set(message); data[l] = 0x80;
+  const view = new DataView(data.buffer);
+  view.setUint32(data.length - 8, Math.floor(bitLen / 0x100000000));
+  view.setUint32(data.length - 4, bitLen >>> 0);
+  const W = new Array(64);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < data.length; off += 64) {
+    for (let i = 0; i < 16; i += 1) W[i] = view.getUint32(off + i * 4);
+    for (let i = 16; i < 64; i += 1) {
+      const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
+      const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
+      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i += 1) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + K[i] + W[i]) >>> 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0; d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    H = H.map((x, i) => (x + [a,b,c,d,e,f,g,h][i]) >>> 0);
+  }
+  const out = new Uint8Array(32);
+  const outView = new DataView(out.buffer);
+  H.forEach((x, i) => outView.setUint32(i * 4, x));
+  return out;
+}
+function sha512(message) {
+  const MASK = (1n << 64n) - 1n;
+  const K = [
+    0x428a2f98d728ae22n,0x7137449123ef65cdn,0xb5c0fbcfec4d3b2fn,0xe9b5dba58189dbbcn,0x3956c25bf348b538n,0x59f111f1b605d019n,0x923f82a4af194f9bn,0xab1c5ed5da6d8118n,
+    0xd807aa98a3030242n,0x12835b0145706fben,0x243185be4ee4b28cn,0x550c7dc3d5ffb4e2n,0x72be5d74f27b896fn,0x80deb1fe3b1696b1n,0x9bdc06a725c71235n,0xc19bf174cf692694n,
+    0xe49b69c19ef14ad2n,0xefbe4786384f25e3n,0x0fc19dc68b8cd5b5n,0x240ca1cc77ac9c65n,0x2de92c6f592b0275n,0x4a7484aa6ea6e483n,0x5cb0a9dcbd41fbd4n,0x76f988da831153b5n,
+    0x983e5152ee66dfabn,0xa831c66d2db43210n,0xb00327c898fb213fn,0xbf597fc7beef0ee4n,0xc6e00bf33da88fc2n,0xd5a79147930aa725n,0x06ca6351e003826fn,0x142929670a0e6e70n,
+    0x27b70a8546d22ffcn,0x2e1b21385c26c926n,0x4d2c6dfc5ac42aedn,0x53380d139d95b3dfn,0x650a73548baf63den,0x766a0abb3c77b2a8n,0x81c2c92e47edaee6n,0x92722c851482353bn,
+    0xa2bfe8a14cf10364n,0xa81a664bbc423001n,0xc24b8b70d0f89791n,0xc76c51a30654be30n,0xd192e819d6ef5218n,0xd69906245565a910n,0xf40e35855771202an,0x106aa07032bbd1b8n,
+    0x19a4c116b8d2d0c8n,0x1e376c085141ab53n,0x2748774cdf8eeb99n,0x34b0bcb5e19b48a8n,0x391c0cb3c5c95a63n,0x4ed8aa4ae3418acbn,0x5b9cca4f7763e373n,0x682e6ff3d6b2b8a3n,
+    0x748f82ee5defb2fcn,0x78a5636f43172f60n,0x84c87814a1f0ab72n,0x8cc702081a6439ecn,0x90befffa23631e28n,0xa4506cebde82bde9n,0xbef9a3f7b2c67915n,0xc67178f2e372532bn,
+    0xca273eceea26619cn,0xd186b8c721c0c207n,0xeada7dd6cde0eb1en,0xf57d4f7fee6ed178n,0x06f067aa72176fban,0x0a637dc5a2c898a6n,0x113f9804bef90daen,0x1b710b35131c471bn,
+    0x28db77f523047d84n,0x32caab7b40c72493n,0x3c9ebe0a15c9bebcn,0x431d67c49c100d4cn,0x4cc5d4becb3e42b6n,0x597f299cfc657e2an,0x5fcb6fab3ad6faecn,0x6c44198c4a475817n,
+  ];
+  let H = [0x6a09e667f3bcc908n,0xbb67ae8584caa73bn,0x3c6ef372fe94f82bn,0xa54ff53a5f1d36f1n,0x510e527fade682d1n,0x9b05688c2b3e6c1fn,0x1f83d9abfb41bd6bn,0x5be0cd19137e2179n];
+  const l = message.length;
+  const bitLen = BigInt(l) * 8n;
+  const withOne = l + 1;
+  const padLen = (withOne % 128 <= 112 ? 112 - (withOne % 128) : 240 - (withOne % 128));
+  const data = new Uint8Array(l + 1 + padLen + 16);
+  data.set(message); data[l] = 0x80;
+  const view = new DataView(data.buffer);
+  for (let i = 0; i < 8; i += 1) view.setUint8(data.length - 1 - i, Number((bitLen >> BigInt(8 * i)) & 0xffn));
+  const rotr = (x, n) => ((x >> BigInt(n)) | (x << BigInt(64 - n))) & MASK;
+  const shr = (x, n) => x >> BigInt(n);
+  const read64 = (offset) => { let x = 0n; for (let i = 0; i < 8; i += 1) x = (x << 8n) | BigInt(view.getUint8(offset + i)); return x; };
+  const W = new Array(80);
+  for (let off = 0; off < data.length; off += 128) {
+    for (let i = 0; i < 16; i += 1) W[i] = read64(off + i * 8);
+    for (let i = 16; i < 80; i += 1) {
+      const s0 = rotr(W[i - 15], 1) ^ rotr(W[i - 15], 8) ^ shr(W[i - 15], 7);
+      const s1 = rotr(W[i - 2], 19) ^ rotr(W[i - 2], 61) ^ shr(W[i - 2], 6);
+      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) & MASK;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 80; i += 1) {
+      const S1 = rotr(e, 14) ^ rotr(e, 18) ^ rotr(e, 41);
+      const ch = (e & f) ^ ((~e) & g);
+      const temp1 = (h + S1 + ch + K[i] + W[i]) & MASK;
+      const S0 = rotr(a, 28) ^ rotr(a, 34) ^ rotr(a, 39);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) & MASK;
+      h = g; g = f; f = e; e = (d + temp1) & MASK; d = c; c = b; b = a; a = (temp1 + temp2) & MASK;
+    }
+    H = H.map((x, i) => (x + [a,b,c,d,e,f,g,h][i]) & MASK);
+  }
+  const out = new Uint8Array(64);
+  for (let i = 0; i < H.length; i += 1) {
+    for (let j = 0; j < 8; j += 1) out[i * 8 + j] = Number((H[i] >> BigInt(56 - 8 * j)) & 0xffn);
+  }
+  return out;
+}
+
+/*
+ * @noble/ed25519 fallback provenance:
+ *   Package: @noble/ed25519@3.1.0
+ *   Source: https://registry.npmjs.org/@noble/ed25519/-/ed25519-3.1.0.tgz
+ *   Repository release: https://github.com/paulmillr/noble-ed25519/releases/tag/3.1.0
+ *   npm gitHead: f22a12486e252526b2658e4401d286b27c9c753b
+ *   License: MIT, copyright Paul Miller.
+ * The package index.js body is vendored inline below. The terminal ESM export was removed so the
+ * browser can evaluate it inside this self-contained page; hashes.sha512 is wired to the local
+ * pure-JS SHA-512 implementation above for a real offline fallback.
+ */
+const nobleEd25519 = (() => {
+/*! noble-ed25519 - MIT License (c) 2019 Paul Miller (paulmillr.com) */
+/**
+ * 5KB JS implementation of ed25519 EdDSA signatures.
+ * Targets RFC8032, FIPS 186-5, and ZIP215 behavior.
+ * @module
+ * @example
+ * ```js
+import * as ed from '@noble/ed25519';
+(async () => {
+  const secretKey = ed.utils.randomSecretKey();
+  const message = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
+  const pubKey = await ed.getPublicKeyAsync(secretKey); // Sync methods are also present
+  const signature = await ed.signAsync(message, secretKey);
+  const isValid = await ed.verifyAsync(signature, message, pubKey);
+})();
+```
+ */
+/**
+ * Curve params. edwards25519 uses the RFC equation `-x² + y² = 1 + dx²y²`.
+ * The stored `a` literal below is `p - 1`, i.e. the field-element encoding of RFC `a = -1`.
+ * * P = `2n**255n - 19n` // field over which calculations are done
+ * * N = `2n**252n + 27742317777372353535851937790883648493n` // prime-order subgroup order
+ * * h = 8 // cofactor
+ * * a = `Fp.create(BigInt(-1))` // equation param, stored here as `p - 1`
+ * * d = -121665/121666 a.k.a. `Fp.neg(121665 * Fp.inv(121666))` // equation param
+ * * Gx, Gy are coordinates of Generator / base point
+ *
+ * Mirror noble-curves: Point.CURVE() exposes shared params, but callers must not be able to mutate
+ * that shared view and desynchronize it from the arithmetic constants captured below.
+ */
+const ed25519_CURVE = Object.freeze({
+    p: 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffedn,
+    n: 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3edn,
+    h: 8n,
+    a: 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffecn,
+    d: 0x52036cee2b6ffe738cc740797779e89800700a4d4141d8ab75eb4dca135978a3n,
+    Gx: 0x216936d3cd6e53fec0a4e231fdd6dc5c692cc7609525a7b2c9562d608f25d51an,
+    Gy: 0x6666666666666666666666666666666666666666666666666666666666666658n,
+});
+const { p: P, n: N, Gx, Gy, a: _a, d: _d, h } = ed25519_CURVE;
+const L = 32; // shared 32-byte encoded width for Ed25519 points, scalars, signatures, and keys
+// Helpers and Precomputes sections are reused between libraries
+// ## Helpers
+// ----------
+// @ts-ignore
+const captureTrace = (...args) => {
+    if ('captureStackTrace' in Error && typeof Error.captureStackTrace === 'function') {
+        Error.captureStackTrace(...args);
+    }
+};
+const err = (message = '') => {
+    const e = new Error(message);
+    captureTrace(e, err);
+    throw e;
+};
+const isBig = (n) => typeof n === 'bigint'; // is big integer
+const isStr = (s) => typeof s === 'string'; // is string
+// Plain `instanceof Uint8Array` is too strict for some Buffer / proxy / cross-realm cases. The
+// fallback still requires a real ArrayBuffer view so plain JSON-deserialized `{ constructor: ... }`
+// spoofing is rejected, and `BYTES_PER_ELEMENT === 1` keeps the fallback on byte-oriented views.
+const isBytes = (a) => a instanceof Uint8Array ||
+    (ArrayBuffer.isView(a) &&
+        a.constructor.name === 'Uint8Array' &&
+        'BYTES_PER_ELEMENT' in a &&
+        a.BYTES_PER_ELEMENT === 1);
+/**
+ * Asserts something is Bytes, optionally enforces exact length,
+ * and returns the same reference.
+ */
+const abytes = (value, length, title = '') => {
+    const bytes = isBytes(value);
+    const len = value?.length;
+    const needsLen = length !== undefined;
+    if (!bytes || (needsLen && len !== length)) {
+        const prefix = title && `"${title}" `;
+        const ofLen = needsLen ? ` of length ${length}` : '';
+        const got = bytes ? `length=${len}` : `type=${typeof value}`;
+        const msg = prefix + 'expected Uint8Array' + ofLen + ', got ' + got;
+        throw bytes ? new RangeError(msg) : new TypeError(msg);
+    }
+    return value;
+};
+/** create Uint8Array */
+const u8n = (len) => new Uint8Array(len);
+// Clone helper used before in-place byte edits such as sign-bit clearing or endian reversal.
+const u8fr = (buf) => Uint8Array.from(buf);
+// Left-pad hex to a caller-chosen width. Width enforcement/truncation policy stays with callers.
+const padh = (n, pad) => n.toString(16).padStart(pad, '0');
+// Lowercase hex serializer.
+const bytesToHex = (b) => Array.from(abytes(b))
+    .map((e) => padh(e, 2))
+    .join('');
+const C = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 }; // ASCII characters
+const _ch = (ch) => {
+    if (ch >= C._0 && ch <= C._9)
+        return ch - C._0; // '2' => 50-48
+    if (ch >= C.A && ch <= C.F)
+        return ch - (C.A - 10); // 'B' => 66-(65-10)
+    if (ch >= C.a && ch <= C.f)
+        return ch - (C.a - 10); // 'b' => 98-(97-10)
+    return;
+};
+// Accepts both uppercase and lowercase hex; all parse failures intentionally collapse to `hex invalid`.
+const hexToBytes = (hex) => {
+    const e = 'hex invalid';
+    if (!isStr(hex))
+        return err(e);
+    const hl = hex.length;
+    const al = hl / 2;
+    if (hl % 2)
+        return err(e);
+    const array = u8n(al);
+    for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
+        // treat each char as ASCII
+        const n1 = _ch(hex.charCodeAt(hi)); // parse first char, multiply it by 16
+        const n2 = _ch(hex.charCodeAt(hi + 1)); // parse second char
+        if (n1 === undefined || n2 === undefined)
+            return err(e);
+        array[ai] = n1 * 16 + n2; // example: 'A9' => 10*16 + 9
+    }
+    return array;
+};
+const cr = () => globalThis?.crypto; // Optional WebCrypto lookup; sync code still handles absence.
+// Async-path capability helper for WebCrypto-backed APIs.
+const subtle = () => cr()?.subtle ?? err('crypto.subtle must be defined, consider polyfill');
+// prettier-ignore
+const concatBytes = (...arrs) => {
+    // Argument order is transcript-significant for hash/signature callers, and input validation here
+    // intentionally reuses `abytes(...)` without making defensive copies of the source chunks.
+    let len = 0;
+    for (const a of arrs)
+        len += abytes(a).length;
+    const r = u8n(len); // create u8a of summed length
+    let pad = 0; // walk through each array,
+    arrs.forEach(a => { r.set(a, pad); pad += a.length; }); // ensure they have proper type
+    return r;
+};
+/** WebCrypto OS-level CSPRNG (random number generator). Absence still fails later via `cr()`. */
+const randomBytes = (len = L) => {
+    const c = cr();
+    return c.getRandomValues(u8n(len));
+};
+const big = BigInt;
+/** Inclusive-lower, exclusive-upper bigint range assertion. */
+const assertRange = (n, min, max, msg = 'bad number: out of range') => {
+    if (!isBig(n))
+        throw new TypeError(msg);
+    if (min <= n && n < max)
+        return n;
+    throw new RangeError(msg);
+};
+/** Canonical modular reduction into `[0, b)`. */
+const M = (a, b = P) => {
+    const r = a % b;
+    return r >= 0n ? r : b + r;
+};
+// Low-255-bit mask used by the `2^255 - 19` fast reduction in `modP(...)`.
+const P_MASK = (1n << 255n) - 1n;
+// Fast reduction for the special prime `2^255 - 19`. This path assumes nonnegative inputs; the
+// generic fallback would simply be `M(num, P)`.
+const modP = (num) => {
+    // return M(num, P);
+    if (num < 0n)
+        err('negative coordinate');
+    let r = (num >> 255n) * 19n + (num & P_MASK);
+    r = (r >> 255n) * 19n + (r & P_MASK);
+    return r % P;
+};
+// Reduce modulo the subgroup order stored in implementation constant `N` (RFC 8032's `L`).
+const modN = (a) => M(a, N);
+/** Modular inversion using Euclidean GCD (non-CT) instead of the RFC's `x^(p-2)` formulation.
+ * This still sits on secret-dependent paths like point normalization during keygen/signing. */
+// prettier-ignore
+const invert = (num, md) => {
+    if (num === 0n || md <= 0n)
+        err('no inverse n=' + num + ' mod=' + md);
+    let a = M(num, md), b = md, x = 0n, y = 1n, u = 1n, v = 0n;
+    while (a !== 0n) {
+        const q = b / a, r = b % a;
+        const m = x - u * q, n = y - v * q;
+        b = a, a = r, x = u, y = v, u = m, v = n;
+    }
+    return b === 1n ? M(x, md) : err('no inverse'); // b is gcd at this point
+};
+// Dynamic lookup keeps sync/async hash providers configurable at runtime. Both exported slots are
+// caller-owned and may be unset; wrapper helpers use this lookup first and then enforce the digest
+// contract instead of trusting provider output.
+const callHash = (name) => {
+    // @ts-ignore
+    const fn = hashes[name];
+    if (typeof fn !== 'function')
+        err('hashes.' + name + ' not set');
+    return fn;
+};
+// Both provider slots are configurable API surface and may return arbitrary values, so callers must
+// enforce the promised 64-byte SHA-512 digest contract here instead of trusting provider output.
+const checkDigest = (value) => abytes(value, 64, 'digest');
+/**
+ * SHA-512 helper used by the synchronous API.
+ * @param msg - Message bytes to hash.
+ * @returns 64-byte SHA-512 digest.
+ * @example
+ * Hash message bytes after wiring the synchronous SHA-512 implementation.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const digest = ed.hash(new Uint8Array([1, 2, 3]));
+ * ```
+ */
+// Public helper validates the message boundary explicitly; the configured provider is still looked
+// up dynamically and its output is checked with `checkDigest(...)`.
+const hash = (msg) => checkDigest(callHash('sha512')(abytes(msg, undefined, 'message')));
+// Runtime class guard: this is `instanceof Point`, so cross-realm / duplicate-bundle Point objects
+// are rejected even if they are structurally identical.
+const apoint = (p) => (p instanceof Point ? p : err('Point expected'));
+// ## End of Helpers
+// -----------------
+// Exclusive upper bound `2^256` used by 32-byte decode/serialization range checks.
+const B256 = 2n ** 256n;
+/**
+ * Point in XYZT extended coordinates.
+ * @param X - X coordinate.
+ * @param Y - Y coordinate.
+ * @param Z - Projective Z coordinate.
+ * @param T - Cached cross-product term.
+ * @example
+ * Do point arithmetic with the built-in base point and encode the result as hex.
+ *
+ * ```ts
+ * const hex = Point.BASE.double().toHex();
+ * ```
+ */
+class Point {
+    static BASE;
+    static ZERO;
+    X;
+    Y;
+    Z;
+    T;
+    // Constructor only bounds-checks and freezes XYZT coordinates; it does not prove the point is
+    // on-curve or that T matches X*Y/Z.
+    constructor(X, Y, Z, T) {
+        const max = B256;
+        this.X = assertRange(X, 0n, max);
+        this.Y = assertRange(Y, 0n, max);
+        this.Z = assertRange(Z, 1n, max);
+        this.T = assertRange(T, 0n, max);
+        Object.freeze(this);
+    }
+    static CURVE() {
+        return ed25519_CURVE;
+    }
+    static fromAffine(p) {
+        return new Point(p.x, p.y, 1n, modP(p.x * p.y));
+    }
+    /** RFC8032 5.1.3: Bytes to Point. */
+    static fromBytes(hex, zip215 = false) {
+        const d = _d;
+        // Copy array to not mess it up.
+        const normed = u8fr(abytes(hex, L));
+        // adjust first LE byte = last BE byte
+        const lastByte = hex[31];
+        normed[31] = lastByte & ~0x80;
+        const y = bytesToNumberLE(normed);
+        // After clearing the sign bit, parsed `y` is always < 2^255. ZIP-215 still accepts the full
+        // post-mask range here, while strict RFC8032 decoding further requires `y < p`.
+        const max = zip215 ? B256 : P;
+        assertRange(y, 0n, max);
+        const y2 = modP(y * y); // y²
+        const u = M(y2 - 1n); // u=y²-1
+        const v = modP(d * y2 + 1n); // v=dy²+1
+        let { isValid, value: x } = uvRatio(u, v); // (uv³)(uv⁷)^(p-5)/8; square root
+        if (!isValid)
+            err('bad point: y not sqrt'); // not square root: bad point
+        const isXOdd = (x & 1n) === 1n; // adjust sign of x coordinate
+        const isLastByteOdd = (lastByte & 0x80) !== 0; // x_0, last bit
+        // ZIP-215-compatible decoding keeps the x=0 / sign-bit=1 encoding accepted; strict RFC 8032
+        // rejects it, but the vendored ZIP-215 compliance vectors include this form in A/R bytes.
+        if (!zip215 && x === 0n && isLastByteOdd)
+            err('bad point: x==0, isLastByteOdd'); // x=0, x_0=1
+        if (isLastByteOdd !== isXOdd)
+            x = M(-x);
+        return new Point(x, y, 1n, modP(x * y)); // Z=1, T=xy
+    }
+    static fromHex(hex, zip215) {
+        return Point.fromBytes(hexToBytes(hex), zip215);
+    }
+    get x() {
+        return this.toAffine().x;
+    }
+    get y() {
+        return this.toAffine().y;
+    }
+    /** Checks if the point is valid and on-curve. */
+    assertValidity() {
+        const a = _a;
+        const d = _d;
+        const p = this;
+        // Intentional stricter-than-on-curve policy: reject ZERO by default because many protocols
+        // require a non-zero point, and silently accepting identity points is a common caller mistake.
+        if (p.is0())
+            return err('bad point: ZERO'); // TODO: optimize, with vars below?
+        // Equation in affine coordinates: ax² + y² = 1 + dx²y²
+        // Equation in projective coordinates (X/Z, Y/Z, Z):  (aX² + Y²)Z² = Z⁴ + dX²Y²
+        const { X, Y, Z, T } = p;
+        const X2 = modP(X * X); // X²
+        const Y2 = modP(Y * Y); // Y²
+        const Z2 = modP(Z * Z); // Z²
+        const Z4 = modP(Z2 * Z2); // Z⁴
+        const aX2 = modP(X2 * a); // aX²
+        const left = modP(Z2 * (aX2 + Y2)); // (aX² + Y²)Z²
+        const right = M(Z4 + modP(d * modP(X2 * Y2))); // Z⁴ + dX²Y²
+        if (left !== right)
+            return err('bad point: equation left != right (1)');
+        // In Extended coordinates we also have T, which is x*y=T/Z: check X*Y == Z*T
+        const XY = modP(X * Y);
+        const ZT = modP(Z * T);
+        if (XY !== ZT)
+            return err('bad point: equation left != right (2)');
+        return this;
+    }
+    /** Equality check: compare points P&Q. */
+    equals(other) {
+        const { X: X1, Y: Y1, Z: Z1 } = this;
+        const { X: X2, Y: Y2, Z: Z2 } = apoint(other); // checks class equality
+        const X1Z2 = modP(X1 * Z2);
+        const X2Z1 = modP(X2 * Z1);
+        const Y1Z2 = modP(Y1 * Z2);
+        const Y2Z1 = modP(Y2 * Z1);
+        return X1Z2 === X2Z1 && Y1Z2 === Y2Z1;
+    }
+    is0() {
+        return this.equals(I);
+    }
+    /** Flip point over y coordinate. */
+    negate() {
+        return new Point(M(-this.X), this.Y, this.Z, M(-this.T));
+    }
+    /** Point doubling. Complete formula. Cost: `4M + 4S + 1*a + 6add + 1*2`. */
+    double() {
+        const { X: X1, Y: Y1, Z: Z1 } = this;
+        const a = _a;
+        // https://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html#doubling-dbl-2008-hwcd
+        const A = modP(X1 * X1);
+        const B = modP(Y1 * Y1);
+        const C = modP(2n * Z1 * Z1);
+        const D = modP(a * A);
+        const x1y1 = M(X1 + Y1);
+        const E = M(modP(x1y1 * x1y1) - A - B);
+        const G = M(D + B);
+        const F = M(G - C);
+        const H = M(D - B);
+        const X3 = modP(E * F);
+        const Y3 = modP(G * H);
+        const T3 = modP(E * H);
+        const Z3 = modP(F * G);
+        return new Point(X3, Y3, Z3, T3);
+    }
+    /** Point addition. Complete formula. Cost: `8M + 1*k + 8add + 1*2`. */
+    add(other) {
+        const { X: X1, Y: Y1, Z: Z1, T: T1 } = this;
+        const { X: X2, Y: Y2, Z: Z2, T: T2 } = apoint(other); // doesn't check if other on-curve
+        const a = _a;
+        const d = _d;
+        // https://hyperelliptic.org/EFD/g1p/auto-twisted-extended-1.html#addition-add-2008-hwcd-3
+        const A = modP(X1 * X2);
+        const B = modP(Y1 * Y2);
+        const C = modP(modP(T1 * d) * T2);
+        const D = modP(Z1 * Z2);
+        const E = M(modP(M(X1 + Y1) * M(X2 + Y2)) - A - B);
+        const F = M(D - C);
+        const G = M(D + C);
+        const H = M(B - modP(a * A));
+        const X3 = modP(E * F);
+        const Y3 = modP(G * H);
+        const T3 = modP(E * H);
+        const Z3 = modP(F * G);
+        return new Point(X3, Y3, Z3, T3);
+    }
+    subtract(other) {
+        return this.add(apoint(other).negate());
+    }
+    /**
+     * Point-by-scalar multiplication. Safe mode requires `1 <= n < CURVE.n`.
+     * Unsafe mode additionally permits `n = 0` and returns the identity point for that case.
+     * Uses {@link wNAF} for base point.
+     * Uses fake point to mitigate side-channel leakage.
+     * @param n - scalar by which point is multiplied
+     * @param safe - safe mode guards against timing attacks; unsafe mode is faster
+     */
+    multiply(n, safe = true) {
+        // Mirror noble-curves: unsafe mode still validates scalar range first, but intentionally keeps
+        // `n = 0` as the one extra accepted case used by verification-style callers.
+        if (!safe && n === 0n)
+            return I;
+        assertRange(n, 1n, N);
+        if (!safe && this.is0())
+            return I;
+        if (n === 1n)
+            return this;
+        if (this.equals(G))
+            return wNAF(n).p;
+        // init result point & fake point
+        let p = I;
+        let f = G;
+        for (let d = this; n > 0n; d = d.double(), n >>= 1n) {
+            // if bit is present, add to point
+            // if not present, add to fake, for timing safety
+            if (n & 1n)
+                p = p.add(d);
+            else if (safe)
+                f = f.add(d);
+        }
+        return p;
+    }
+    multiplyUnsafe(scalar) {
+        return this.multiply(scalar, false);
+    }
+    /** Convert point to 2d xy affine point. (X, Y, Z) ∋ (x=X/Z, y=Y/Z) */
+    toAffine() {
+        const { X, Y, Z } = this;
+        // Fast-path only for the identity point; all other inputs still go through inversion.
+        if (this.equals(I))
+            return { x: 0n, y: 1n };
+        const iz = invert(Z, P);
+        // (Z * Z^-1) must be 1, otherwise bad math
+        if (modP(Z * iz) !== 1n)
+            err('invalid inverse');
+        // x = X*Z^-1; y = Y*Z^-1
+        const x = modP(X * iz);
+        const y = modP(Y * iz);
+        return { x, y };
+    }
+    toBytes() {
+        const { x, y } = this.toAffine();
+        const b = numTo32bLE(y);
+        // store sign in first LE byte
+        b[31] |= x & 1n ? 0x80 : 0;
+        return b;
+    }
+    toHex() {
+        return bytesToHex(this.toBytes());
+    }
+    clearCofactor() {
+        return this.multiply(big(h), false);
+    }
+    isSmallOrder() {
+        return this.clearCofactor().is0();
+    }
+    isTorsionFree() {
+        // Multiply by big number N. We can't `mul(N)` because of checks. Instead, we `mul(N/2)*2+1`
+        let p = this.multiply(N / 2n, false).double();
+        if (N % 2n)
+            p = p.add(this);
+        return p.is0();
+    }
+}
+/** Generator / base point */
+const G = new Point(Gx, Gy, 1n, M(Gx * Gy));
+/** Identity / zero point */
+const I = new Point(0n, 1n, 1n, 0n);
+// Static aliases
+Point.BASE = G;
+Point.ZERO = I;
+const numTo32bLE = (num) => hexToBytes(padh(assertRange(num, 0n, B256), 64)).reverse();
+// Caller-enforced width: some sites require 32-byte RFC encodings, while others intentionally feed
+// wider SHA-512 output chunks through the same little-endian parser.
+const bytesToNumberLE = (b) => big('0x' + bytesToHex(u8fr(abytes(b)).reverse()));
+const pow2 = (x, power) => {
+    // pow2(x, 4) == x^(2^4)
+    // Negative `power` values are not rejected here and currently leave `x` unchanged.
+    let r = x;
+    while (power-- > 0n) {
+        r = modP(r * r);
+    }
+    return r;
+};
+// prettier-ignore
+const pow_2_252_3 = (x) => {
+    const x2 = modP(x * x); // x^2,       bits 1
+    const b2 = modP(x2 * x); // x^3,       bits 11
+    const b4 = modP(pow2(b2, 2n) * b2); // x^(2^4-1), bits 1111
+    const b5 = modP(pow2(b4, 1n) * x); // x^(2^5-1), bits 11111
+    const b10 = modP(pow2(b5, 5n) * b5); // x^(2^10-1)
+    const b20 = modP(pow2(b10, 10n) * b10); // x^(2^20-1)
+    const b40 = modP(pow2(b20, 20n) * b20); // x^(2^40-1)
+    const b80 = modP(pow2(b40, 40n) * b40); // x^(2^80-1)
+    const b160 = modP(pow2(b80, 80n) * b80); // x^(2^160-1)
+    const b240 = modP(pow2(b160, 80n) * b80); // x^(2^240-1)
+    const b250 = modP(pow2(b240, 10n) * b10); // x^(2^250-1)
+    const pow_p_5_8 = modP(pow2(b250, 2n) * x); // x^((p-5)/8), used by RFC8032 point decode
+    return { pow_p_5_8, b2 };
+};
+const RM1 = 0x2b8324804fc1df0b2b4d00993dfbd7a72f431806ad2fe478c4ee1b274a0ea0b0n; // 2^((p-1)/4) = sqrt(-1)
+// RFC8032 §5.1.3 square-root helper for point decompression. `value` is only meaningful when
+// `isValid` is true; callers are also expected to pass canonical field elements with non-zero `v`.
+// prettier-ignore
+const uvRatio = (u, v) => {
+    const v3 = modP(v * modP(v * v)); // v³
+    const v7 = modP(modP(v3 * v3) * v); // v⁷
+    const pow = pow_2_252_3(modP(u * v7)).pow_p_5_8; // (uv⁷)^(p-5)/8
+    let x = modP(u * modP(v3 * pow)); // (uv³)(uv⁷)^(p-5)/8
+    const vx2 = modP(v * modP(x * x)); // vx²
+    const root1 = x; // First root candidate
+    const root2 = modP(x * RM1); // Second root candidate; RM1 is √-1
+    const useRoot1 = vx2 === u; // If vx² = u (mod p), x is a square root
+    const useRoot2 = vx2 === M(-u); // If vx² = -u, set x <-- x * 2^((p-1)/4)
+    const noRoot = vx2 === M(-u * RM1); // There is no valid root, vx² = -u√-1
+    if (useRoot1)
+        x = root1;
+    if (useRoot2 || noRoot)
+        x = root2; // We return root2 anyway, for const-time
+    if ((M(x) & 1n) === 1n)
+        x = M(-x); // edIsNegative
+    return { isValid: useRoot1 || useRoot2, value: x };
+};
+// Implementation `N` is the subgroup order; `L` is only the shared 32-byte encoded width constant.
+// Reduce any little-endian byte string modulo the subgroup order; the `hash` name reflects the
+// common caller shape, not an input restriction.
+const modL_LE = (hash) => modN(bytesToNumberLE(hash)); // modulo L; but little-endian
+// Both sync and async SHA-512 slots are exported/configurable; use `callHash(...)` for both so
+// missing async overrides fail explicitly, then validate the returned digest type/length.
+const sha512a = (...m) => Promise.resolve(callHash('sha512Async')(concatBytes(...m))).then(checkDigest);
+const sha512s = (...m) => checkDigest(callHash('sha512')(concatBytes(...m)));
+// RFC8032 5.1.5. Split the 64-byte hashed seed into the clamped scalar half and nonce prefix.
+const hash2extK = (hashed) => {
+    // slice creates a copy, unlike subarray
+    const copy = u8fr(hashed);
+    const head = copy.slice(0, 32);
+    head[0] &= 248; // Clamp bits: 0b1111_1000
+    head[31] &= 127; // 0b0111_1111
+    head[31] |= 64; // 0b0100_0000
+    const prefix = copy.slice(32, 64); // secret key "prefix"
+    // RFC words this as `[s]B`; reducing the clamped little-endian scalar modulo `N` is equivalent
+    // for base-point multiplication because `G` already has subgroup order `N`.
+    const scalar = modL_LE(head);
+    const point = G.multiply(scalar); // public key point
+    const pointBytes = point.toBytes(); // point serialized to Uint8Array
+    return { head, prefix, scalar, point, pointBytes };
+};
+// RFC8032 5.1.5; getPublicKey async, sync. Hash priv key and extract point.
+const getExtendedPublicKeyAsync = (secretKey) => sha512a(abytes(secretKey, L)).then(hash2extK);
+const getExtendedPublicKey = (secretKey) => hash2extK(sha512s(abytes(secretKey, L)));
+/**
+ * Creates a 32-byte Ed25519 public key from the RFC 8032 32-byte secret-key seed. Async.
+ * @param secretKey - 32-byte RFC 8032 secret-key seed, not a 64-byte expanded secret key.
+ * @returns 32-byte public key.
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Derive the public key bytes for a newly generated signer secret.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ *
+ * const secretKey = ed.utils.randomSecretKey();
+ * const publicKey = await ed.getPublicKeyAsync(secretKey);
+ * ```
+ */
+const getPublicKeyAsync = (secretKey) => getExtendedPublicKeyAsync(secretKey).then((p) => p.pointBytes);
+/**
+ * Creates a 32-byte Ed25519 public key from the RFC 8032 32-byte secret-key seed.
+ * To use, set `hashes.sha512` first.
+ * @param priv - 32-byte RFC 8032 secret-key seed, not a 64-byte expanded secret key.
+ * @returns 32-byte public key.
+ * @throws If synchronous SHA-512 has not been configured in `hashes`. {@link Error}
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Derive the public key entirely through the synchronous API.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const secretKey = ed.utils.randomSecretKey();
+ * const publicKey = ed.getPublicKey(secretKey);
+ * ```
+ */
+const getPublicKey = (priv) => getExtendedPublicKey(priv).pointBytes;
+const hashFinishA = (res) => sha512a(res.hashable).then(res.finish);
+const hashFinishS = (res) => res.finish(sha512s(res.hashable));
+// Code, shared between sync & async sign
+const _sign = (e, rBytes, msg) => {
+    const { pointBytes: P, scalar: s } = e;
+    const r = modL_LE(rBytes); // r was created outside, reduce it modulo L
+    // RFC 8032 5.1.6 allows r mod L = 0, and SUPERCOP ref10 accepts the resulting identity-point
+    // signature.
+    // We intentionally keep the safe multiply() rejection here so a miswired all-zero SHA-512 provider
+    // fails loudly instead of silently producing a degenerate signature.
+    const R = G.multiply(r).toBytes(); // R = [r]B
+    const hashable = concatBytes(R, P, msg); // dom2(F, C) || R || A || PH(M)
+    const finish = (hashed) => {
+        // k = SHA512(dom2(F, C) || R || A || PH(M))
+        const S = modN(r + modL_LE(hashed) * s); // S = (r + k * s) mod L; 0 <= s < l
+        return abytes(concatBytes(R, numTo32bLE(S)), 64); // 64-byte sig: 32-byte encoded R point || 32-byte LE(S)
+    };
+    return { hashable, finish };
+};
+/**
+ * Signs message using secret key. Async.
+ * Follows RFC8032 5.1.6.
+ * @param message - Message bytes to sign.
+ * @param secretKey - 32-byte RFC 8032 secret-key seed, not a 64-byte expanded secret key.
+ * @returns 64-byte Ed25519 signature.
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Sign an arbitrary message with a fresh Ed25519 secret key.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ *
+ * const secretKey = ed.utils.randomSecretKey();
+ * const message = new Uint8Array([1, 2, 3]);
+ * const signature = await ed.signAsync(message, secretKey);
+ * ```
+ */
+const signAsync = async (message, secretKey) => {
+    const m = abytes(message);
+    const e = await getExtendedPublicKeyAsync(secretKey);
+    const rBytes = await sha512a(e.prefix, m); // r = SHA512(dom2(F, C) || prefix || PH(M))
+    return hashFinishA(_sign(e, rBytes, m)); // gen R, k, S, then 64-byte signature
+};
+/**
+ * Signs message using secret key. To use, set `hashes.sha512` first.
+ * Follows RFC8032 5.1.6.
+ * @param message - Message bytes to sign.
+ * @param secretKey - 32-byte RFC 8032 secret-key seed, not a 64-byte expanded secret key.
+ * @returns 64-byte Ed25519 signature.
+ * @throws If synchronous SHA-512 has not been configured in `hashes`. {@link Error}
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Use the sync API when you've wired a SHA-512 implementation yourself.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const secretKey = ed.utils.randomSecretKey();
+ * const signature = ed.sign(new Uint8Array([1, 2, 3]), secretKey);
+ * ```
+ */
+const sign = (message, secretKey) => {
+    const m = abytes(message);
+    const e = getExtendedPublicKey(secretKey);
+    const rBytes = sha512s(e.prefix, m); // r = SHA512(dom2(F, C) || prefix || PH(M))
+    return hashFinishS(_sign(e, rBytes, m)); // gen R, k, S, then 64-byte signature
+};
+// Exported defaults favor ZIP-215 interoperability semantics; callers must opt into the stricter
+// branch with `{ zip215: false }`.
+const defaultVerifyOpts = { zip215: true };
+const _verify = (sig, msg, publicKey, options = defaultVerifyOpts) => {
+    sig = abytes(sig, 64); // Signature hex str/Bytes, must be 64 bytes
+    msg = abytes(msg); // Message hex str/Bytes
+    publicKey = abytes(publicKey, L);
+    // zip215=false keeps the library's stricter branch, which still canonicalizes `R` / `A` before
+    // hashing and rejects small-order public keys earlier than pure RFC8032 text would require.
+    // Preserve the exported ZIP-215 default for `{}` / `{ zip215: undefined }`, not just omitted opts.
+    const { zip215 = true } = options;
+    const r = sig.subarray(0, L);
+    const s = bytesToNumberLE(sig.subarray(L, L * 2)); // Decode second half as an integer S;
+    let A, R, SB;
+    let hashable = Uint8Array.of();
+    let finished = false;
+    try {
+        // zip215=true is good for consensus-critical apps. =false follows RFC8032 / NIST186-5.
+        // zip215=true:  0 <= y < MASK (2^256 for ed25519)
+        // zip215=false: 0 <= y < P (2^255-19 for ed25519)
+        A = Point.fromBytes(publicKey, zip215);
+        R = Point.fromBytes(r, zip215);
+        SB = G.multiply(s, false); // 0 <= s < l is done inside
+        // ZIP-215 accepts noncanonical / unreduced point encodings, so the challenge hash must use the
+        // exact signature/public-key bytes rather than canonicalized re-encodings of the decoded points.
+        hashable = concatBytes(r, publicKey, msg); // dom2(F, C) || R || A || PH(M)
+        finished = true;
+    }
+    catch (error) { }
+    const finish = (hashed) => {
+        if (!finished)
+            return false;
+        // Policy: strict mode intentionally rejects all small-order public keys, even though the raw RFC
+        // equation text is looser here. This matches libsodium and avoids weak / ambiguous verification
+        // outcomes where unusual low-order public keys can make distinct key/signature combinations verify.
+        if (!zip215 && A.isSmallOrder())
+            return false;
+        // k = SHA512(dom2(F, C) || R || A || PH(M))
+        const k = modL_LE(hashed);
+        const RkA = R.add(A.multiply(k, false));
+        // Extended group equation
+        // [8][S]B = [8]R + [8][k]A'
+        return RkA.subtract(SB).clearCofactor().is0();
+    };
+    return { hashable, finish };
+};
+/**
+ * Verifies a signature on message and public key. Async.
+ * The implementation is based on RFC8032 5.1.7, but default opts use ZIP-215 semantics; pass
+ * `{ zip215: false }` for the library's stricter branch.
+ * @param signature - 64-byte signature.
+ * @param message - Signed message bytes.
+ * @param publicKey - 32-byte public key.
+ * @param opts - Verification options. Defaults to ZIP-215 semantics. See {@link EdDSAVerifyOpts}.
+ * @returns `true` when the signature is valid.
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Verify the signature against the same message and derived public key.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ *
+ * const secretKey = ed.utils.randomSecretKey();
+ * const message = new Uint8Array([1, 2, 3]);
+ * const publicKey = await ed.getPublicKeyAsync(secretKey);
+ * const signature = await ed.signAsync(message, secretKey);
+ * const isValid = await ed.verifyAsync(signature, message, publicKey);
+ * ```
+ */
+const verifyAsync = async (signature, message, publicKey, opts = defaultVerifyOpts) => hashFinishA(_verify(signature, message, publicKey, opts));
+/**
+ * Verifies a signature on message and public key using the synchronous hash path.
+ * The implementation is based on RFC8032 5.1.7, but default opts use ZIP-215 semantics; pass
+ * `{ zip215: false }` for the library's stricter branch.
+ * @param signature - 64-byte signature.
+ * @param message - Signed message bytes.
+ * @param publicKey - 32-byte public key.
+ * @param opts - Verification options. Defaults to ZIP-215 semantics. See {@link EdDSAVerifyOpts}.
+ * @returns `true` when the signature is valid.
+ * @throws If synchronous SHA-512 has not been configured in `hashes`. {@link Error}
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Verify a signature entirely through the synchronous API.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const secretKey = ed.utils.randomSecretKey();
+ * const message = new Uint8Array([1, 2, 3]);
+ * const publicKey = ed.getPublicKey(secretKey);
+ * const signature = ed.sign(message, secretKey);
+ * const isValid = ed.verify(signature, message, publicKey);
+ * ```
+ */
+const verify = (signature, message, publicKey, opts = defaultVerifyOpts) => hashFinishS(_verify(signature, message, publicKey, opts));
+/**
+ * Math, hex, byte helpers. Not in `utils` because utils share API with noble-curves.
+ * Exposes the same low-level field-default `mod` reducer and non-CT `invert` helper used
+ * internally.
+ * @example
+ * Convert bytes to a hex string with the low-level helper namespace.
+ *
+ * ```ts
+ * const hex = etc.bytesToHex(new Uint8Array([1, 2, 3]));
+ * ```
+ */
+const etc = /* @__PURE__ */ Object.freeze({
+    bytesToHex,
+    hexToBytes,
+    concatBytes,
+    mod: M,
+    invert: invert,
+    randomBytes,
+});
+/**
+ * Hash implementations used by the synchronous API plus the default async WebCrypto provider.
+ * Both slots are configurable API surface; wrapper helpers revalidate that providers still return
+ * 64-byte SHA-512 digests.
+ * @example
+ * Provide a SHA-512 implementation before calling synchronous helpers.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const { publicKey } = ed.keygen();
+ * ```
+ */
+const hashes = {
+    sha512Async: async (message) => {
+        const s = subtle();
+        const m = concatBytes(message);
+        return u8n(await s.digest('SHA-512', m.buffer));
+    },
+    sha512: undefined,
+};
+// Returns the final 32-byte Ed25519 secret-key seed verbatim, generating fresh random bytes only
+// when omitted.
+const randomSecretKey = (seed) => {
+    seed = seed === undefined ? randomBytes(L) : seed;
+    return abytes(seed, L);
+};
+/**
+ * Generates a secret/public keypair.
+ * @param seed - Optional 32-byte Ed25519 secret-key seed, returned verbatim as `secretKey`.
+ * @returns Keypair with `secretKey` and `publicKey`.
+ * @throws If synchronous SHA-512 has not been configured in `hashes`. {@link Error}
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Generate a new keypair through the synchronous API after wiring SHA-512.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ * import { sha512 } from '@noble/hashes/sha2.js';
+ *
+ * ed.hashes.sha512 = sha512;
+ * const { secretKey, publicKey } = ed.keygen();
+ * ```
+ */
+const keygen = (seed) => {
+    const secretKey = randomSecretKey(seed);
+    const publicKey = getPublicKey(secretKey);
+    return { secretKey, publicKey };
+};
+/**
+ * Generates a secret/public keypair asynchronously.
+ * @param seed - Optional 32-byte Ed25519 secret-key seed, returned verbatim as `secretKey`.
+ * @returns Keypair with `secretKey` and `publicKey`.
+ * @throws On wrong argument types. {@link TypeError}
+ * @throws On wrong argument ranges or values. {@link RangeError}
+ * @example
+ * Generate a new keypair through the asynchronous WebCrypto-backed path.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ *
+ * const { secretKey, publicKey } = await ed.keygenAsync();
+ * ```
+ */
+const keygenAsync = async (seed) => {
+    const secretKey = randomSecretKey(seed);
+    const publicKey = await getPublicKeyAsync(secretKey);
+    return { secretKey, publicKey };
+};
+/**
+ * Ed25519-specific key utilities.
+ * `utils.getExtendedPublicKey*` expose secret-derived internals (`head`, `prefix`, `scalar`, and
+ * point objects), not just public-key bytes.
+ * @example
+ * Generate a new Ed25519 secret key and derive the matching public key.
+ *
+ * ```ts
+ * import * as ed from '@noble/ed25519';
+ *
+ * const secretKey = ed.utils.randomSecretKey();
+ * const publicKey = await ed.getPublicKeyAsync(secretKey);
+ * ```
+ */
+const utils = /* @__PURE__ */ Object.freeze({
+    getExtendedPublicKeyAsync: getExtendedPublicKeyAsync,
+    getExtendedPublicKey: getExtendedPublicKey,
+    randomSecretKey: randomSecretKey,
+});
+// ## Precomputes
+// --------------
+const W = 8; // W is window size
+const scalarBits = 256;
+const pwindows = Math.ceil(scalarBits / W) + 1; // 33 for W=8, NOT 32 - see wNAF loop
+const pwindowSize = 2 ** (W - 1); // 128 for W=8
+// Layout is grouped by window: each block stores the positive multiples `1*base .. 128*base` for
+// that window, and the extra `+1` window in `pwindows` absorbs carries from signed-digit recoding.
+const precompute = () => {
+    const points = [];
+    let p = G;
+    let b = p;
+    for (let w = 0; w < pwindows; w++) {
+        b = p;
+        points.push(b);
+        for (let i = 1; i < pwindowSize; i++) {
+            b = b.add(p);
+            points.push(b);
+        } // i=1, bc we skip 0
+        p = b.double();
+    }
+    return points;
+};
+let Gpows = undefined; // shared process-wide cache of base-point precomputes
+// Branch-based negate helper used for JS/JIT mitigation symmetry, not a strict constant-time claim.
+const ctneg = (cnd, p) => {
+    const n = p.negate();
+    return cnd ? n : p;
+};
+/**
+ * Precomputes give 12x faster getPublicKey(), 10x sign(), 2x verify() by
+ * caching multiples of G (base point). Cache is stored in 32MB of RAM.
+ * Any time `G.multiply` is done, precomputes are used.
+ * Not used for getSharedSecret, which instead multiplies random pubkey `P.multiply`.
+ *
+ * w-ary non-adjacent form (wNAF) precomputation method is 10% slower than windowed method,
+ * but takes 2x less RAM. RAM reduction is possible by utilizing `.subtract`.
+ * Returns the real accumulator `p` plus a fake accumulator `f`; callers only care about `p`, while
+ * `f` exists to keep similar work in zero-digit branches as a JS/JIT side-channel mitigation.
+ *
+ * !! Precomputes can be disabled by commenting-out call of the wNAF() inside Point#multiply().
+ */
+const wNAF = (n) => {
+    const comp = Gpows || (Gpows = precompute());
+    let p = I;
+    let f = G; // f must be G, or could become I in the end
+    const pow_2_w = 2 ** W; // 256 for W=8
+    const maxNum = pow_2_w; // 256 for W=8
+    const mask = big(pow_2_w - 1); // 255 for W=8 == mask 0b11111111
+    const shiftBy = big(W); // 8 for W=8
+    for (let w = 0; w < pwindows; w++) {
+        let wbits = Number(n & mask); // extract W bits.
+        n >>= shiftBy; // shift number by W bits.
+        // We use negative indexes to reduce size of precomputed table by 2x.
+        // Instead of needing precomputes 0..256, we only calculate them for 0..128.
+        // If an index > 128 is found, we do (256-index) - where 256 is next window.
+        // Naive: index +127 => 127, +224 => 224
+        // Optimized: index +127 => 127, +224 => 256-32
+        if (wbits > pwindowSize) {
+            wbits -= maxNum;
+            n += 1n;
+        }
+        const off = w * pwindowSize;
+        const offF = off; // offsets, evaluate both
+        const offP = off + Math.abs(wbits) - 1;
+        const isEven = w % 2 !== 0; // conditions, evaluate both
+        const isNeg = wbits < 0;
+        if (wbits === 0) {
+            // off == I: can't add it. Adding random offF instead.
+            f = f.add(ctneg(isEven, comp[offF])); // bits are 0: add garbage to fake point
+        }
+        else {
+            p = p.add(ctneg(isNeg, comp[offP])); // bits are 1: add to result point
+        }
+    }
+    if (n !== 0n)
+        err('invalid wnaf');
+    return { p, f }; // callers only need `p`; `f` is kept for zero-digit mitigation symmetry
+};
+// !! Remove the export to easily use in REPL / browser console
+
+hashes.sha512 = sha512;
+return Object.freeze({ verify });
+})();
+
+function base64ToBytes(input) {
+  const clean = String(input).trim().replace(/^ed25519:/, "").replace(/\s+/g, "");
+  if (!clean) throw new Error("base64 value is empty");
+  if (typeof atob === "function") {
+    const bin = atob(clean);
+    return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+  }
+  if (typeof Buffer !== "undefined") return Uint8Array.from(Buffer.from(clean, "base64"));
+  throw new Error("No base64 decoder available");
+}
+function publicKeyMaterial(input) {
+  const text = String(input || "").trim();
+  if (!text) throw new Error("Public key is required");
+  if (text.includes("BEGIN PUBLIC KEY")) {
+    const body = text.replace(/-----BEGIN PUBLIC KEY-----/g, "").replace(/-----END PUBLIC KEY-----/g, "").replace(/\s+/g, "");
+    const der = base64ToBytes(body);
+    if (der.length === 32) return { raw: der, spki: der, encoding: "raw-base64" };
+    if (der.length < 32) throw new Error("Ed25519 public key PEM is too short");
+    return { raw: der.slice(der.length - 32), spki: der, encoding: "pem-spki" };
+  }
+  const raw = base64ToBytes(text);
+  if (raw.length !== 32) throw new Error("Ed25519 raw public key must decode to 32 bytes");
+  return { raw, spki: null, encoding: "raw-base64" };
+}
+async function verifyEd25519(signatureBytes, messageBytes, publicKeyBytes) {
+  if (globalThis.crypto && globalThis.crypto.subtle) {
+    try {
+      const key = await globalThis.crypto.subtle.importKey("raw", publicKeyBytes, { name: "Ed25519" }, false, ["verify"]);
+      const ok = await globalThis.crypto.subtle.verify({ name: "Ed25519" }, key, signatureBytes, messageBytes);
+      return { ok, engine: "WebCrypto SubtleCrypto Ed25519" };
+    } catch (error) {
+      // Browsers that lack Ed25519 support still have SHA/digest support; fall through to noble.
+    }
+  }
+  return { ok: nobleEd25519.verify(signatureBytes, messageBytes, publicKeyBytes, { zip215: false }), engine: "@noble/ed25519@3.1.0 inline fallback" };
+}
+function verificationTier(block) {
+  const meta = block && typeof block.metadata === "object" ? block.metadata : {};
+  const material = block && typeof block.public_verification_material === "object" ? block.public_verification_material : {};
+  if (block?.key_id === "demo-not-for-production" || meta.demo_only || meta.verification_tier === "demo" || material.verification_tier === "demo") return "demo-not-for-production";
+  if (block?.key_id === "ephemeral-dev" || meta.non_durable || meta.verification_tier === "non-durable") return "ephemeral-dev";
+  return "production";
+}
+async function verifySignatureRecord(block, expectedPayloadHash, purpose, tenantId, keyId, publicKeyInput) {
+  const checks = [];
+  if (!block || typeof block !== "object") return { ok: false, checks: [{ name: "signature_block", ok: false, message: "missing signature block" }] };
+  const schemaVersion = block.schema_version || SIGNATURE_SCHEMA_VERSION;
+  checks.push({ name: "schema_version", ok: SUPPORTED_SIGNATURE_SCHEMA_VERSIONS.has(schemaVersion), expected: Array.from(SUPPORTED_SIGNATURE_SCHEMA_VERSIONS).join(" or "), actual: schemaVersion });
+  checks.push({ name: "algorithm", ok: block.algorithm === "Ed25519", expected: "Ed25519", actual: block.algorithm });
+  checks.push({ name: "purpose", ok: block.purpose === purpose, expected: purpose, actual: block.purpose });
+  checks.push({ name: "tenant_id", ok: !tenantId || block.tenant_id === tenantId, expected: tenantId, actual: block.tenant_id });
+  checks.push({ name: "key_id", ok: !keyId || block.key_id === keyId, expected: keyId, actual: block.key_id });
+  checks.push({ name: "payload_hash", ok: block.payload_hash === expectedPayloadHash, expected: expectedPayloadHash, actual: block.payload_hash });
+  let engine = "not-run";
+  let signatureOk = false;
+  let signingPayload = "";
+  let signingPayloadHash = "";
+  if (checks.every((check) => check.ok)) {
+    const keyFromBlock = block.public_verification_material?.public_key_base64 || block.public_verification_material?.public_key_pem || "";
+    const keyMaterial = publicKeyMaterial(publicKeyInput || keyFromBlock);
+    const signatureBytes = base64ToBytes(block.signature || "");
+    signingPayload = signingMessage(block, expectedPayloadHash);
+    signingPayloadHash = "sha256:" + sha256Hex(utf8Bytes(signingPayload));
+    const result = await verifyEd25519(signatureBytes, utf8Bytes(signingPayload), keyMaterial.raw);
+    signatureOk = result.ok;
+    engine = result.engine;
+  }
+  checks.push({ name: "ed25519_signature", ok: signatureOk, engine });
+  return {
+    ok: checks.every((check) => check.ok),
+    checks,
+    engine,
+    signingPayload,
+    signingPayloadHash,
+    keyId: block.key_id || "",
+    algorithm: block.algorithm || "",
+    keyVersion: block.key_version || "",
+    schemaVersion,
+    purpose: block.purpose || "",
+    tenantId: block.tenant_id || "",
+    verificationTier: verificationTier(block),
+  };
+}
+async function verifyWarrantObject(warrant, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  const hash = proofArtifactHash("warrant", warrant);
+  const expectedKeyId = warrant.signing_key_id || warrant.signature?.key_id || null;
+  const signature = await verifySignatureRecord(warrant.signature, hash.hash, PURPOSE_WARRANT, warrant.tenant_id || null, expectedKeyId, publicKeyInput);
+  const hashOk = warrant.warrant_hash === hash.hash;
+  return {
+    artifactType: "warrant",
+    status: hashOk && signature.ok ? "pass" : "fail",
+    hashOk,
+    storedHash: warrant.warrant_hash || "",
+    recomputedHash: hash.hash,
+    canonicalPayload: hash.canonicalPayload,
+    unsignedPayload: plain(hash.unsignedPayload),
+    signature,
+    issues: [
+      ...(hashOk ? [] : [{ code: "warrant_hash_mismatch", offendingField: "warrant_hash", expected: hash.hash, actual: warrant.warrant_hash || "" }]),
+      ...(signature.ok ? [] : [{ code: "signature_mismatch", offendingField: "signature", expected: "valid Ed25519 signature over recomputed payload hash", actual: "failed" }]),
+    ],
+  };
+}
+async function verifyLedgerRecordObject(record, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  const hash = ledgerRecordHash(record);
+  const hashOk = record.record_hash === hash.hash;
+  const signature = await verifySignatureRecord(record.signature, hash.hash, PURPOSE_LEDGER_RECORD, record.tenant_id || null, record.signature?.key_id || null, publicKeyInput);
+  return {
+    artifactType: "ledger_record",
+    status: hashOk && signature.ok ? "pass" : "fail",
+    hashOk,
+    storedHash: record.record_hash || "",
+    recomputedHash: hash.hash,
+    canonicalPayload: hash.canonicalPayload,
+    unsignedPayload: plain(hash.unsignedPayload),
+    signature,
+    issues: [
+      ...(hashOk ? [] : [{ code: "record_hash_mismatch", offendingField: "record_hash", expected: hash.hash, actual: record.record_hash || "" }]),
+      ...(signature.ok ? [] : [{ code: "signature_mismatch", offendingField: "signature", expected: "valid Ed25519 signature over recomputed record hash", actual: "failed" }]),
+    ],
+  };
+}
+async function verifyArtifactText(text, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  const artifact = parseJsonObject(text, { preserveNumbers: true });
+  if (artifact.contract === "velvet.ledger" || Object.prototype.hasOwnProperty.call(artifact, "record_hash")) return verifyLedgerRecordObject(artifact, publicKeyInput);
+  return verifyWarrantObject(artifact, publicKeyInput);
+}
+async function verifyLedgerRecordsText(text, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  const rows = parseJsonl(text, { preserveNumbers: true });
+  const issues = [];
+  const records = [];
+  let expectedSequence = 1;
+  let expectedPreviousHash = LEDGER_GENESIS_HASH;
+  for (let index = 0; index < rows.length; index += 1) {
+    const { line, record } = rows[index];
+    const hash = ledgerRecordHash(record);
+    const recordHashOk = record.record_hash === hash.hash;
+    const sequence = Number(record.sequence_number);
+    const sequenceOk = sequence === expectedSequence;
+    const previousOk = record.previous_record_hash === expectedPreviousHash;
+    let warrantHashOk = null;
+    let expectedWarrantHash = null;
+    if (record.selected_warrant && typeof record.selected_warrant === "object") {
+      expectedWarrantHash = proofArtifactHash("warrant", record.selected_warrant).hash;
+      warrantHashOk = record.warrant_hash === expectedWarrantHash;
+    }
+    const signature = await verifySignatureRecord(record.signature, hash.hash, PURPOSE_LEDGER_RECORD, record.tenant_id || null, record.signature?.key_id || null, publicKeyInput);
+    const rowIssues = [];
+    if (!sequenceOk) rowIssues.push({ code: "sequence_number_mismatch", offendingField: "sequence_number", expected: expectedSequence, actual: displayValue(record.sequence_number) });
+    if (!previousOk) rowIssues.push({ code: "previous_hash_mismatch", offendingField: "previous_record_hash", expected: expectedPreviousHash, actual: record.previous_record_hash || "" });
+    if (!recordHashOk) rowIssues.push({ code: "record_hash_mismatch", offendingField: "record_hash", expected: hash.hash, actual: record.record_hash || "" });
+    if (warrantHashOk === false) rowIssues.push({ code: "warrant_hash_mismatch", offendingField: "warrant_hash", expected: expectedWarrantHash, actual: record.warrant_hash || "" });
+    if (!signature.ok) rowIssues.push({ code: "signature_mismatch", offendingField: "signature", expected: "valid Ed25519 signature over recomputed record hash", actual: "failed" });
+    for (const issue of rowIssues) issues.push({ ...issue, line, recordId: record.record_id || "", sequenceNumber: sequence });
+    records.push({
+      line,
+      index,
+      recordId: record.record_id || "",
+      sequenceNumber: sequence,
+      previousRecordHash: record.previous_record_hash || "",
+      storedRecordHash: record.record_hash || "",
+      recomputedRecordHash: hash.hash,
+      expectedPreviousHash,
+      recordHashOk,
+      previousOk,
+      sequenceOk,
+      warrantHashOk,
+      expectedWarrantHash,
+      signature,
+      canonicalPayload: hash.canonicalPayload,
+      issues: rowIssues,
+    });
+    expectedSequence += 1;
+    expectedPreviousHash = recordHashOk ? String(record.record_hash) : hash.hash;
+  }
+  return {
+    artifactType: "ledger_records_json",
+    status: issues.length === 0 && records.length > 0 ? "pass" : "fail",
+    records,
+    issues,
+    recordCount: records.length,
+    firstRecordHash: records[0]?.storedRecordHash || "",
+    lastRecordHash: records[records.length - 1]?.storedRecordHash || "",
+    chainOk: issues.filter((issue) => ["sequence_number_mismatch", "previous_hash_mismatch", "record_hash_mismatch"].includes(issue.code)).length === 0 && records.length > 0,
+    signatureOk: records.every((record) => record.signature.ok),
+    canonicalPayload: records[0]?.canonicalPayload || "",
+  };
+}
+async function verifySTHInclusionProof(record, sth, proof, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  const recordResult = await verifyLedgerRecordObject(record, publicKeyInput);
+  const sthHash = signedTreeHeadHash(sth);
+  const sthStoredHashOk = !sth.sth_hash || sth.sth_hash === sthHash.hash;
+  const sthSignature = await verifySignatureRecord(
+    sth.signature,
+    sthHash.hash,
+    PURPOSE_SIGNED_TREE_HEAD,
+    sth.signature?.tenant_id || null,
+    sth.signature?.key_id || null,
+    publicKeyInput
+  );
+  const schemaOk = sth.schema_version === SIGNED_TREE_HEAD_SCHEMA_VERSION;
+  const proofLeafOk = proof?.leaf_hash === recordResult.recomputedHash;
+  const proofTreeSizeOk = Number(proof?.tree_size) === Number(sth.tree_size);
+  const inclusionOk = verifyMerkleInclusionProofArtifact(proof, String(sth.root_hash || ""));
+  const issues = [
+    ...(recordResult.status === "pass" ? [] : recordResult.issues),
+    ...(schemaOk ? [] : [{ code: "sth_schema_version_mismatch", expected: SIGNED_TREE_HEAD_SCHEMA_VERSION, actual: sth.schema_version || "" }]),
+    ...(sthStoredHashOk ? [] : [{ code: "sth_hash_mismatch", expected: sthHash.hash, actual: sth.sth_hash || "" }]),
+    ...(sthSignature.ok ? [] : [{ code: "sth_signature_mismatch", expected: "valid Ed25519 signature over STH hash", actual: "failed" }]),
+    ...(proofLeafOk ? [] : [{ code: "inclusion_leaf_mismatch", expected: recordResult.recomputedHash, actual: proof?.leaf_hash || "" }]),
+    ...(proofTreeSizeOk ? [] : [{ code: "inclusion_tree_size_mismatch", expected: sth.tree_size, actual: proof?.tree_size }]),
+    ...(inclusionOk ? [] : [{ code: "inclusion_proof_mismatch", expected: sth.root_hash || "", actual: "failed" }]),
+  ];
+  return {
+    artifactType: "sth_inclusion_proof",
+    status: issues.length === 0 ? "pass" : "fail",
+    record: recordResult,
+    sthHash: sthHash.hash,
+    sthCanonicalPayload: sthHash.canonicalPayload,
+    sthSignature,
+    inclusionOk,
+    issues,
+  };
+}
+async function verifySTHInclusionProofText(recordText, sthText, proofText, publicKeyInput = DEMO_PUBLIC_KEY_BASE64) {
+  return verifySTHInclusionProof(
+    parseJsonObject(recordText, { preserveNumbers: true }),
+    parseJsonObject(sthText, { preserveNumbers: true }),
+    parseJsonObject(proofText, { preserveNumbers: true }),
+    publicKeyInput
+  );
+}
+function summarize(result) {
+  if (result.artifactType === "ledger_records_json") {
+    const firstSig = result.records[0]?.signature || {};
+    return {
+      keyId: firstSig.keyId || "n/a",
+      algorithm: firstSig.algorithm || "n/a",
+      verificationTier: firstSig.verificationTier || "n/a",
+      payloadHash: result.records[0]?.recomputedRecordHash || "n/a",
+      signatureStatus: result.signatureOk ? "pass" : "fail",
+      chainStatus: result.chainOk ? "pass" : "fail",
+      engine: firstSig.engine || "n/a",
+    };
+  }
+  if (result.artifactType === "sth_inclusion_proof") {
+    return {
+      keyId: result.sthSignature.keyId || "n/a",
+      algorithm: result.sthSignature.algorithm || "n/a",
+      verificationTier: result.sthSignature.verificationTier || "n/a",
+      payloadHash: result.sthHash || "n/a",
+      signatureStatus: result.sthSignature.ok ? "pass" : "fail",
+      chainStatus: result.inclusionOk ? "inclusion pass" : "inclusion fail",
+      engine: result.sthSignature.engine || "n/a",
+    };
+  }
+  return {
+    keyId: result.signature.keyId || "n/a",
+    algorithm: result.signature.algorithm || "n/a",
+    verificationTier: result.signature.verificationTier || "n/a",
+    payloadHash: result.recomputedHash || "n/a",
+    signatureStatus: result.signature.ok ? "pass" : "fail",
+    chainStatus: result.artifactType === "ledger_record" ? (result.hashOk ? "single-record hash pass" : "single-record hash fail") : "n/a",
+    engine: result.signature.engine || "n/a",
+  };
+}
+
+return Object.freeze({
+  BUNDLED_EXAMPLES,
+  DEMO_PUBLIC_KEY_BASE64,
+  CanonicalizationError,
+  parseJsonStrict,
+  parseJsonObject,
+  parseJsonl,
+  canonicalJsonV1Dumps,
+  canonicalDumpsLegacy,
+  proofArtifactHash,
+  ledgerRecordHash,
+  signedTreeHeadHash,
+  signingMessage,
+  sha256Hex,
+  sha512,
+  verifyMerkleInclusionProofArtifact,
+  verifySignatureRecord,
+  verifyWarrantObject,
+  verifyLedgerRecordObject,
+  verifyArtifactText,
+  verifyLedgerRecordsText,
+  verifySTHInclusionProof,
+  verifySTHInclusionProofText,
+  summarize,
+  plain,
+});
+
+})();
+/* END VELVET_VERIFIER_CORE */
+  </script>
+  <script>
+    const V = window.VelvetVerifierCore;
+    const $ = (id) => document.getElementById(id);
+    const publicKeyInput = $("publicKeyInput");
+    const recordInput = $("recordInput");
+    const ledgerInput = $("ledgerInput");
+    const sthInput = $("sthInput");
+    const inclusionProofInput = $("inclusionProofInput");
+    publicKeyInput.value = V.DEMO_PUBLIC_KEY_BASE64;
+    function setStatus(kind, status, artifact, note) {
+      const card = $(kind + "Status");
+      const word = $(kind + "Word");
+      const badge = $(kind + "Artifact");
+      const noteEl = $(kind + "Note");
+      card.classList.remove("pass", "fail");
+      badge.className = "badge " + (status === "pass" ? "pass" : status === "fail" ? "fail" : "warn");
+      if (status === "pass" || status === "fail") card.classList.add(status);
+      word.textContent = status.toUpperCase();
+      badge.textContent = artifact;
+      noteEl.textContent = note;
+    }
+    function renderSummary(result) {
+      const s = V.summarize(result);
+      const items = [
+        ["Key id", s.keyId], ["Algorithm", s.algorithm], ["Verification tier", s.verificationTier],
+        ["Payload hash", s.payloadHash], ["Signature", s.signatureStatus], ["Chain", s.chainStatus],
+        ["Engine", s.engine], ["No network", "true"],
+      ];
+      $("summaryGrid").innerHTML = items.map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
+    }
+    function renderChecks(result) {
+      const checks = result.artifactType === "ledger_records_json"
+        ? (result.records[0]?.signature?.checks || [])
+        : result.artifactType === "sth_inclusion_proof"
+          ? (result.sthSignature?.checks || [])
+          : (result.signature?.checks || []);
+      $("checks").innerHTML = checks.map((check) => `<div class="row"><div class="label">${escapeHtml(check.name)}</div><div class="value">expected=${escapeHtml(check.expected ?? "")} actual=${escapeHtml(check.actual ?? check.engine ?? "")}</div><div><span class="badge ${check.ok ? "pass" : "fail"}">${check.ok ? "pass" : "fail"}</span></div></div>`).join("") || '<p class="muted">No checks.</p>';
+    }
+    function renderIssues(issues) {
+      $("issues").innerHTML = issues.length ? issues.map((issue) => `<div class="issue"><strong>${escapeHtml(issue.code)}</strong> - field <code>${escapeHtml(issue.offendingField || "unknown")}</code><br>expected <code>${escapeHtml(issue.expected ?? "")}</code><br>actual <code>${escapeHtml(issue.actual ?? "")}</code></div>`).join("") : '<p class="muted">No issues detected.</p>';
+    }
+    function renderRecordResult(result) {
+      setStatus("record", result.status, result.artifactType, result.status === "pass" ? "Hash and Ed25519 signature agree with Velvet." : "At least one hash or signature check failed.");
+      renderSummary(result);
+      renderChecks(result);
+      renderIssues(result.issues || []);
+      $("canonicalPayload").textContent = result.canonicalPayload || "";
+      $("signingPayload").textContent = result.signature?.signingPayload || "";
+      $("canonicalCaption").textContent = `Recomputed hash: ${result.recomputedHash || "n/a"}`;
+      $("chainRows").innerHTML = result.artifactType === "ledger_record" ? `<tr class="${result.hashOk ? "" : "bad"}"><td>single</td><td>${escapeHtml(result.unsignedPayload.previous_record_hash || "n/a")}</td><td>${escapeHtml(result.storedHash)}</td><td>${escapeHtml(result.recomputedHash)}</td><td>${result.hashOk ? "" : "record_hash"}</td></tr>` : "";
+    }
+    function renderLedgerResult(result) {
+      setStatus("ledger", result.status, result.artifactType, result.status === "pass" ? `${result.recordCount} records verify from genesis.` : `${result.issues.length} issue(s) detected.`);
+      renderSummary(result);
+      renderChecks(result);
+      renderIssues(result.issues || []);
+      $("canonicalPayload").textContent = result.canonicalPayload || "";
+      $("signingPayload").textContent = result.records[0]?.signature?.signingPayload || "";
+      $("canonicalCaption").textContent = `First record recomputed hash: ${result.records[0]?.recomputedRecordHash || "n/a"}`;
+      $("chainRows").innerHTML = result.records.map((record) => {
+        const issue = record.issues[0];
+        return `<tr class="${issue ? "bad" : ""}"><td>${escapeHtml(record.sequenceNumber)}</td><td>${escapeHtml(record.previousRecordHash)}<br><span class="muted">expected ${escapeHtml(record.expectedPreviousHash)}</span></td><td>${escapeHtml(record.storedRecordHash)}</td><td>${escapeHtml(record.recomputedRecordHash)}</td><td>${escapeHtml(issue?.offendingField || "")}</td></tr>`;
+      }).join("");
+    }
+    function renderSTHProofResult(result) {
+      setStatus("vault", result.status, result.artifactType, result.status === "pass" ? "STH signature and inclusion proof verify." : `${result.issues.length} issue(s) detected.`);
+      renderSummary(result);
+      renderChecks(result);
+      renderIssues(result.issues || []);
+      $("canonicalPayload").textContent = result.sthCanonicalPayload || "";
+      $("signingPayload").textContent = result.sthSignature?.signingPayload || "";
+      $("canonicalCaption").textContent = `STH hash: ${result.sthHash || "n/a"}`;
+      $("chainRows").innerHTML = result.record ? `<tr class="${result.record.status === "pass" && result.inclusionOk ? "" : "bad"}"><td>${escapeHtml(result.record.unsignedPayload.sequence_number || "single")}</td><td>${escapeHtml(result.record.unsignedPayload.previous_record_hash || "n/a")}</td><td>${escapeHtml(result.record.storedHash)}</td><td>${escapeHtml(result.record.recomputedHash)}</td><td>${result.inclusionOk ? "" : "inclusion_proof"}</td></tr>` : "";
+    }
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    async function verifyRecord() {
+      try { renderRecordResult(await V.verifyArtifactText(recordInput.value, publicKeyInput.value)); }
+      catch (error) { setStatus("record", "fail", "parse", error.message); renderIssues([{ code: "parse_error", offendingField: "input", expected: "valid JSON", actual: error.message }]); }
+    }
+    async function verifyLedger() {
+      try { renderLedgerResult(await V.verifyLedgerRecordsText(ledgerInput.value, publicKeyInput.value)); }
+      catch (error) { setStatus("ledger", "fail", "parse", error.message); renderIssues([{ code: "parse_error", offendingField: "input", expected: "valid JSONL", actual: error.message }]); }
+    }
+    async function verifySTHProof() {
+      try { renderSTHProofResult(await V.verifySTHInclusionProofText(recordInput.value, sthInput.value, inclusionProofInput.value, publicKeyInput.value)); }
+      catch (error) { setStatus("vault", "fail", "parse", error.message); renderIssues([{ code: "parse_error", offendingField: "input", expected: "valid JSON", actual: error.message }]); }
+    }
+    function loadValid() { recordInput.value = V.BUNDLED_EXAMPLES.validWarrantJson; ledgerInput.value = V.BUNDLED_EXAMPLES.validLedgerRecordsJson; verifyRecord(); verifyLedger(); }
+    function loadTampered() { recordInput.value = V.BUNDLED_EXAMPLES.tamperedWarrantJson; ledgerInput.value = V.BUNDLED_EXAMPLES.tamperedLedgerRecordsJson; verifyRecord(); verifyLedger(); }
+    $("verifyRecord").addEventListener("click", verifyRecord);
+    $("verifyLedger").addEventListener("click", verifyLedger);
+    $("verifySTHProof").addEventListener("click", verifySTHProof);
+    $("loadValid").addEventListener("click", loadValid);
+    $("loadTampered").addEventListener("click", loadTampered);
+    $("clearInputs").addEventListener("click", () => { recordInput.value = ""; ledgerInput.value = ""; sthInput.value = ""; inclusionProofInput.value = ""; });
+    const dropZone = $("dropZone");
+    for (const eventName of ["dragenter", "dragover"]) dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dropZone.classList.add("drag"); });
+    for (const eventName of ["dragleave", "drop"]) dropZone.addEventListener(eventName, (event) => { event.preventDefault(); dropZone.classList.remove("drag"); });
+    dropZone.addEventListener("drop", async (event) => {
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      ledgerInput.value = await file.text();
+      verifyLedger();
+    });
+    loadValid();
+  </script>
+</body>
+</html>

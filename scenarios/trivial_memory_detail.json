@@ -1,0 +1,22 @@
+{
+  "state": {
+    "user_request": "I had toast today.",
+    "available_context": [],
+    "freshness_required": false,
+    "ambiguous": false,
+    "memory_candidate_value": 0.10,
+    "memory_novelty": 0.24,
+    "memory_confidence": 0.55,
+    "memory_type": "trivial_detail",
+    "sensitivity": 0.05,
+    "expected_action": "ANSWER_DIRECTLY"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    {
+      "action_type": "STORE_MEMORY",
+      "description": "Consider storing a trivial personal detail.",
+      "metadata": { "budget_affecting": false, "non_budget_affecting": true }
+    }
+  ]
+}

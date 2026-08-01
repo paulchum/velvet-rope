@@ -1,0 +1,10 @@
+title = "Velvet secret scanning policy"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Committed public demo key material is documented in SECURITY.md."
+paths = [
+  '''demo/keys/live_demo_oap_public_key\.hex''',
+]

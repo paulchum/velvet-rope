@@ -1,0 +1,112 @@
+{
+  "repo": "https://github.com/aporthq/aport-spec",
+  "commit": "a706c64b0b7ef4bcff9756a926f9a278e577e8b0",
+  "fetched_at": "2026-05-28T15:35:47.396Z",
+  "files": [
+    {
+      "source": "oap/passport-schema.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/passport-schema.json",
+      "sha256": "b1467f49a01bfc367903ea09b7872abdce2fa814a98d77accbb8e65e26353341"
+    },
+    {
+      "source": "oap/decision-schema.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/decision-schema.json",
+      "sha256": "3ae99dcf0d0404f2dc745c0ee717bd0c39467463864b2d165cd7bb01f70cd970"
+    },
+    {
+      "source": "error-schema.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/error-schema.json",
+      "sha256": "a62040c7466f97238c3b98fa7d71b6d62469e48f615cbeb36a31e07d6a32edcf"
+    },
+    {
+      "source": "oap/security.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/security.md",
+      "sha256": "b93af378313a9c71772ad4d04ff0ee5bea18ffab242522792f52738bbb034bfe"
+    },
+    {
+      "source": "oap/capability-registry.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/capability-registry.md",
+      "sha256": "d3f155f3c00addab5e893034058a502cb8628e6454fe3966373e93ea0e407e91"
+    },
+    {
+      "source": "oap/conformance.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/conformance.md",
+      "sha256": "70233d06e2a78753c47da3ba76f9b2648a08d22c67d1963dd8898f65f621d877"
+    },
+    {
+      "source": "oap/oap-spec.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/oap-spec.md",
+      "sha256": "b16e7888a31a9c57de4a45c945bfcb1d9ff7797189ced56b710db3fd22df0516"
+    },
+    {
+      "source": "oap/vc/context-oap-v1.jsonld",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/vc/context-oap-v1.jsonld",
+      "sha256": "a701753de9451a4e02d6badb0d042ffc08c5f86048e611118211328dbc5acef4"
+    },
+    {
+      "source": "oap/vc/vc-mapping.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/vc/vc-mapping.md",
+      "sha256": "8c0bbe5c1c0b5869900ccc1c70fb04073ea7724d2b867d265ca0399b51d91ce5"
+    },
+    {
+      "source": "oap/examples/decision.allow.sample.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/examples/decision.allow.sample.json",
+      "sha256": "69af44b3f91c8c8a024839bd68a8b6657af988e787e2ac306cc494a57a2bc8be"
+    },
+    {
+      "source": "oap/examples/decision.deny.sample.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/oap/examples/decision.deny.sample.json",
+      "sha256": "e4213a25e1215624a80d27626681b0a3dad3ee6dd992bdec9d07a228657da086"
+    },
+    {
+      "source": "conformance/README.md",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/README.md",
+      "sha256": "164ee79c3bd836eca2c7aea64c02c87e13f5726a3f917b70e0c55d70bf6fa8e5"
+    },
+    {
+      "source": "conformance/package.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/package.json",
+      "sha256": "af8a0bd0492cf1dda0e87817e6730d3f9f9ad07cbfd22895ef6a8862e74948e6"
+    },
+    {
+      "source": "conformance/pnpm-lock.yaml",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/pnpm-lock.yaml",
+      "sha256": "6c247dcc63ff74b1bbfa395553931970237c9a01b0614461635232f3d3e5ead8"
+    },
+    {
+      "source": "conformance/tsconfig.json",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/tsconfig.json",
+      "sha256": "846b99060f272726af10f0efcddc366feb4e4b2cc175ce330e66546b016c4e7f"
+    },
+    {
+      "source": "conformance/test-runner.js",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/test-runner.js",
+      "sha256": "4600faadf4d448eda1d7eba281a9f372c4cca0f2193187d4387dda029c4e9236"
+    },
+    {
+      "source": "conformance/src/runner.ts",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/src/runner.ts",
+      "sha256": "3224c8736bcb8f745c11c4ec8bc441e4a4542f085f06b4275032f0c330066f6b"
+    },
+    {
+      "source": "conformance/src/validators.ts",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/src/validators.ts",
+      "sha256": "617b80af4d0475b9a0f96663bd8091910ff032d9cd312c8ac84e1bb66e9e463b"
+    },
+    {
+      "source": "conformance/src/ed25519.ts",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/src/ed25519.ts",
+      "sha256": "0982c77b849fc1e3b96f0c93a61dce17dda841a77aaf1d343f215a26f4c24a14"
+    },
+    {
+      "source": "conformance/src/jcs.ts",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/src/jcs.ts",
+      "sha256": "21245ad49d057441b45eecf46739b5dce11433500b20b45d87132f9d820e57fe"
+    },
+    {
+      "source": "conformance/src/cases.ts",
+      "vendored": "third_party/oap/a706c64b0b7ef4bcff9756a926f9a278e577e8b0/conformance/src/cases.ts",
+      "sha256": "5bc2a39c526b07ec78c2269794d5e2368361cc6ff80d8aa2cb96fe3094e6e107"
+    }
+  ]
+}

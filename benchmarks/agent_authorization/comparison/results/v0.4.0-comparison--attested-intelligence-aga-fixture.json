@@ -1,0 +1,78 @@
+{
+  "benchmark_version": "0.4.0",
+  "commit_hash": "37c94176e6315a810c0d16d81fd60a851d266829",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "repeat_count": 20,
+  "schema_version": "velvet.agent_authorization.comparison.v0.1",
+  "system_result": {
+    "adapter_kind": "signed_receipt_fixture",
+    "capabilities": {
+      "binding_depth": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Fixture does not demonstrate the full Velvet action, policy, arguments, tool schema, budget, ledger, and raw-action binding set.",
+        "status": "fail",
+        "value": false
+      },
+      "deterministic_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Identical receipt decision across N=20 fixture runs.",
+        "status": "pass",
+        "value": true
+      },
+      "drift_rejection": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action before handler execution.",
+        "status": "fail",
+        "value": false
+      },
+      "pre_execution_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Fixture receipt records the allow decision before simulated dispatch.",
+        "status": "pass",
+        "value": true
+      },
+      "public_verification": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Fixture receipt signature verifies with public key material only.",
+        "status": "pass",
+        "value": true
+      },
+      "replayable_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Offline verification recomputed the same receipt hash and chain link.",
+        "status": "pass",
+        "value": true
+      },
+      "signed_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Fixture receipt has a structured Ed25519 signature block.",
+        "status": "pass",
+        "value": true
+      },
+      "tamper_evidence": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+        "measurement": "Changing one signed receipt field failed signature verification.",
+        "status": "pass",
+        "value": true
+      }
+    },
+    "evidence_path": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+    "fixture_boundary": "Local Attested Governance Artifact-shaped receipt fixture. This is not a live Attested Intelligence product run.",
+    "measurement_boundary": "local AGA-shaped fixture, not live Attested Intelligence",
+    "pass_k_reliability": {
+      "1": 1.0,
+      "10": 1.0,
+      "2": 1.0,
+      "20": 1.0,
+      "5": 1.0
+    },
+    "public_claim_status": "not_claimable_against_live_product",
+    "source_urls": [
+      "https://attestedintelligence.com/technology",
+      "https://attestedintelligence.com/docs",
+      "https://github.com/attestedintelligence/aga-mcp-server"
+    ],
+    "system": "Attested Intelligence AGA fixture",
+    "system_version": "fixture"
+  }
+}

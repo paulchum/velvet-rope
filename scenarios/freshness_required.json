@@ -1,0 +1,14 @@
+{
+  "state": {
+    "user_request": "What changed in npm supply-chain security this week?",
+    "available_context": [],
+    "freshness_required": true,
+    "ambiguous": false,
+    "expected_action": "SEARCH_WEB"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "non_budget_affecting": true } },
+    { "action_type": "SEARCH_WEB", "metadata": { "non_budget_affecting": true } },
+    { "action_type": "ASK_USER", "metadata": { "non_budget_affecting": true } }
+  ]
+}

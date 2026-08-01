@@ -1,0 +1,470 @@
+{
+  "benchmark_version": "0.4.0",
+  "capability_keys": [
+    "pre_execution_decision",
+    "deterministic_decision",
+    "signed_artifact",
+    "public_verification",
+    "tamper_evidence",
+    "replayable_artifact",
+    "binding_depth",
+    "drift_rejection"
+  ],
+  "capability_matrix": [
+    {
+      "adapter_kind": "real_repo_path",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Required action, policy, arguments, tool schema, budget, and ledger bindings were present.",
+          "status": "pass",
+          "value": true
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Identical normalized decision across N=20 fixture runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Dispatch with a mutated canonical action was rejected before handler execution.",
+          "status": "pass",
+          "value": true
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Velvet wrote a pre-execution ledger record before dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Admission evidence verified with committed demo Ed25519 public key.",
+          "status": "pass",
+          "value": true
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Re-running the same request reproduced decision, action hash, and seal.",
+          "status": "pass",
+          "value": true
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Admission evidence contains a structured signature block.",
+          "status": "pass",
+          "value": true
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+          "measurement": "Changing one signed evidence field failed verification.",
+          "status": "pass",
+          "value": true
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/velvet_inline_gateway_fixture_evidence.json",
+      "measurement_boundary": "local Velvet InlineGateway fixture",
+      "public_claim_status": "claimable_for_this_local_fixture",
+      "source_urls": [
+        "src/velvet/gateway.py",
+        "src/velvet/admission_evidence.py"
+      ],
+      "system": "Velvet Inline Gateway",
+      "system_version": "local_repo"
+    },
+    {
+      "adapter_kind": "pinned_schema_fixture",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Pinned OAP decision fixture does not bind the full Velvet required field set.",
+          "status": "fail",
+          "value": false
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Identical fixture decision across N=20 runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action.",
+          "status": "fail",
+          "value": false
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Fixture emitted an allow decision before simulated dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Signature record verified with public key material only.",
+          "status": "pass",
+          "value": true
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Fixture has no replay command or stable Velvet-style seal reproduction contract.",
+          "status": "fail",
+          "value": false
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Local OAP-shaped fixture decision was signed and verified with public key material.",
+          "status": "pass",
+          "value": true
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+          "measurement": "Changing one signed decision field failed signature verification.",
+          "status": "pass",
+          "value": true
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+      "measurement_boundary": "local OAP-shaped fixture, not hosted APort",
+      "public_claim_status": "not_claimable_against_live_product",
+      "source_urls": [
+        "third_party/oap/OAP_SPEC_LOCK.json",
+        "https://sandbox.aport.io/spec/spec/oap/oap-spec.md/"
+      ],
+      "strict_oap_schema_validation_errors": [
+        "<root>: 'passport_id' is a required property",
+        "<root>: 'issued_at' is a required property",
+        "<root>: 'expires_at' is a required property"
+      ],
+      "strict_oap_schema_validation_passed": false,
+      "system": "OAP/APort pinned schema fixture",
+      "system_version": "pinned_a706c64"
+    },
+    {
+      "adapter_kind": "signed_receipt_fixture",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Fixture does not demonstrate the full Velvet action, policy, arguments, tool schema, budget, ledger, and raw-action binding set.",
+          "status": "fail",
+          "value": false
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Identical receipt decision across N=20 fixture runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action before handler execution.",
+          "status": "fail",
+          "value": false
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Fixture receipt records the allow decision before simulated dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Fixture receipt signature verifies with public key material only.",
+          "status": "pass",
+          "value": true
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Offline verification recomputed the same receipt hash and chain link.",
+          "status": "pass",
+          "value": true
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Fixture receipt has a structured Ed25519 signature block.",
+          "status": "pass",
+          "value": true
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+          "measurement": "Changing one signed receipt field failed signature verification.",
+          "status": "pass",
+          "value": true
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/pipelock_action_receipt_fixture_evidence.json",
+      "fixture_boundary": "Local Pipelock-shaped action receipt fixture. This is not a live Pipelock product run.",
+      "measurement_boundary": "local Pipelock-shaped fixture, not live Pipelock",
+      "pass_k_reliability": {
+        "1": 1.0,
+        "10": 1.0,
+        "2": 1.0,
+        "20": 1.0,
+        "5": 1.0
+      },
+      "public_claim_status": "not_claimable_against_live_product",
+      "source_urls": [
+        "https://github.com/luckyPipewrench/pipelock",
+        "https://pipelab.org/pipelock/",
+        "https://github.com/luckyPipewrench/pipelock-verify-python"
+      ],
+      "system": "Pipelock action receipt fixture",
+      "system_version": "fixture"
+    },
+    {
+      "adapter_kind": "signed_receipt_fixture",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Fixture does not demonstrate the full Velvet action, policy, arguments, tool schema, budget, ledger, and raw-action binding set.",
+          "status": "fail",
+          "value": false
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Identical receipt decision across N=20 fixture runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action before handler execution.",
+          "status": "fail",
+          "value": false
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Fixture receipt records the allow decision before simulated dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Fixture receipt signature verifies with public key material only.",
+          "status": "pass",
+          "value": true
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Offline verification recomputed the same receipt hash and chain link.",
+          "status": "pass",
+          "value": true
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Fixture receipt has a structured Ed25519 signature block.",
+          "status": "pass",
+          "value": true
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+          "measurement": "Changing one signed receipt field failed signature verification.",
+          "status": "pass",
+          "value": true
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/attested_governance_artifact_fixture_evidence.json",
+      "fixture_boundary": "Local Attested Governance Artifact-shaped receipt fixture. This is not a live Attested Intelligence product run.",
+      "measurement_boundary": "local AGA-shaped fixture, not live Attested Intelligence",
+      "pass_k_reliability": {
+        "1": 1.0,
+        "10": 1.0,
+        "2": 1.0,
+        "20": 1.0,
+        "5": 1.0
+      },
+      "public_claim_status": "not_claimable_against_live_product",
+      "source_urls": [
+        "https://attestedintelligence.com/technology",
+        "https://attestedintelligence.com/docs",
+        "https://github.com/attestedintelligence/aga-mcp-server"
+      ],
+      "system": "Attested Intelligence AGA fixture",
+      "system_version": "fixture"
+    },
+    {
+      "adapter_kind": "pdp_contract_fixture",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture response does not bind the required action, policy, budget, ledger, and raw-action fields.",
+          "status": "fail",
+          "value": false
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Identical PDP fixture response across N=20 runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action.",
+          "status": "fail",
+          "value": false
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture evaluates a PDP-style allow/deny decision before simulated dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture response has no public-key verification material.",
+          "status": "fail",
+          "value": false
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture response has no replay command or stable seal reproduction contract.",
+          "status": "fail",
+          "value": false
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture response is not a signed decision artifact.",
+          "status": "fail",
+          "value": false
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+          "measurement": "Fixture response has no signature or hash-chain check bound to the decision.",
+          "status": "fail",
+          "value": false
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/cerbos_pdp_fixture_evidence.json",
+      "measurement_boundary": "local PDP-style fixture, not running Cerbos",
+      "public_claim_status": "not_claimable_against_live_product",
+      "source_urls": [
+        "https://docs.cerbos.dev/cerbos-hub/index.html",
+        "https://www.cerbos.dev/product-cerbos-pdp"
+      ],
+      "system": "Cerbos PDP fixture",
+      "system_version": "fixture"
+    },
+    {
+      "adapter_kind": "gateway_contract_fixture",
+      "capabilities": {
+        "binding_depth": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture response does not bind the required action, policy, budget, ledger, and raw-action fields.",
+          "status": "fail",
+          "value": false
+        },
+        "deterministic_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Identical allowlist fixture response across N=20 runs.",
+          "status": "pass",
+          "value": true
+        },
+        "drift_rejection": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action.",
+          "status": "fail",
+          "value": false
+        },
+        "pre_execution_decision": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Static allowlist decision was computed before simulated dispatch.",
+          "status": "pass",
+          "value": true
+        },
+        "public_verification": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture response has no public-key verification material.",
+          "status": "fail",
+          "value": false
+        },
+        "replayable_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture response has no replay command or stable seal reproduction contract.",
+          "status": "fail",
+          "value": false
+        },
+        "signed_artifact": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture response is not a signed decision artifact.",
+          "status": "fail",
+          "value": false
+        },
+        "tamper_evidence": {
+          "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+          "measurement": "Fixture response has no signature or hash-chain check bound to the decision.",
+          "status": "fail",
+          "value": false
+        }
+      },
+      "evidence_path": "benchmarks/agent_authorization/comparison/evidence/gateway_allowlist_baseline_fixture_evidence.json",
+      "measurement_boundary": "local static allowlist fixture, not a gateway vendor",
+      "public_claim_status": "fixture_baseline_only",
+      "source_urls": [
+        "benchmarks/agent_authorization/comparison/fixtures/competitor_profiles.json"
+      ],
+      "system": "Gateway allowlist baseline",
+      "system_version": "fixture"
+    }
+  ],
+  "claim_boundary": {
+    "docs": [
+      "README.md",
+      "benchmarks/agent_authorization/SPEC.md",
+      "benchmarks/agent_authorization/README.md"
+    ],
+    "status": "fixture_evidence_only",
+    "summary": "This harness proves local fixture behavior and repo artifact properties. It is not a live APort, Pipelock, Attested Intelligence, Cerbos, Kong, Cloudflare, or other gateway product evaluation."
+  },
+  "commit_hash": "37c94176e6315a810c0d16d81fd60a851d266829",
+  "commit_repo": "velvet (private monorepo)",
+  "fixture_dir": "benchmarks/agent_authorization/comparison/fixtures",
+  "fixture_hashes": {
+    "action_request.json": "1c827d09a8bbc21efa54f3afede088f05194d7beb694e886aae2b795774c6a2d",
+    "competitor_profiles.json": "96a7c70af17ebef90fecee2d3b7e1b95db888cd9b9884a4a2e7759afa58eb1a4"
+  },
+  "generated_at": "1970-01-01T00:00:00Z",
+  "limitations": [
+    "Non-Velvet rows are local fixtures and must not be described as live product failures.",
+    "The OAP/APort row uses the pinned vendored OAP schema snapshot, not the hosted APort service.",
+    "The Cerbos row is a PDP-style fixture, not a running Cerbos PDP instance.",
+    "The gateway baseline is a static allowlist fixture, not Kong, Cloudflare, or another vendor gateway.",
+    "The Velvet row uses the committed demo Ed25519 key and local InlineGateway path.",
+    "The fixture action is one MCP-style tool call; it does not prove coverage for every runtime action."
+  ],
+  "markdown_path": "benchmarks/agent_authorization/comparison/COMPARISON_RESULTS.md",
+  "methodology": {
+    "fixture_scope": "Velvet uses the real InlineGateway path. OAP/APort, Pipelock, Attested Intelligence, Cerbos, and gateway rows are local contract fixtures, not live service evaluations.",
+    "question": "For one fixed proposed MCP tool action, what artifact properties can each local fixture demonstrate before execution?",
+    "repeat_count": 20,
+    "result_rule": "A positive result requires the fixture artifact itself to contain or verify the measured property. General product documentation is recorded as source context but is not used to mark an unmeasured capability as satisfied."
+  },
+  "oap_spec_lock": {
+    "commit": "a706c64b0b7ef4bcff9756a926f9a278e577e8b0",
+    "path": "third_party/oap/OAP_SPEC_LOCK.json",
+    "repo": "https://github.com/aporthq/aport-spec",
+    "sha256": "df7763f92ca09f776217916a6b91d5e2c4c4779a1b370908a0474f8bc412b575"
+  },
+  "offline_command": "(monorepo) uv run velvet agent-auth-benchmark --comparison --output-dir reports/agent_auth/comparison",
+  "repeat_count": 20,
+  "results_path": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison.json",
+  "schema_version": "velvet.agent_authorization.comparison.v0.1",
+  "source_lockfile_hashes": {
+    "hashes": {
+      "Cargo.lock": "1c8474f1bb0c1814a14c69f48039f1e082a9a931b1fd2717b665f0a9f5336ba9",
+      "pyproject.toml": "4869edbe3362574abe7832d11717cb2d52e9e73424b6bba69df45619d165629d",
+      "rust-toolchain.toml": "24ef3b9d3edbd850aa386cb0a98e10450b0030991a4537cb359f54d49dbbb33a",
+      "uv.lock": "80b15f8194f05d8abda3498a11cae03c1235e055e7eeb56a8800da7423504320"
+    },
+    "note": "hashes of lockfiles in the private source monorepo at commit_hash; not shipped in this repo"
+  },
+  "system_result_paths": {
+    "Attested Intelligence AGA fixture": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--attested-intelligence-aga-fixture.json",
+    "Cerbos PDP fixture": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--cerbos-pdp-fixture.json",
+    "Gateway allowlist baseline": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--gateway-allowlist-baseline.json",
+    "OAP/APort pinned schema fixture": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--oap-aport-pinned-schema-fixture.json",
+    "Pipelock action receipt fixture": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--pipelock-action-receipt-fixture.json",
+    "Velvet Inline Gateway": "benchmarks/agent_authorization/comparison/results/v0.4.0-comparison--velvet-inline-gateway.json"
+  },
+  "worktree_dirty": false
+}

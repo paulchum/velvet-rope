@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/ledger_segment_manifest.v1.schema.json",
+  "title": "Velvet Binary Ledger Checkpoint v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ledger_format",
+    "checkpoint_id",
+    "ledger_path",
+    "record_count",
+    "next_sequence",
+    "first_sequence",
+    "last_sequence",
+    "first_record_hash",
+    "last_record_hash",
+    "head_frame_hash",
+    "valid_length",
+    "generated_at",
+    "checkpoint_hash",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": { "const": "velvet.ledger_checkpoint.v1" },
+    "ledger_format": { "const": "velvet.binary_ledger.v1" },
+    "checkpoint_id": { "type": "string", "pattern": "^chk_[0-9a-f]{32}$" },
+    "ledger_path": { "type": "string", "minLength": 1 },
+    "record_count": { "type": "integer", "minimum": 1 },
+    "next_sequence": { "type": "integer", "minimum": 2 },
+    "first_sequence": { "type": "integer", "minimum": 1 },
+    "last_sequence": { "type": "integer", "minimum": 1 },
+    "first_record_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "last_record_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "head_frame_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "valid_length": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "checkpoint_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "storage_uri": { "type": "string", "minLength": 1 },
+    "signature": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "provider_name",
+        "algorithm",
+        "key_id",
+        "key_version",
+        "purpose",
+        "tenant_id",
+        "payload_hash",
+        "signature",
+        "signed_at",
+        "metadata"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "schema_version": { "type": "string", "minLength": 1 },
+        "provider_name": { "type": "string", "minLength": 1 },
+        "algorithm": { "type": "string", "minLength": 1 },
+        "key_id": { "type": "string", "minLength": 1 },
+        "key_version": { "type": "string", "minLength": 1 },
+        "purpose": { "const": "velvet.ledger.checkpoint.v1" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "payload_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "signature": { "type": "string", "minLength": 1 },
+        "signed_at": { "type": "string", "minLength": 1 },
+        "metadata": { "type": "object" }
+      }
+    }
+  }
+}

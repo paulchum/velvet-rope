@@ -1,0 +1,77 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "event": "customer.review_failed",
+          "webhook_id": 1
+        },
+        "event_type": "webhook_created",
+        "route_id": "webhook_creation"
+      },
+      {
+        "detail": {
+          "event": "customer.review_failed",
+          "webhook_id": 1
+        },
+        "event_type": "webhook_delivered",
+        "route_id": "webhook_creation"
+      }
+    ],
+    "effect_events": [
+      {
+        "actor": "webhook_callback",
+        "after_status": "disabled",
+        "before_status": "active",
+        "customer_id": "synthetic-webhook_creation",
+        "route_id": "webhook_creation"
+      }
+    ],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-webhook_creation",
+  "dispatch": {
+    "deliveries": 1,
+    "kind": "webhook",
+    "trigger": "customer.review_failed",
+    "webhook_id": 1
+  },
+  "effect_attribution": "attributed",
+  "effect_fingerprint": "sha256:5c4c93dd5e7980c5a74ab6e2ec4adf709ea8b492b2347d6b219b0e04a7880c37",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "webhook callback",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "webhook registration",
+    "intermediates": [
+      "customer.review_failed event",
+      "deterministic webhook delivery"
+    ],
+    "label": "Webhook creation",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "webhook_creation"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-webhook_creation"
+}

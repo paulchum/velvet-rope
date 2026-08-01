@@ -1,0 +1,115 @@
+{
+  "benchmark_results": "benchmarks/agent_authorization/results/v0.2.1.json",
+  "benchmark_results_sha256": "3f1dae2b347ca0a87ace2a6e64962d60f92daa5c88df45fb3cd3a7f2880a1f9a",
+  "bernoulli_source": "src/velvet/research/bernoulli.py",
+  "bernoulli_source_sha256": "d0e037b5135830691d35762ef698082e13b0259de6bb09a48c4d264106acc477",
+  "checks": {
+    "all_benchmark_capabilities_have_evidence": true,
+    "all_mc_estimates_within_bounds": true
+  },
+  "generated_at": "1970-01-01T00:00:00Z",
+  "math_file_sha256": {
+    "O1_Martingale_Maximal_Certificates_for_Safe_Lockout.txt": "0fa1c32f92cdbf084e0e1b630d151209b6cda135b677c449f5e08226d8f73b38",
+    "beta_1_2_recovery_window_final_theorem.txt": "5b3b3f778cdf81ea3357f2ac3d3ecc258e80cda5f6df7b0c56f5745b7a889f1a",
+    "budget_safety_deterministic_theorem.txt": "98b1dbc6fcd0fa017fdd283c291bb126c421559f88f75684bb2af0a85dcad1af",
+    "certified_max_de_theorem.txt": "442d648cb002a67e6357d862bff1a0eb4fb025ec8b5d8d23c8b33ccc8fb7a87a",
+    "exact_max_de_theorem.txt": "1a0852e271eb6df6754ee9fc4d512316740b8003ff85ce3af2ff22ec9d2488bd",
+    "fixed_price_max_de_regret_theorem.txt": "6ed28e10f1e411deeb4036f9259eb5ba2b1b50bbde971c02f9378a0cff2ee877",
+    "information_budget_for_martingale_supremum_exploration.txt": "efe4e642710a658799099022df1ffc559d780559c2daabf4525390c171707785",
+    "lower_certificates_for_max_de_inspection_theorem.txt": "67a3db28e7c3bd985ed455d807722c7e0748580e223d95067729d65a128e8c57",
+    "moving_baseline_hard_shutoff_theorem.txt": "22b6050c3f6bd15c3e07536156e0e11c8cf23a8fcefc808034e3b98c17a930b1"
+  },
+  "monte_carlo_grid": [
+    {
+      "alpha": 1.0,
+      "baseline": 0.55,
+      "beta": 2.0,
+      "index": 1,
+      "lower_certificate": 0.07358253946267232,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0016263170661215717,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.08274683753445042,
+      "upper_certificate": 0.11225469081352345
+    },
+    {
+      "alpha": 1.0,
+      "baseline": 0.55,
+      "beta": 3.0,
+      "index": 2,
+      "lower_certificate": 0.028709501697443053,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001016872789800484,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.03432262538692168,
+      "upper_certificate": 0.04902110044994057
+    },
+    {
+      "alpha": 2.0,
+      "baseline": 0.5,
+      "beta": 2.0,
+      "index": 3,
+      "lower_certificate": 0.17531309320594268,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0020166476979112504,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.19398142048633119,
+      "upper_certificate": 0.25068529064734424
+    },
+    {
+      "alpha": 3.0,
+      "baseline": 0.45,
+      "beta": 5.0,
+      "index": 4,
+      "lower_certificate": 0.07725896451686898,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001423873978014723,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.09224611242837309,
+      "upper_certificate": 0.13540320493205146
+    },
+    {
+      "alpha": 5.0,
+      "baseline": 0.65,
+      "beta": 2.0,
+      "index": 5,
+      "lower_certificate": 0.1679558769886566,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0012599216578452696,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.1841442323263977,
+      "upper_certificate": 0.23104187542616605
+    },
+    {
+      "alpha": 2.0,
+      "baseline": 0.4,
+      "beta": 6.0,
+      "index": 6,
+      "lower_certificate": 0.037840485178098536,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.001103185682096173,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.04736230413494869,
+      "upper_certificate": 0.07179056442419746
+    },
+    {
+      "alpha": 8.0,
+      "baseline": 0.6,
+      "beta": 4.0,
+      "index": 7,
+      "lower_certificate": 0.1486738805742841,
+      "lower_horizon": 5,
+      "mc_95_half_width": 0.0012024336694352136,
+      "mc_horizon": 200,
+      "mc_paths": 10000,
+      "mc_phi_estimate": 0.16586710266563573,
+      "upper_certificate": 0.23043526463964425
+    }
+  ]
+}

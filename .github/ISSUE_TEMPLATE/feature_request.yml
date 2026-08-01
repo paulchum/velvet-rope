@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a scoped improvement to Velvet's OSS gateway, policy, evidence, or benchmark surfaces.
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or evidence gap does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed shape
+      description: Describe the smallest useful behavior change, command, API, fixture, or doc update.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI and Python SDK
+        - Rust proxy
+        - Policy engine
+        - Ledger, Vault, or replay
+        - Policy compiler
+        - Agent Authorization Benchmark
+        - Documentation
+        - Release or packaging
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Boundary notes
+      description: Note any security, determinism, claim-boundary, or open-core boundary concerns.
+    validations:
+      required: false

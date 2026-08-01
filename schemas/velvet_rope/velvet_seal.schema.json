@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/velvet_seal.schema.json",
+  "title": "Velvet Seal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "seal_id",
+    "run_id",
+    "query_id",
+    "candidate_action_id",
+    "decision_id",
+    "warrant_id",
+    "execution_id",
+    "trace_hash",
+    "replay_command",
+    "verification_status",
+    "created_at"
+  ],
+  "properties": {
+    "seal_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "query_id": { "type": "string", "minLength": 1 },
+    "candidate_action_id": { "type": "string", "minLength": 1 },
+    "decision_id": { "type": "string", "minLength": 1 },
+    "warrant_id": { "type": ["string", "null"] },
+    "execution_id": { "type": "string", "minLength": 1 },
+    "trace_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "replay_command": { "type": "string", "minLength": 1 },
+    "verification_status": { "enum": ["verified", "unverified", "missing"] },
+    "created_at": { "type": "string", "minLength": 1 }
+  }
+}

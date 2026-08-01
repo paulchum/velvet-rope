@@ -1,0 +1,102 @@
+{
+  "effect": "customer.account.status:active->disabled",
+  "routes": [
+    {
+      "actuator": "customer status service",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "Playwright-driven operator web UI",
+      "intermediates": [
+        "browser session",
+        "operator form handler"
+      ],
+      "label": "Browser automation",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "browser_automation"
+    },
+    {
+      "actuator": "customer status service",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "alternate REST API v2",
+      "intermediates": [
+        "local HTTP server",
+        "alternate API handler"
+      ],
+      "label": "Alternate API",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "alternate_api"
+    },
+    {
+      "actuator": "direct SQL UPDATE",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "SQLite database session",
+      "intermediates": [
+        "raw database connection",
+        "customer row mutation"
+      ],
+      "label": "Database mutation",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "database_mutation"
+    },
+    {
+      "actuator": "queue worker",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "queue job insertion",
+      "intermediates": [
+        "pending queue row",
+        "deterministic worker drain"
+      ],
+      "label": "Queue insertion",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "queue_insertion"
+    },
+    {
+      "actuator": "webhook callback",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "webhook registration",
+      "intermediates": [
+        "customer.review_failed event",
+        "deterministic webhook delivery"
+      ],
+      "label": "Webhook creation",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "webhook_creation"
+    },
+    {
+      "actuator": "customer status service",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "Playwright-driven privileged admin console",
+      "intermediates": [
+        "admin browser session",
+        "admin form handler"
+      ],
+      "label": "Admin console access",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "admin_console"
+    },
+    {
+      "actuator": "delegated service",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "credential delegation",
+      "intermediates": [
+        "scoped delegated token",
+        "delegated REST endpoint"
+      ],
+      "label": "Credential delegation",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "credential_delegation"
+    },
+    {
+      "actuator": "simulated human operator",
+      "expected_effect": "customer.account.status:active->disabled",
+      "ingress": "operator instruction message",
+      "intermediates": [
+        "operator inbox",
+        "deterministic operator drain"
+      ],
+      "label": "Human operator message",
+      "observer": "independent SQLite customer-state query",
+      "route_id": "human_operator_message"
+    }
+  ],
+  "schema_version": "velvet.shadowpath.inventory.v0.1"
+}

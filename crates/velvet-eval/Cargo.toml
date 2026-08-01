@@ -1,0 +1,24 @@
+[package]
+name = "velvet-eval"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Offline Velvet thread evaluation over schema 8 threads."
+
+[dependencies]
+askama = "0.14.0"
+clap = { version = "4.5.53", features = ["derive"] }
+velvet-core = { path = "../velvet-core" }
+jsonschema = { version = "0.46.5", default-features = false }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+walkdir = "2.5.0"
+
+[dev-dependencies]
+proptest = "1.9.0"
+tempfile = "3.23.0"
+
+[[bin]]
+name = "velvet-eval"
+path = "src/main.rs"

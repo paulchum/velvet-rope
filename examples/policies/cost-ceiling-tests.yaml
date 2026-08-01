@@ -1,0 +1,18 @@
+apiVersion: velvet.io/v1alpha1
+kind: PolicyTest
+metadata:
+  name: cost-ceiling-blocks-overage
+  version: 1
+spec:
+  policy: standard-cost-ceiling
+  context:
+    user_id: test-user
+    task_budget:
+      spent_usd: 0.48
+  candidate:
+    action_type: CALL_TOOL
+    metadata:
+      usd_estimate: 0.1
+  expect:
+    decision: Deny
+    reason_contains: cost_ceiling.hard_limit

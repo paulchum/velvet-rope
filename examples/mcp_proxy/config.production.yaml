@@ -1,0 +1,114 @@
+mode: strict
+identity:
+  tenant_id: tenant-prod
+  environment: prod
+  product_surface: velvet_gateway.mcp
+  subject_id: null
+  agent_id: null
+  client_id: null
+  session_id: null
+oap:
+  enabled: true
+  policy_id: velvet.mcp.call.v1
+  require_max_de_certificate: true
+  require_max_de_for_all_tool_calls: true
+  allow_missing_max_de_in_development: false
+  oap_private_key_env: VELVET_OAP_ED25519_PRIVATE_KEY
+  velvet_private_key_env: VELVET_MAXDE_ED25519_PRIVATE_KEY
+  velvet_trusted_public_key_env: VELVET_MAXDE_ED25519_PUBLIC_KEY
+  transport_context:
+    kind: mcp
+    openai_secure_mcp_tunnel:
+      enabled: false
+      tunnel_id_env: VELVET_OPENAI_TUNNEL_ID
+      workspace_id_env: VELVET_OPENAI_WORKSPACE_ID
+      connector_subject_env: VELVET_CONNECTOR_SUBJECT
+transport: streamable_http
+upstream:
+  server: servicenow-prod
+  command: null
+  args: []
+  endpoint: https://mcp.example.internal/mcp
+  boundary:
+    required: true
+    require_bearer: true
+    require_mtls: true
+    bearer:
+      header_name: Authorization
+      scheme: Bearer
+      token_env: VELVET_PRIVATE_MCP_UPSTREAM_TOKEN
+    mtls:
+      identity_pem_env: VELVET_PRIVATE_MCP_CLIENT_IDENTITY_PEM
+      ca_bundle_pem_env: VELVET_PRIVATE_MCP_CA_BUNDLE_PEM
+policy:
+  dir: /etc/velvet/policies
+  chain: mcp_prod
+  bundle_manifest: /etc/velvet/policy-bundle.yaml
+  require_signature: true
+tools: []
+approvals: []
+approval_receipts:
+  require_signature: true
+  allow_unsigned_local_demo_only: false
+  trusted_keys:
+    - provider_name: velvet_ed25519
+      algorithm: Ed25519
+      key_id: velvet-production-ed25519
+      key_version: v1
+      public_key_base64_env: VELVET_APPROVAL_RECEIPT_PUBLIC_KEY_BASE64
+method_dispositions:
+  resources: block
+  prompts: block
+  tasks: block
+  notifications: block
+  unknown: block
+  methods: {}
+ledger_path: /var/lib/velvet/reports/velvet_ledger_v2.jsonl
+ledger:
+  strict: true
+  fsync: true
+  sink: local_file
+  segment_manifest_path: /var/lib/velvet/reports/ledger_manifest.json
+control_plane:
+  base_url: ""
+  gateway_token_env: VELVET_GATEWAY_TOKEN
+  timeout_ms: 10000
+evidence:
+  sink: local_filesystem
+signing:
+  provider: ed25519
+  kms_key_id_env: null
+  algorithm: Ed25519
+gateway:
+  gateway_deployment_id: null
+  hostname: null
+thread_path: null
+inventory_path: /var/lib/velvet/reports/inventory.json
+approval_requests_path: /var/lib/velvet/reports/approval_requests.jsonl
+evidence_pack_path: /var/lib/velvet/reports/evidence_pack.json
+schema_drift_action: deny
+limits:
+  max_request_bytes: 1048576
+  max_response_bytes: 4194304
+  max_arguments_bytes: 262144
+  max_concurrent_requests: 128
+  upstream_timeout_ms: 30000
+auth:
+  require_bearer: true
+  bearer_token_env: VELVET_MCP_PROXY_TOKEN
+  forward_authorization: false
+  subject_header: x-velvet-subject-id
+  trust_subject_header: false
+http:
+  bind: 0.0.0.0:8791
+  endpoint_path: /mcp
+  allow_plaintext_loopback_upstream: false
+  allowed_origins:
+    - https://velvet.example.com
+  supported_protocol_versions:
+    - 2025-11-25
+  sse_enabled: true
+  sse_replay_buffer_events: 512
+  sse_replay_ttl_seconds: 300
+  sse_keepalive_seconds: 15
+demo_requests: []

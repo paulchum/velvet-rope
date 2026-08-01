@@ -1,0 +1,120 @@
+{
+  "$id": "https://velvet.example/schemas/shadowpath/results.v0.1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "benchmark_version": {
+      "const": "0.4.0"
+    },
+    "capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "effect_inventory": {
+          "$ref": "#/$defs/capability"
+        },
+        "effect_prevention": {
+          "$ref": "#/$defs/capability"
+        },
+        "effect_reconciliation": {
+          "$ref": "#/$defs/capability"
+        },
+        "route_authorization": {
+          "$ref": "#/$defs/capability"
+        }
+      },
+      "required": [
+        "route_authorization",
+        "effect_prevention",
+        "effect_inventory",
+        "effect_reconciliation"
+      ],
+      "type": "object"
+    },
+    "exit_code": {
+      "enum": [
+        0,
+        2,
+        3,
+        4
+      ]
+    },
+    "route_results": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "benchmark_reconciliation": {
+            "type": "object"
+          },
+          "effect_observed": {
+            "type": "boolean"
+          },
+          "post_state": {
+            "type": "object"
+          },
+          "pre_state": {
+            "type": "object"
+          },
+          "route": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "route",
+          "pre_state",
+          "post_state",
+          "effect_observed",
+          "benchmark_reconciliation"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "velvet.shadowpath.results.v0.1"
+    },
+    "summary": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "benchmark_version",
+    "summary",
+    "exit_code"
+  ],
+  "$defs": {
+    "capability": {
+      "additionalProperties": true,
+      "properties": {
+        "evidence_pointer": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "measurement": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_measured"
+          ]
+        },
+        "value": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "value",
+        "evidence_pointer"
+      ],
+      "type": "object"
+    }
+  },
+  "title": "ShadowPath benchmark result",
+  "type": "object"
+}

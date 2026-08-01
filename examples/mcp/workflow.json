@@ -1,0 +1,33 @@
+{
+  "requests": [
+    {
+      "label": "allowed_enterprise_read_only_lookup",
+      "server": "servicenow",
+      "tool": "search_change_requests",
+      "arguments": {
+        "query": "service=payments state=open"
+      },
+      "user_request": "Find open production payment-service change requests before opening anything new."
+    },
+    {
+      "label": "blocked_destructive_enterprise_call",
+      "server": "servicenow",
+      "tool": "delete_change_request",
+      "arguments": {
+        "change_id": "CHG0042007"
+      },
+      "user_request": "Remove the stale production change request before the release meeting."
+    },
+    {
+      "label": "escalated_sensitive_enterprise_write",
+      "server": "servicenow",
+      "tool": "create_change_request",
+      "arguments": {
+        "service": "payments",
+        "summary": "Approve production deploy for routing fix",
+        "window": "2026-05-23T22:00:00-07:00"
+      },
+      "user_request": "Open a production change request for the routing fix."
+    }
+  ]
+}

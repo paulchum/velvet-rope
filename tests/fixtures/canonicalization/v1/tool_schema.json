@@ -1,0 +1,29 @@
+{
+  "signature": "tool-schema-signature",
+  "tool_schema_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "canonicalization": "velvet.canonical_json.v1.sha256",
+  "schema_version": "velvet.tool_schema.v1",
+  "tool_id": "mcp:servicenow/search_change_requests",
+  "generated_at": "2026-05-27T19:03:00Z",
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "query"
+    ],
+    "properties": {
+      "דּ": {
+        "type": "string",
+        "description": "Hebrew compatibility key"
+      },
+      "😀": {
+        "type": "string",
+        "description": "Emoji key"
+      },
+      "query": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "owner": "platform"
+}

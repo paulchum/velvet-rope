@@ -1,0 +1,24 @@
+Velvet
+Copyright 2026 Velvet Contributors
+
+This product includes software developed by the Velvet Contributors
+(https://github.com/paulchum/velvet-rope), licensed under the Apache License,
+Version 2.0. You may obtain a copy of the License in the accompanying LICENSE
+file or at http://www.apache.org/licenses/LICENSE-2.0.
+
+The Certified Decisions layer (src/velvet/verdict) contains portions derived
+from the Max-DE response engine and the maxde-replay study (MIT),
+Copyright 2026 Coriolis Labs Inc., relicensed by the copyright owner under
+the Apache License, Version 2.0. Provenance and upstream commit pins are
+recorded in src/velvet/verdict/UPSTREAM.md.
+
+------------------------------------------------------------------------
+Third-party components
+------------------------------------------------------------------------
+
+OAP / APort specification snapshot
+  Vendored from https://github.com/aporthq/aport-spec at pinned commit
+  a706c64b0b7ef4bcff9756a926f9a278e577e8b0, licensed under the MIT License
+  (Copyright (c) 2025 APort Technologies Inc.). See third_party/oap/LICENSE and
+  third_party/oap/NOTICE. Vendored file hashes and paths are recorded in
+  third_party/oap/OAP_SPEC_LOCK.json.

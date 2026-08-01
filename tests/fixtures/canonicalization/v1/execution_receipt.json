@@ -1,0 +1,35 @@
+{
+  "canonical_action_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "canonicalization": "velvet.canonical_json.v1.sha256.unsigned_payload",
+  "completed_at": "2026-05-27T19:06:03Z",
+  "dispatch_attempted": true,
+  "dispatch_claim_record_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "executor": {
+    "attestation_level": "gateway_observed",
+    "audience": "mcp:servicenow",
+    "executor_id": "velvet-rope-proxy"
+  },
+  "outcome": "succeeded",
+  "permit_hash": "sha256:a367fccad52771a739f9201a71919b2b3b5f8597c6774b1e7939569e0b956e43",
+  "permit_id": "vpermit_0123456789abcdef0123456789abcdef",
+  "pre_execution_record_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "receipt_hash": "sha256:f0cda6a16053d24734fa88705da11adcd04595956152cf450d463e1593e8b31a",
+  "receipt_id": "vreceipt_0123456789abcdef0123456789abcdef",
+  "request_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "schema_version": "velvet.execution_receipt.v1",
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "demo-not-for-production",
+    "key_version": "demo-v1",
+    "metadata": {},
+    "payload_hash": "sha256:f0cda6a16053d24734fa88705da11adcd04595956152cf450d463e1593e8b31a",
+    "provider_name": "velvet_ed25519",
+    "purpose": "velvet.execution_receipt.v1",
+    "schema_version": "velvet.signature.v2",
+    "signature": "fixed",
+    "signed_at": "2026-05-27T19:06:04Z",
+    "tenant_id": "tenant-a"
+  },
+  "started_at": "2026-05-27T19:06:02Z",
+  "upstream_response_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

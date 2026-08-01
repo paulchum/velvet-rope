@@ -1,0 +1,70 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "surface": "operator"
+        },
+        "event_type": "browser_form_submitted",
+        "route_id": "browser_automation"
+      }
+    ],
+    "effect_events": [
+      {
+        "actor": "operator_browser_session",
+        "after_status": "disabled",
+        "before_status": "active",
+        "customer_id": "synthetic-browser_automation",
+        "route_id": "browser_automation"
+      }
+    ],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-browser_automation",
+  "dispatch": {
+    "driver": "playwright",
+    "engine": "chromium",
+    "kind": "browser",
+    "page_result": "disabled",
+    "selector": "#disable-customer",
+    "surface": "operator"
+  },
+  "effect_attribution": "attributed",
+  "effect_fingerprint": "sha256:b8fba38e6c2c9d80233358265d645a315e51b754330137663897b015d2157ae8",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "customer status service",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "Playwright-driven operator web UI",
+    "intermediates": [
+      "browser session",
+      "operator form handler"
+    ],
+    "label": "Browser automation",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "browser_automation"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-browser_automation"
+}

@@ -1,0 +1,134 @@
+Fleet False-Lockout Control: Online e-BH Gate and Selection Closure
+===================================================================
+
+Claim currency: [FM] — fixed-mean frequentist (upstream notation [Fmu]) for Theorem
+T1, its exact matching lower bound, Proposition CX, and the e-LOND stream variant.
+Theorem F is a separate composite [BP] statement on the deployed fleet kernel. The
+two contracts consume different evidence objects and are never merged.
+
+Objects.
+--------
+Retirement decisions occur at stopping times tau_1 < tau_2 < ... on arms a_j; each
+retirement event has a fresh decision_id and a fresh e-process. Fixed-mean null for
+decision j: H_j: mu_{a_j} >= max_b mu_b - eps (practical margin). For the executed
+set R at any stopping time,
+
+    FLR = E[ #(true nulls in R) / max(|R|, 1) ].
+
+Consumed contract (selection-closed box, v2): for every registered decision j,
+E[E_j(tau_j) 1{H_j true}] <= 1, with values across decisions arbitrarily dependent.
+Proposition CX proves the selection closure is necessary, not stylistic; the box is a
+distributional property, certifiably not runtime-checkable, and therefore an
+UPSTREAM certification obligation (the gate refuses only observable malformations).
+
+Theorem T1 (windowed online gate) [FM].
+---------------------------------------
+In a declared window with budget K_max and level delta, process registered decisions
+in canonical order; with R the currently executed set, execute decision j iff
+
+    E_j(tau_j) >= K_max / (delta * (|R| + 1)).
+
+Then FLR <= delta * |H_0| / K_max <= delta, under arbitrary dependence across
+decisions and adaptive stopping. The online ladder implements a valid (boost-free,
+ordered-thresholds) e-BH rejection set at every decision time despite irrevocability.
+
+EXACT matching lower bound. For every K_max >= 1, delta in (0,1), 1 <= m <= K_max,
+a contract-compliant instance realizes FLR = delta * m / K_max exactly (= delta at
+m = K_max). The constant cannot be improved for this gate under this contract.
+(Optimality among all valid procedures is NOT claimed.)
+
+Proposition CX (selection hazard) [FM].
+---------------------------------------
+Per-arm anytime validity does NOT suffice. For every delta there is an instance with
+A = ceil(1/delta) arms, ALL eps-optimal, and per-arm anytime e-processes each
+satisfying E[E_a(tau)] = 1 at every stopping time, such that retiring the spiking arm
+and reporting that arm's own e-value drives the T1 gate (window K_max = 1) to
+FLR = 1: every executed retirement is false, and one always executes. No per-decision
+inspection can detect the violation. Certified repairs, each restoring T1 verbatim at
+a power price of the selection factor A: (i) selection dividend — report E_{a*}/A;
+(ii) arithmetic e-merge — report (1/A) sum_a E_a. Forbidden practice: attaching
+evidence to a retirement post hoc among several processes' values (e.g. retiring
+whichever arm shows the largest e-value and reporting that value) without paying the
+selection price.
+
+Theorem T1b (e-LOND stream gate) [FM].
+--------------------------------------
+Fix a deterministic weight sequence gamma_j >= 0 with sum_j gamma_j <= 1, declared
+before the stream. Execute j iff E_j(tau_j) >= 1 / (delta * gamma_j * (r_j + 1)).
+Then FLR(T) <= delta at every stopping time T; no window, no K_max; the stream may be
+unbounded. T1 is the uniform-weight special case (gamma_j = 1{j <= K_max}/K_max) — an
+independent second derivation of its validity. Data-adaptive weights are REFUSED
+under this contract (a predictable-weights variant is revivable-if-proved upstream).
+Cross-window: naive same-delta pooling is REFUSED; alpha-spending
+(sum_w delta_w <= delta) and the globally-carried-count weight-spending corollary are
+proved.
+
+Theorem F (fleet-valid composite gate) [BP].
+--------------------------------------------
+The fully selection-closed fleet theorem — "any evidence-driven fleet of registered
+retirements, gated by e-BH/e-LOND arithmetic on windowed [BP] certificates, satisfies
+E[sup_t FLR_t] <= delta" — is FALSE as stated. Minimal obstruction O-F2 (fleet
+self-interference), exact actual-kernel witness: K = 4 arms Beta(33,7), Beta(34,6),
+Beta(9,1), Beta(1,1), c = 1/25, windows (1,0). Each retirement's certificate is
+exactly u = 0 under its own single-decision kernel, but executing both at once
+changes the deployed active set; one host failure (probability 1/10) fires the
+would-be-host channel, and E[sup FLR] = 1/20 > delta = 1/40. Executing a retirement
+changes the kernel the other open certificates were computed on.
+
+Theorem F (proved, narrower): with (F-REG) registration at issue stopping times with
+fresh ids, (F-CERT) pointwise composite certificates u_j >= P(A_j | F_{tau_j}),
+(F-ISO) kernel isolation over open windows — serialization within interaction
+components, or kernel-separated components; enforceable by the scheduler at issue
+time, and NECESSARY by the O-F2 witness — (F-GATE) execute only when
+u_j <= delta * gamma_j * r_j, and (F-ADJ) adjudication at exactly tau_j + W_j:
+
+    E[ sup_t FLR_t ] <= delta,
+
+under arbitrary dependence, adaptive stopping, and EVERY issue-time-measurable
+selection rule: which candidates are examined, which decisions are registered and
+when, which gate-passers are executed, how the predictable weight budget is spent.
+The single-decision boundary instance attains E[sup FLR] = delta exactly. Here FLR
+counts the policy's own adjudicated bookkeeping reversals under the modeled composite
+law — not ground truth.
+
+Hypotheses to carry with every quote.
+-------------------------------------
+[FM] gate: the selection-closed e-value box certified upstream (fixed-pair audit
+processes with pre-declared decision keys satisfy it; evidence-driven arm selection
+does not, unless repaired); declared windows or deterministic weight schedules; fresh
+decision and e-process ids per retirement event. [BP] gate: (F-REG), (F-CERT),
+(F-ISO), (F-GATE), (F-ADJ). Cross-currency evidence is refused in both directions:
+[FM] audit e-processes do not pass the [BP] gate, and [BP] certificates do not feed
+the [FM] theorem.
+
+Not claimed.
+------------
+The guarantee is a fleet-fraction guarantee, never per-decision — "each individual
+retirement has false-lockout probability at most delta" is a forbidden reading, and
+no per-record budget decomposition exists. No boosting without its distributional
+hypothesis. Theorem F has no fixed-mean content; T1 has no composite-kernel content
+outside its own contract. Neither gate generates audit evidence: non-vacuity is
+conditional and schedule-specific (kl for a predeclared directed audit, G_pair for
+balanced — quoting kl for balanced inspection is refused; see
+anytime_glr_audit_family_m.txt).
+
+Verification status.
+--------------------
+[FM] side: exact-enumeration pins for the matching lower bound and Proposition CX;
+executed falsifier F2 full mode PASS (n = 1000 fleets: boundary cell mean FLR 0.110
+vs exact 0.100 inside the CP interval; CX hazard 300/300 executions with both repairs
+at 0/300; the broken-gate selftest is correctly falsified). [BP] side: Theorem F
+mechanically verified in exact rational arithmetic, 61/61 checks, including an
+exhaustive 6,561-strategy adaptive-adversary enumeration and the O-F2 witness with
+its serialized repair (Max-DE math packs, pack 02, work/RESULT.md, 2026-07-08).
+Velvet port batteries: tests/test_verdict_flr_ebh.py (28 tests),
+tests/test_verdict_fleet.py (9 tests).
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d (flr_ebh.md); Theorem F proved in the Max-DE
+math packs (pack 02, work/RESULT.md); the same-snapshot batch fleet surface ported
+from maxde-replay @ fc2f082; implementation: src/velvet/verdict/flr_ebh.py and
+src/velvet/verdict/fleet.py; tests: tests/test_verdict_flr_ebh.py,
+tests/test_verdict_fleet.py.

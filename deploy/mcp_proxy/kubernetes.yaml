@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velvet-mcp-proxy
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: velvet-mcp-proxy
+  template:
+    metadata:
+      labels:
+        app: velvet-mcp-proxy
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: velvet-mcp-proxy
+          image: velvet-mcp-proxy:latest
+          args: ["--config", "/etc/velvet/config.yaml"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8791
+              name: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            - name: VELVET_MCP_PROXY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: bearer-token
+            - name: VELVET_OAP_ED25519_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: oap-ed25519-private-key
+            - name: VELVET_MAXDE_ED25519_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: maxde-ed25519-private-key
+            - name: VELVET_PRIVATE_MCP_UPSTREAM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: private-mcp-upstream-token
+            - name: VELVET_PRIVATE_MCP_CLIENT_IDENTITY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: private-mcp-client-identity-pem
+            - name: VELVET_PRIVATE_MCP_CA_BUNDLE_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: private-mcp-ca-bundle-pem
+            - name: VELVET_OPENAI_TUNNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: openai-tunnel-id
+                  optional: true
+            - name: VELVET_OPENAI_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: openai-workspace-id
+                  optional: true
+            - name: VELVET_CONNECTOR_SUBJECT
+              valueFrom:
+                secretKeyRef:
+                  name: velvet-mcp-proxy
+                  key: connector-subject
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8791
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 8791
+          volumeMounts:
+            - name: config
+              mountPath: /etc/velvet
+              readOnly: true
+            - name: ledger
+              mountPath: /var/lib/velvet
+      volumes:
+        - name: config
+          configMap:
+            name: velvet-mcp-proxy-config
+        - name: ledger
+          persistentVolumeClaim:
+            claimName: velvet-mcp-proxy-ledger
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: velvet-mcp-proxy
+spec:
+  selector:
+    app: velvet-mcp-proxy
+  ports:
+    - name: http
+      port: 8791
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: velvet-mcp-proxy
+spec:
+  podSelector:
+    matchLabels:
+      app: velvet-mcp-proxy
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8791
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
+        - protocol: UDP
+          port: 53

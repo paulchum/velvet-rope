@@ -1,0 +1,21 @@
+services:
+  velvet-mcp-proxy:
+    build:
+      context: ../..
+      dockerfile: deploy/mcp_proxy/Dockerfile
+    command: ["--config", "/config/config.yaml"]
+    environment:
+      VELVET_MCP_PROXY_TOKEN: "replace-in-local-only"
+      VELVET_OAP_ED25519_PRIVATE_KEY: "replace-with-secret"
+      VELVET_MAXDE_ED25519_PRIVATE_KEY: "replace-with-secret"
+      VELVET_OPENAI_TUNNEL_ID: ""
+      VELVET_OPENAI_WORKSPACE_ID: ""
+      VELVET_CONNECTOR_SUBJECT: ""
+      VELVET_PRIVATE_MCP_UPSTREAM_TOKEN: "replace-with-private-mcp-secret"
+      VELVET_PRIVATE_MCP_CLIENT_IDENTITY_PEM: "replace-with-client-cert-and-key-pem"
+      VELVET_PRIVATE_MCP_CA_BUNDLE_PEM: "replace-with-private-mcp-ca-bundle-pem"
+    ports:
+      - "8791:8791"
+    volumes:
+      - ../../examples/mcp_proxy:/config:ro
+      - ./data:/var/lib/velvet/reports

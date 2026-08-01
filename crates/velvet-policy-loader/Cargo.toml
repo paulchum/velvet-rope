@@ -1,0 +1,39 @@
+[package]
+name = "velvet-policy-loader"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "YAML policy loading, validation, reload, migration, and test tooling."
+
+[dependencies]
+arc-swap = "1.7.1"
+velvet-core = { path = "../velvet-core" }
+velvet-policies = { path = "../velvet-policies" }
+jsonschema = { version = "0.46.5", default-features = false }
+notify = "8.2.0"
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+walkdir = "2.5.0"
+
+[dev-dependencies]
+criterion = "0.7.0"
+proptest = "1.9.0"
+tempfile = "3.23.0"
+
+[[bin]]
+name = "velvet-policy-test"
+path = "src/bin/policy_test.rs"
+
+[[bin]]
+name = "velvet-policy-migrate"
+path = "src/bin/policy_migrate.rs"
+
+[[bin]]
+name = "velvet-policy-schema"
+path = "src/bin/policy_schema.rs"
+
+[[bench]]
+name = "load_reload"
+harness = false

@@ -1,0 +1,29 @@
+[package]
+name = "velvet-rope-proxy-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+velvet-rope-proxy = { path = ".." }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "decode_ledger"
+path = "fuzz_targets/decode_ledger.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "verify_ledger"
+path = "fuzz_targets/verify_ledger.rs"
+test = false
+doc = false
+bench = false

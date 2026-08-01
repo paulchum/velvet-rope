@@ -1,0 +1,79 @@
+Checkpointed Tamper-Evident Ledger Theorem
+==========================================
+
+Theorem 1 (tamper evidence for an externally checkpointed ledger segment).
+
+Let L = (r_1, ..., r_n) be a Velvet Ledger segment whose records are serialized
+with Velvet's stable canonicalization. Each canonical record r_i carries:
+
+    sequence_number = i
+    previous_record_hash = H(r_{i-1}) for i > 1
+    previous_record_hash = genesis for i = 1
+    record_hash = H(r_i without record_hash and signature material)
+
+Let M be an externally retained Velvet ledger segment manifest for L. M records
+the first and last sequence numbers, first and last record hashes, record count,
+and a segment hash over the ordered list of record_hash values. If segment
+manifest signing is required for the deployment, M also carries a valid manifest
+signature. If record signatures are required, every required record signature is
+valid for its record_hash and signing purpose.
+
+Assume:
+
+(H1) Stable canonicalization. All honest writers and verifiers compute the same
+canonical byte representation for the same JSON value and reject unsupported
+record shapes.
+
+(H2) Collision-resistant hashing. It is computationally infeasible to find two
+distinct canonical ledger payloads or two distinct ordered record-hash lists
+with the same SHA-256 hash.
+
+(H3) Valid record signatures where required. For any deployment that treats
+record signatures as required evidence, a verifier rejects missing or invalid
+signatures for the relevant ledger records.
+
+(H4) External checkpoint retention. The segment manifest M is retained outside
+the ledger segment under an integrity boundary unavailable to the ledger editor.
+The verifier compares the candidate segment against M, and verifies M's
+signature when signed checkpoint evidence is required.
+
+Then any modification, replacement, insertion, deletion inside the checkpointed
+segment, or reordering of records in that segment is detected except with
+negligible probability under H2 or by violating one of H1-H4.
+
+Proof sketch.
+
+Changing a field covered by record_hash changes that record's canonical hash
+unless it finds a hash collision. If an attacker changes a record without
+updating the stored record_hash, direct record verification fails. If the
+attacker updates the stored record_hash, the following record's
+previous_record_hash no longer matches unless the attacker also rewrites the
+suffix. Rewriting the suffix changes the ordered list of record hashes, so the
+externally retained manifest's segment_hash, first or last record hash, or
+record count no longer matches.
+
+Record replacement is either a covered field change at the same position or a
+previous-hash and segment-hash change. Insertion and deletion change sequence
+continuity, previous-hash links, record count, and the ordered segment hash.
+Reordering changes previous-hash links and the ordered segment hash. If record
+signatures are required, a rewritten record_hash also requires a fresh valid
+signature under the accepted signing purpose.
+
+Limits.
+
+Tail truncation after the latest unpublished checkpoint is not detectable by
+the local hash chain alone. A truncated prefix can remain internally consistent
+because every remaining previous_record_hash can still point to the preceding
+remaining record. Detecting that loss requires an externally retained manifest,
+checkpoint, witness, or equivalent publication that names the longer segment.
+
+Fork or equivocation is not prevented by a local ledger verifier alone. Two
+different internally valid histories can both verify locally if no transparency
+log, checkpoint gossip, remote witness, or equivalent external publication lets
+verifiers compare which checkpoint was published for the same ledger boundary.
+
+Ledger integrity does not prove decision correctness, policy safety, or budget
+compliance. The ledger can prove that a recorded decision artifact was preserved
+under the stated hash-chain, signature, and checkpoint assumptions. It does not
+prove that the policy was the right policy, that the decision was semantically
+correct, or that runtime budget obligations were satisfied.

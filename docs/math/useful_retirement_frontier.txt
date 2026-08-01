@@ -1,0 +1,93 @@
+The Useful-Retirement Frontier
+==============================
+
+Claim currency: [FM] — every probability statement is fixed-mean frequentist, for an
+adaptive one-arm-per-round Bernoulli bandit policy. No Bayesian-predictive martingale
+is used, and no [BP] certificate implies this frontier.
+
+Theorem 1 (post-lockout absorption).
+------------------------------------
+Let mu, mu' in (0,1)^K differ only in coordinate a, and run the same adaptive policy
+under both. On every strict-lockout history with tau_a < infinity, for all
+t >= tau_a,
+
+    log dP_mu/dP_mu' |_{F_t}  =  log dP_mu/dP_mu' |_{F_{tau_a}}:
+
+the locked arm's likelihood ratio FREEZES at retirement (policy-selection factors
+cancel; non-candidate factors equal one; strict lockout supplies no candidate factor
+after tau_a). Equivalently, conditional on a common observed history at retirement,
+the law of the post-retirement observed continuation is identical under mu and mu'.
+No monitor measurable from later selected actions and their realized rewards can
+acquire further information about mu_a — later host data cannot learn the locked arm
+back. Scope: pre-retirement histories may differ in probability, and other arms can
+still reveal their own misspecification; the claim is only about worlds differing
+solely in the locked arm. Strict lockout is needed only for this absorption
+statement, not for Theorem 2.
+
+Theorem 2 (usefulness-conditioned retirement lower bound).
+----------------------------------------------------------
+Let nu, nu' in (0,1)^K be two instances driven by the same adaptive policy, and
+suppose 0 < delta < p <= 1 with P_nu(retire a) >= p and P_nu'(retire a) <= delta.
+Then
+
+    sum_{i=1}^K E_nu[ N_i(tau_a) ] * kl(nu_i, nu_i')  >=  d(p, delta),
+
+where d is binary relative entropy. The usefulness condition p > delta is
+load-bearing: a rule that never retires has P(retire) = 0, uses no samples, and is
+VALID BUT USELESS — no positive sample lower bound can apply to it. Useful
+retirement, not validity, is what carries a price.
+
+Bernoulli frontier (the exact inspection price).
+------------------------------------------------
+Fix mu with arm a suboptimal; mu*^{-a} = max_{b != a} mu_b and
+Delta_a = mu*^{-a} - mu_a > 0. If the rule is uniformly delta-safe for a (retirement
+probability <= delta under every alternative raising only mu_a above mu*^{-a}) and it
+retires a under mu with probability >= p > delta, then
+
+    E_mu N_a(tau_a)  >=  d(p, delta) / kl(mu_a, mu*^{-a}),
+    E_mu R_{tau_a}   >=  Delta_a * d(p, delta) / kl(mu_a, mu*^{-a}),
+
+with R_{tau_a} the pre-retirement fixed-mean regret. As delta -> 0 at fixed p,
+d(p, delta) = p log(1/delta) + O_p(1); at p -> 1 the leading retirement price is
+log(1/delta) / kl — the constant a matching audit must attain. The directed Family-M
+audit (anytime_glr_audit_family_m.txt, Theorem T3.2-DIR) supplies the matching
+two-arm upper bound, so the two-arm directed frontier is exact.
+
+Relation to DE and Max-DE. The unmodified greedy-host DE counterexample supplies a
+positive-probability strict lockout of the truly optimal arm; Theorem 1 explains why
+later host data cannot repair the missing information. Theorem 2 explains the repair:
+a rule that usefully retires suboptimal arms while protecting optimal alternatives
+must purchase enough pre-retirement inspections. The audit layer is what pays this
+frontier from actual samples.
+
+Hypotheses. Bernoulli rewards; the policy adaptive and measurable in the observed
+history plus fresh policy randomization; tau_a an observed-filtration stopping time
+(with the limit convention for never-retiring paths); interior means for the boxed
+forms; the uniform delta-safety class as stated (alternatives change only the
+candidate's coordinate).
+
+Not claimed.
+------------
+- The change-of-measure inequality is classical; the contribution is its
+  usefulness-conditioned formulation for irreversible retirement and its composition
+  with the absorption theorem.
+- No infinite-horizon Bayesian-predictive certificate, and no claim about artificial
+  inspection clocks.
+- A [BP] crossing certificate may license a model-relative lockout at tolerance
+  delta, but it does NOT imply this fixed-mean frontier, and this frontier says
+  nothing about the [BP] certificate's own validity.
+- No claim that the frontier is attained beyond the predeclared two-arm directed
+  case; a simulation or proof synopsis alone would not establish attainment.
+
+Verification status.
+--------------------
+Proved upstream in closed form; no simulation is load-bearing. Velvet port battery:
+tests/test_verdict_retirement_frontier.py (6 tests) plus golden-numeric pins in
+tests/test_verdict_upstream_parity.py.
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d (retirement_frontier.md); implementation:
+src/velvet/verdict/retirement_frontier.py; tests:
+tests/test_verdict_retirement_frontier.py.

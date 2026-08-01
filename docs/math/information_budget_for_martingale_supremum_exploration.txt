@@ -1,0 +1,89 @@
+Information Budget for Martingale-Supremum Exploration
+
+Theorem.
+Fix a Beta-Bernoulli arm and a fixed baseline v in (0,1). Let
+
+    Y = (theta - v)^+,
+
+where theta has a Beta prior, and let
+
+    M_n = E[Y | F_n]
+
+be the posterior expected-improvement martingale obtained by repeatedly sampling the same arm. Define the martingale-supremum value
+
+    Z_n = E[sup_{k >= n} M_k | F_n]
+
+and the Max-DE option premium
+
+    Pi_n = Z_n - M_n.
+
+Then the following hold.
+
+1. Local one-shot maximal control.
+
+For every n,
+
+    0 <= Pi_n <= 1 - v - M_n.
+
+Moreover, conditionally on F_n,
+
+    Z_n <= M_n [1 + log((1-v)/M_n)],
+
+with the convention that the right-hand side is 0 when M_n = 0, and
+
+    Pi_n <= 2 sqrt(Var(Y | F_n)).
+
+Thus the Max-DE premium admits valid one-shot certificates from boundedness, Doob L log L, and Doob L^2 maximal inequalities.
+
+2. Finite budget for the martingale-supremum envelope.
+
+The process (Z_n) is a bounded supermartingale. Hence its predictable decay telescopes:
+
+    E sum_{n=0}^{T-1}
+      [ Z_n - E[Z_{n+1} | F_n] ]
+    =
+    E[Z_0 - Z_T]
+    <=
+    Z_0 - E[Y]
+    =
+    Pi_0.
+
+Letting T -> infinity,
+
+    E sum_{n >= 0}
+      [ Z_n - E[Z_{n+1} | F_n] ]
+    =
+    Pi_0.
+
+Therefore the predictable decay of the martingale-supremum envelope has a finite information-style budget.
+
+3. No finite budget for raw cumulative selected option premium.
+
+There exist a fixed v in (0,1), a Beta prior, and a positive-price Max-DE gate such that the selected arm remains eligible eventually and
+
+    E sum_{n <= T, selected} Pi_n
+    >=
+    c sqrt(T)
+
+for some constant c > 0.
+
+Consequently, no horizon-uniform theorem of the form
+
+    E sum_{t <= T, Max-DE selected a_t}
+      OptionPremium_t(a_t)
+    <=
+    C * InformationPotential_0
+
+can hold for any finite initial information potential independent of T.
+
+Reason.
+The raw option premium Pi_n is not an information-consumption increment. It is a repeatedly re-priced stock of unresolved optionality. Repeatedly summing Pi_n double-counts the same remaining future upside.
+
+The budgetable object is instead the Snell-envelope compensator
+
+    Z_n - E[Z_{n+1} | F_n],
+
+whose cumulative expectation is bounded by the initial option premium Pi_0.
+
+Conclusion.
+Max-DE is locally certifiable but not globally budgetable by summing raw option premiums. The strongest valid theorem is a no-go result for cumulative raw selected premium together with a positive finite-budget theorem for the predictable decay of the martingale-supremum envelope.

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/velvet_failure_card.schema.json",
+  "title": "Velvet Rope Failure Card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "failure_card_id",
+    "failure_title",
+    "system",
+    "adapter",
+    "result_type",
+    "query_id",
+    "scenario_id",
+    "scenario_type",
+    "user_query",
+    "candidate_action",
+    "admission_decision",
+    "execution_context",
+    "warrant_status",
+    "seal_status",
+    "final_response_excerpt",
+    "invariant_violated",
+    "policy_evidence",
+    "budget_evidence",
+    "jurisdiction_evidence",
+    "consent_evidence",
+    "auditability_defects",
+    "liability_explanation",
+    "severity",
+    "reproduction_command",
+    "failure_fingerprint",
+    "bound_metric_names",
+    "trace_hash"
+  ],
+  "properties": {
+    "failure_card_id": { "type": "string", "minLength": 1 },
+    "failure_title": { "type": "string", "minLength": 1 },
+    "system": { "type": "string", "minLength": 1 },
+    "adapter": { "type": "string", "minLength": 1 },
+    "result_type": { "enum": ["live", "fixture", "trace_audit_only", "not_run", "ablation"] },
+    "query_id": { "type": "string", "minLength": 1 },
+    "scenario_id": { "type": "string", "minLength": 1 },
+    "scenario_type": { "type": "string", "minLength": 1 },
+    "user_query": { "type": "string", "minLength": 1 },
+    "candidate_action": { "type": ["object", "null"] },
+    "admission_decision": { "type": ["object", "null"] },
+    "execution_context": { "type": ["object", "null"] },
+    "warrant_status": { "enum": ["present", "missing"] },
+    "seal_status": { "enum": ["present", "missing"] },
+    "final_response_excerpt": { "type": "string" },
+    "invariant_violated": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "policy_evidence": { "type": "object" },
+    "budget_evidence": { "type": "object" },
+    "jurisdiction_evidence": { "type": "object" },
+    "consent_evidence": { "type": "object" },
+    "auditability_defects": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "liability_explanation": { "type": "string", "minLength": 1 },
+    "severity": {
+      "enum": ["critical", "high", "medium", "low", "opportunity", "cost"]
+    },
+    "reproduction_command": { "type": "string", "minLength": 1 },
+    "failure_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "bound_metric_names": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "trace_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "approval_required": false,
+  "arguments_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "decision": "execute",
+  "environment": "prod",
+  "expires_at": "9999-12-31T23:59:59Z",
+  "issued_at": "2026-05-27T19:00:00Z",
+  "issuer": "velvet",
+  "obligations": [
+    "forward_upstream"
+  ],
+  "policy_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "policy_version": "policy_graph_v1",
+  "reason": "Clearance score cleared the entry price.",
+  "reason_codes": [
+    "cost_ceiling.allow",
+    "pii_guard.allow"
+  ],
+  "request_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "signature": "local-signature",
+  "tenant_id": "tenant-a",
+  "tool_key": "servicenow/search_change_requests",
+  "tool_name": "servicenow/search_change_requests",
+  "tool_schema_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "warrant_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "warrant_id": "wrnt_vector_001"
+}

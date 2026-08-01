@@ -1,0 +1,20 @@
+{
+  "authorization_report": {
+    "decision": "deny",
+    "dispatch_attempted": false,
+    "reason_code": "route_policy_denied",
+    "route_id": "protected_tool",
+    "status": "success"
+  },
+  "customer_id": "synthetic-protected-tool",
+  "effect_observed": false,
+  "post_state": {
+    "status": "active"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route_authorization_passed": true,
+  "route_id": "protected_tool",
+  "trial_id": "shadowpath-protected-tool"
+}

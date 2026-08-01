@@ -1,0 +1,63 @@
+name: ShadowPath effect test
+description: Test whether blocking one route prevents the prohibited effect across equivalent paths.
+author: Velvet Contributors
+
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  project:
+    description: Path to the ShadowPath project JSON file.
+    required: true
+    default: shadowpath.json
+  output-dir:
+    description: Directory for evidence, the report, and share artifacts.
+    required: false
+    default: reports/shadowpath
+  velvet-version:
+    description: Published velvet-rope version to execute.
+    required: false
+    default: "1.1.0"
+  expect-breach:
+    description: Set true for an intentionally vulnerable teaching fixture.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+
+    - name: Run effect paths
+      id: run
+      shell: bash
+      env:
+        SHADOWPATH_PROJECT: ${{ inputs.project }}
+        SHADOWPATH_OUTPUT_DIR: ${{ inputs.output-dir }}
+        SHADOWPATH_VERSION: ${{ inputs.velvet-version }}
+        SHADOWPATH_EXPECT_BREACH: ${{ inputs.expect-breach }}
+      run: |
+        args=(
+          shadowpath run
+          --project "${SHADOWPATH_PROJECT}"
+          --output-dir "${SHADOWPATH_OUTPUT_DIR}"
+        )
+        if [[ "${SHADOWPATH_EXPECT_BREACH}" == "true" ]]; then
+          args+=(--expect-breach)
+        fi
+        uvx --from "velvet-rope==${SHADOWPATH_VERSION}" velvet "${args[@]}"
+
+    - name: Publish report summary
+      if: always()
+      shell: bash
+      env:
+        SHADOWPATH_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        report="${SHADOWPATH_OUTPUT_DIR}/SHADOWPATH_RESULTS.md"
+        if [[ -f "${report}" ]]; then
+          cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
+        else
+          echo "ShadowPath did not produce a report." >> "${GITHUB_STEP_SUMMARY}"
+        fi

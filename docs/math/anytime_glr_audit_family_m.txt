@@ -1,0 +1,121 @@
+Anytime-Valid KL/GLR Retirement Audit: Family M
+===============================================
+
+Claim currency: [FM] — fixed-mean frequentist throughout: probabilities under a fixed
+unknown parameter vector, uniformly over adaptive sampling and stopping. The single
+Bayesian-predictive companion (Lemma B below) is labeled [BP], returned under its own
+key, and never blended into a frequentist quote.
+
+Setting.
+--------
+Rounds t = 1, 2, ...; arms i in [K]; Bernoulli rewards with mu in (0,1)^K fixed and
+unknown (A1); the pulled arm may be chosen by ANY adaptive rule measurable in the
+observed history plus exogenous randomization (A2) — validity uses nothing else about
+sampling, so it covers the actual host-override kernel. For an ordered pair (a,b)
+with one-sided null H_ab: mu_a >= mu_b, the GLR statistic is
+
+    Z_ab(t) = inf_{lambda_a >= lambda_b} [ n_a kl(muhat_a, lambda_a)
+                                          + n_b kl(muhat_b, lambda_b) ],
+
+which is 0 when muhat_a >= muhat_b and otherwise pools at the weighted mean.
+
+Theorem T3.3 (e-process; the KT normalization is NECESSARY).
+------------------------------------------------------------
+With R_i(t) the Krichevsky-Trofimov prediction regret of arm i, define
+ln E_ab(t) = Z_ab(t) - R_a(t) - R_b(t). Under A1-A2, for every null point and EVERY
+stopping time tau (including tau = infinity, via the stopped evaluation):
+E[E_ab^[tau]] <= 1, and P(exists t: E_ab(t) >= 1/delta) <= delta.
+
+Negative bookkeeping (load-bearing): raw exp(Z) is provably NOT an e-value, even at a
+fixed time — at n_a = n_b = 1, mu_a = mu_b = 1/2, E[e^Z] = 1.75 > 1 by enumeration.
+No fixed rescaling repairs it uniformly in t; the necessary correction grows like
+(1/2) ln n_a + (1/2) ln n_b - O(1), which is exactly R_a + R_b. Raw exp(Z) is never
+exported or thresholded.
+
+Threshold families.
+-------------------
+Family M (mixture / universal inference; the deployed default):
+beta_M(t, delta) = ln(1/delta) + R_a(t) + R_b(t). Safe rejection of a via b requires
+muhat_a < muhat_b and Z_ab >= beta_M — by construction EXACTLY the e-process crossing
+E_ab >= 1/delta, hence valid at exactly delta with leading constant exactly 1 on
+ln(1/delta) and no union bound. Family S (stitched/peeled) is proved self-containedly
+with O(ln ln n) growth and explicit constants (pair leading constant 2*eta); Family M
+dominates it in every deployment-relevant regime (27.41 vs 62.88 at
+n_a = n_b = 2000, delta = 1e-8). The literal unit-constant ln ln threshold
+(Kaufmann-Koolen) is cited with a hypothesis check, not used; nothing rests on it.
+
+Theorem T3.1 (anytime validity).
+--------------------------------
+Testing each ordered pair with Family M (or S) at level delta/(K-1): for any fixed mu
+with optimal arm a*, P(a* is ever safely rejected) <= delta, under any A2 allocation,
+hence at any data-dependent stopping time. No declared horizon appears anywhere.
+Exposed caveat: this protects the optimal arm; protecting every true null
+simultaneously under ties needs delta/#pairs (both options are flags).
+
+Regret: what is true and what is false.
+---------------------------------------
+- Proposition P-bal: the spec's target constant Delta/kl(mu_1, mu_2) is FALSE for the
+  balanced skeleton. Any delta-safe alternating audit pays the mandatory constant
+  Delta/G_pair, where G_pair(mu_1, mu_2) < kl(mu_1, mu_2) strictly (ratio 2.15 at
+  (0.75, 0.85)); the balanced pair is closed at that constant. Mechanism: balance
+  spends half its budget sampling the arm the pooled null pulls toward.
+- Theorem T3.2-DIR: the DIRECTED audit — predeclared candidate (arm 1) and comparator
+  (arm 2), comparator top-ups to L(n) = ceil(n ln(e+n)) — attains
+
+      lim_{delta -> 0} E[N_1(tau_{1,delta})] / ln(1/delta) = 1 / kl(mu_1, mu_2),
+
+  matching the useful-retirement frontier with retirement probability one (see
+  useful_retirement_frontier.txt). The comparator top-ups are a separate wall-clock
+  price. The earlier empirical-leader TILT theorem is WITHDRAWN (its proof used an
+  invalid bound on recursively alternating top-ups); that schedule carries no
+  theorem claim. The balanced skeleton provably cannot attain Delta/kl.
+- Proposition P-lock: in the strict-lockout class no policy has instance-uniform
+  anytime o(T) regret; the delta*Delta*T term is irreducible. "Anytime" describes
+  validity, not regret; regret headlines are calibrated corollaries at delta = 1/T*.
+
+N_cert is an ESTIMATOR, not a theorem.
+--------------------------------------
+The certification-cost quote N_cert(a; delta) = ceil(beta / Ghat_half), with the
+Family-M envelope evaluated self-consistently at the projected resolution state and a
+parametric bootstrap interval. Calibration is an EMPIRICAL target adjudicated by
+falsifier F4 (>= 90% coverage; < 85% on any cell falsifies the quoting rule, never
+the audit). Executed: the (5%, 95%) rule missed the 90% target at mu = (0.4, 0.6);
+the pre-registered widening to (2%, 98%) is the deployed default (0.92-0.98 coverage
+per cell). Refusal path: NotSeparated (quote infinity);
+UncertifiedNeedsMoreHorizon with attached shortfall; else Certifiable with interval.
+
+Lemma B [BP] (labeled companion; never blended).
+------------------------------------------------
+For a candidate at Beta(1,2) and gate height in a nonempty pinned window, the
+probability that a SINGLE mandated inspection restores gate eligibility is exactly
+1/3. Returned under its own key; the two currencies never merge into one number.
+
+Hypotheses. A1-A2 for every validity claim (arbitrary host policy within A2); A3-A5
+(declared forced schedules, permanent lockout of safely rejected arms, test gating
+n_a, n_b >= 1 with muhat_a < muhat_b) for regret claims only. Positive regret
+statements attach to audit-modified forced-inspection policies, never to unmodified
+greedy-host DE.
+
+Not claimed. Delta/kl for balanced inspection (false; P-bal); exporting or
+thresholding raw exp(Z); the literal unit-constant ln ln threshold as proved here;
+Graves-Lai K-arm optimality (pairwise composition at delta/(K-1) is valid but
+generically suboptimal); N_cert coverage as a theorem; any blending of the Lemma B
+number into a frequentist quote.
+
+Verification status.
+--------------------
+Executed pre-registered falsification (upstream record): F3a adversarial-stopping
+validity kill test PASS in every cell with power (Family M tie cells carry real
+rejection mass, e.g. 69/2000 at delta = 0.10, CP-upper 0.042); F3b sample counts
+within [0.855, 0.943] of the KL-theoretic prediction, beating the Hoeffding audit in
+200/200 replications of every cell; independent Monte-Carlo Ville check with
+adversarial first-crossing stopping: 115/20000 crossings, CP-upper 0.0076 vs
+delta = 0.05; stopped-e-value means <= 1 within tolerance. Velvet port battery:
+tests/test_verdict_audit_glr.py (33 deterministic tests; the MC and falsification
+suites are gated upstream behind RUN_MC / RUN_FALSIFICATION).
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d (audit_glr.md); implementation:
+src/velvet/verdict/audit_glr.py; tests: tests/test_verdict_audit_glr.py.

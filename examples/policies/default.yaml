@@ -1,0 +1,110 @@
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: standard-cost-ceiling
+  version: 1
+spec:
+  type: cost_ceiling
+  config:
+    per_task_usd_limit: 0.5
+    per_user_daily_usd_limit: 25.0
+    per_org_monthly_usd_limit: 5000.0
+    soft_ceiling_fraction: 0.8
+    cost_model:
+      LLM_CALL:
+        token_usd: 0.00001
+        call_usd: 0.0
+        volume_usd_per_unit: 0.0
+        default_usd: 0.0
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: pii-guard-strict
+  version: 1
+spec:
+  type: pii_guard
+  config:
+    default_mode: block
+    per_action_mode: {}
+    list_context_keys:
+      - own_email
+    enabled_detectors:
+      - email
+      - ssn
+      - phone
+      - credit_card
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: prompt-injection-default
+  version: 1
+spec:
+  type: prompt_injection_detector
+  config:
+    default_action: block
+    source_rules:
+      default:
+        - id: ignore_previous
+          pattern: '(?i)\b(ignore|forget)\b.{0,40}\b(previous|system)\b'
+          severity: error
+    embedding_threshold: null
+    distance_metric: cosine
+    pid_classifier_path: null
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: user-rate-limit-paid-tier
+  version: 1
+spec:
+  type: rate_limiter
+  config:
+    aggregate:
+      window_ms: 60000
+      max_requests: 60
+      sustained_per_second: 1.0
+      burst_multiplier: 1.5
+    per_action:
+      ESCALATE_MODEL:
+        window_ms: 60000
+        max_requests: 5
+        sustained_per_second: 0.05
+        burst_multiplier: 1.5
+---
+apiVersion: velvet.io/v1alpha1
+kind: Policy
+metadata:
+  name: escalation-gate-default
+  version: 1
+spec:
+  type: escalation_gate
+  config:
+    cost_threshold_usd: 2.0
+    confidence_threshold: 0.35
+    novelty_threshold: 0.98
+    repeated_failure_threshold: 2
+    sensitive_actions:
+      - EXECUTE_CODE
+      - CALL_TOOL
+    targets:
+      concierge_review:
+        target_type: velvet_concierge_queue
+        target: local://velvet-concierge
+        mode: sync
+        fallback: deny
+    default_fallback: deny
+---
+apiVersion: velvet.io/v1alpha1
+kind: PolicyChain
+metadata:
+  name: default
+  version: 1
+spec:
+  policies:
+    - standard-cost-ceiling
+    - pii-guard-strict
+    - prompt-injection-default
+    - user-rate-limit-paid-tier
+    - escalation-gate-default

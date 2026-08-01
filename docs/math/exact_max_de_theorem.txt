@@ -1,0 +1,488 @@
+Exact Max-DE as a Beta-Bernoulli Martingale Hitting Problem
+
+Theorem.
+
+Let alpha,beta > 0 and v in (0,1). Let
+
+    Theta ~ Beta(alpha,beta).
+
+Conditional on Theta = theta, let
+
+    X_1, X_2, ... | Theta = theta  iid~  Bernoulli(theta).
+
+Define
+
+    S_n = sum_{i=1}^n X_i,
+    R_n = n - S_n,
+    F_n = sigma(X_1,...,X_n),
+
+where F_n denotes the observation filtration. Let
+
+    Y = (Theta - v)^+.
+
+For a,b > 0, define the Beta-Bernoulli expected-improvement functional
+
+    g_v(a,b)
+    =
+    E_{theta ~ Beta(a,b)}[(theta - v)^+].
+
+Equivalently,
+
+    g_v(a,b)
+    =
+    integral_v^1 (theta - v)
+        theta^{a-1}(1-theta)^{b-1} / B(a,b)
+    dtheta.
+
+In incomplete-beta notation,
+
+    g_v(a,b)
+    =
+    a/(a+b) * (1 - I_v(a+1,b))
+    -
+    v * (1 - I_v(a,b)).
+
+Define the posterior expected-improvement process
+
+    M_n = E[Y | F_n].
+
+Then
+
+    M_n = g_v(alpha + S_n, beta + R_n).
+
+The exact Max-DE value is
+
+    D^max(alpha,beta;v)
+    =
+    L E[sup_{n >= 0} M_n].
+
+Then the following hold.
+
+1. Martingale structure.
+
+The process (M_n)_{n >= 0} is a bounded uniformly integrable Doob martingale. More precisely,
+
+    0 <= M_n <= 1 - v
+
+almost surely for every n, and
+
+    E[M_{n+1} | F_n] = M_n.
+
+Moreover,
+
+    M_n -> Y = (Theta - v)^+
+
+almost surely and in L^1.
+
+Proof.
+
+Since
+
+    0 <= Y <= 1 - v,
+
+we have Y in L^\infty. Therefore
+
+    M_n = E[Y | F_n]
+
+is an integrable adapted process, and by the tower property,
+
+    E[M_{n+1} | F_n]
+    =
+    E[E[Y | F_{n+1}] | F_n]
+    =
+    E[Y | F_n]
+    =
+    M_n.
+
+Also, conditional expectation preserves order, so
+
+    0 <= M_n <= 1 - v.
+
+Thus (M_n) is bounded in L^\infty and hence uniformly integrable.
+
+By martingale convergence, M_n converges almost surely and in L^1 to
+
+    M_infty = E[Y | F_infty],
+
+where
+
+    F_infty = sigma(union_n F_n).
+
+Under the Beta-Bernoulli construction,
+
+    S_n / n -> Theta
+
+almost surely. Hence Theta is F_infty-measurable, so Y is F_infty-measurable, and therefore
+
+    M_infty = E[Y | F_infty] = Y.
+
+This proves the martingale claim.
+
+
+2. Exact layer-cake representation.
+
+Let
+
+    Z = sup_{n >= 0} M_n.
+
+Since 0 <= Z <= 1 - v, the layer-cake formula gives
+
+    E[Z]
+    =
+    integral_0^{1-v} P(Z >= x) dx.
+
+For x in [0,1-v], define
+
+    h_x(a,b)
+    =
+    P_{a,b}(exists n >= 0 :
+        g_v(a + S_n, b + R_n) >= x).
+
+Then
+
+    E[sup_{n >= 0} M_n]
+    =
+    integral_0^{1-v} h_x(alpha,beta) dx.
+
+Consequently,
+
+    D^max(alpha,beta;v)
+    =
+    L integral_0^{1-v} h_x(alpha,beta) dx.
+
+Proof.
+
+Because Z is the countable supremum of measurable random variables, Z is measurable. Since it is bounded and nonnegative,
+
+    E[Z]
+    =
+    integral_0^{1-v} P(Z >= x) dx.
+
+Now
+
+    Z >= x
+
+if and only if
+
+    exists n >= 0 such that M_n >= x.
+
+Using
+
+    M_n = g_v(alpha + S_n, beta + R_n),
+
+we obtain
+
+    P(Z >= x)
+    =
+    P_{alpha,beta}(exists n >= 0 :
+        g_v(alpha + S_n, beta + R_n) >= x)
+    =
+    h_x(alpha,beta).
+
+Substitution into the layer-cake identity gives the result.
+
+
+3. Posterior-lattice hitting formulation.
+
+For fixed x in (0,1-v), define the posterior lattice
+
+    L_{a,b}
+    =
+    {(a+i,b+j): i,j in N_0}.
+
+Define the posterior-state Markov chain
+
+    (A_n,B_n) = (a + S_n, b + R_n).
+
+Its transition kernel is
+
+    (a,b) -> (a+1,b) with probability a/(a+b),
+
+and
+
+    (a,b) -> (a,b+1) with probability b/(a+b).
+
+Define the hitting set
+
+    G_x = {(a,b): g_v(a,b) >= x},
+
+and the hitting time
+
+    tau_x = inf{n >= 0 : (A_n,B_n) in G_x}.
+
+Then
+
+    h_x(a,b) = P_{a,b}(tau_x < infinity).
+
+Furthermore, h_x satisfies the Dirichlet problem
+
+    h_x(a,b) = 1
+    if (a,b) in G_x,
+
+and, if (a,b) notin G_x,
+
+    h_x(a,b)
+    =
+    a/(a+b) h_x(a+1,b)
+    +
+    b/(a+b) h_x(a,b+1).
+
+Proof.
+
+The posterior predictive probability of success from state (a,b) is
+
+    E[Theta | A_n=a, B_n=b] = a/(a+b),
+
+and the predictive probability of failure is b/(a+b). Hence (A_n,B_n) is the stated Markov chain.
+
+By definition, the event
+
+    tau_x < infinity
+
+is exactly the event that the process ever reaches a state where
+
+    g_v(A_n,B_n) >= x.
+
+Therefore
+
+    h_x(a,b) = P_{a,b}(tau_x < infinity).
+
+If (a,b) in G_x, then tau_x = 0, so h_x(a,b)=1.
+
+If (a,b) notin G_x, first-step analysis and the Markov property give
+
+    h_x(a,b)
+    =
+    a/(a+b) h_x(a+1,b)
+    +
+    b/(a+b) h_x(a,b+1).
+
+This proves the harmonic recursion.
+
+
+4. Minimality and boundary at infinity.
+
+The function h_x is the minimal nonnegative solution of the above Dirichlet problem.
+
+That is, if u >= 0 satisfies
+
+    u(a,b) = 1
+    on G_x,
+
+and
+
+    u(a,b)
+    =
+    a/(a+b) u(a+1,b)
+    +
+    b/(a+b) u(a,b+1)
+
+on G_x^c, then
+
+    h_x(a,b) <= u(a,b)
+
+for every lattice state (a,b).
+
+Equivalently,
+
+    h_x(a,b)
+    =
+    lim_{N -> infinity} h_x^{(N)}(a,b),
+
+where
+
+    h_x^{(N)}(a,b)
+    =
+    P_{a,b}(tau_x <= N).
+
+The finite-horizon approximants satisfy
+
+    h_x^{(0)}(a,b) = 1_{g_v(a,b) >= x},
+
+and recursively,
+
+    h_x^{(N+1)}(a,b) = 1
+    on G_x,
+
+while outside G_x,
+
+    h_x^{(N+1)}(a,b)
+    =
+    a/(a+b) h_x^{(N)}(a+1,b)
+    +
+    b/(a+b) h_x^{(N)}(a,b+1).
+
+Moreover,
+
+    h_x^{(N)}(a,b) increases to h_x(a,b).
+
+Proof.
+
+Let u be any nonnegative solution with boundary value 1 on G_x. Let tau = tau_x. For finite N, harmonicity before hitting G_x and constancy after hitting G_x imply
+
+    u(a,b)
+    =
+    E_{a,b}[u(A_{N wedge tau}, B_{N wedge tau})].
+
+On the event {tau <= N}, the stopped chain lies in G_x, so the stopped value is 1. On the event {tau > N}, nonnegativity gives a contribution at least 0. Therefore
+
+    u(a,b)
+    >=
+    P_{a,b}(tau <= N).
+
+Letting N -> infinity yields
+
+    u(a,b)
+    >=
+    P_{a,b}(tau < infinity)
+    =
+    h_x(a,b).
+
+Thus h_x is minimal.
+
+The finite-horizon formula follows from the same first-step recursion and the monotone convergence of the events
+
+    {tau_x <= N} increasing to {tau_x < infinity}.
+
+This minimality condition is the correct boundary condition at infinity. The chain has no finite absorbing boundary except G_x; it moves forever toward larger a+b. Paths that escape to infinity without hitting G_x contribute zero to the hitting probability.
+
+
+5. Boundary conditions.
+
+For x <= 0,
+
+    h_x(a,b) = 1.
+
+For x > 1 - v,
+
+    h_x(a,b) = 0.
+
+For finite a,b and x = 1 - v,
+
+    h_{1-v}(a,b) = 0,
+
+because g_v(a,b) < 1 - v at every finite posterior state.
+
+For x in (0,1-v),
+
+    h_x(a,b) = 1
+    whenever g_v(a,b) >= x.
+
+There is no boundary at a=0 or b=0, because alpha,beta > 0 and the posterior lattice only moves by increasing one coordinate. The only nontrivial boundary data are:
+
+    h_x = 1 on G_x,
+
+together with the minimality condition at infinity.
+
+
+6. Exactness and non-O(1) nature.
+
+The representation
+
+    D^max(alpha,beta;v)
+    =
+    L integral_0^{1-v} h_x(alpha,beta) dx
+
+is exact because it follows from:
+
+    (i) the Doob martingale identity M_n = E[Y | F_n];
+
+    (ii) the equivalence between {sup_n M_n >= x} and hitting the posterior-lattice set G_x;
+
+    (iii) the layer-cake formula for bounded nonnegative random variables.
+
+However, this is not generally an O(1) algebraic closed form.
+
+The local function g_v(a,b) is O(1)-computable through incomplete beta functions. But h_x(a,b) is an infinite-horizon first-passage probability for a nonhomogeneous Markov chain on an infinite lattice. The boundary
+
+    g_v(a,b) = x
+
+is generally nonlinear and depends on incomplete beta functions. Thus the event
+
+    exists n >= 0 : g_v(A_n,B_n) >= x
+
+is genuinely path-dependent.
+
+Beta-binomial identities give fixed-time probabilities such as
+
+    P_{a,b}(S_n=s)
+    =
+    binomial(n,s) B(a+s,b+n-s) / B(a,b),
+
+and hence can compute
+
+    P_{a,b}(M_n >= x)
+
+for fixed n. But they do not eliminate the first-passage condition
+
+    P_{a,b}(exists n >= 0 : M_n >= x).
+
+Therefore standard potential theory and Markov chain hitting theory give the exact characterization, finite-horizon approximations, and bounds, but not a general O(1) algebraic formula.
+
+
+7. Useful sharp bounds.
+
+Since
+
+    M_n -> Y = (Theta - v)^+
+
+almost surely, the event {Y > x} implies eventual crossing of level x. Hence, for 0 < x < 1-v,
+
+    h_x(a,b)
+    >=
+    P_{Theta ~ Beta(a,b)}(Theta > v+x)
+    =
+    1 - I_{v+x}(a,b).
+
+On the other hand, since (M_n) is a nonnegative martingale, Ville's inequality gives
+
+    h_x(a,b)
+    =
+    P_{a,b}(sup_n M_n >= x)
+    <=
+    min{1, g_v(a,b)/x}.
+
+Therefore, for 0 < x < 1-v,
+
+    1 - I_{v+x}(a,b)
+    <=
+    h_x(a,b)
+    <=
+    min{1, g_v(a,b)/x}.
+
+These bounds identify the exact object as lying between terminal realized upside and the martingale maximal envelope.
+
+
+Final exact statement.
+
+The exact Max-DE value for a Beta-Bernoulli arm is
+
+    D^max(alpha,beta;v)
+    =
+    L integral_0^{1-v}
+        P_{alpha,beta}(
+            exists n >= 0 :
+            g_v(alpha + S_n, beta + R_n) >= x
+        )
+    dx.
+
+Equivalently,
+
+    D^max(alpha,beta;v)
+    =
+    L integral_0^{1-v} h_x(alpha,beta) dx,
+
+where h_x is the minimal nonnegative solution of
+
+    h_x(a,b) = 1
+    if g_v(a,b) >= x,
+
+and otherwise
+
+    h_x(a,b)
+    =
+    a/(a+b) h_x(a+1,b)
+    +
+    b/(a+b) h_x(a,b+1).
+
+Thus Max-DE is exactly the layer-cake integral of posterior-martingale first-passage probabilities on the Beta-Bernoulli lattice.

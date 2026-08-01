@@ -1,0 +1,157 @@
+{
+  "files": [
+    {
+      "height": 900,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-x.svg",
+      "preset": "x",
+      "width": 1600
+    },
+    {
+      "height": 900,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-x.png",
+      "preset": "x",
+      "width": 1600
+    },
+    {
+      "height": 900,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-reddit.svg",
+      "preset": "reddit",
+      "width": 1600
+    },
+    {
+      "height": 900,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-reddit.png",
+      "preset": "reddit",
+      "width": 1600
+    },
+    {
+      "height": 1920,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-tiktok.svg",
+      "preset": "tiktok",
+      "width": 1080
+    },
+    {
+      "height": 1920,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-tiktok.png",
+      "preset": "tiktok",
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-carousel.svg",
+      "preset": "carousel",
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-card-carousel.png",
+      "preset": "carousel",
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-01.svg",
+      "slide": 1,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-01.png",
+      "slide": 1,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-02.svg",
+      "slide": 2,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-02.png",
+      "slide": 2,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-03.svg",
+      "slide": 3,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-03.png",
+      "slide": 3,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-04.svg",
+      "slide": 4,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-04.png",
+      "slide": 4,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-05.svg",
+      "slide": 5,
+      "width": 1080
+    },
+    {
+      "height": 1350,
+      "kind": "carousel_slide",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-carousel-05.png",
+      "slide": 5,
+      "width": 1080
+    },
+    {
+      "kind": "badge",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-badge.svg"
+    },
+    {
+      "kind": "html",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-result.html"
+    },
+    {
+      "kind": "markdown",
+      "path": "docs/public/assets/shadowpath/launch/shadowpath-result.md"
+    },
+    {
+      "duration_seconds": 6,
+      "frames_per_second": 30,
+      "height": 1920,
+      "kind": "video",
+      "path": "shadowpath-breach-loop.mp4",
+      "width": 1080
+    },
+    {
+      "duration_seconds": 6,
+      "height": 960,
+      "kind": "animated_gif",
+      "path": "shadowpath-breach-loop.gif",
+      "width": 540
+    }
+  ],
+  "provenance": {
+    "content_policy": "exact-copy-deterministic",
+    "renderer": "velvet.shadowpath.render.v0.1",
+    "video_renderer": "scripts/build_shadowpath_launch_video.py"
+  },
+  "schema_version": "velvet.shadowpath.share-pack.v0.1",
+  "source_schema_version": "velvet.shadowpath.results.v0.1",
+  "verdict": "CONTROL_FALSE_SUCCESS"
+}

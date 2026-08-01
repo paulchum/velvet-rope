@@ -1,0 +1,19 @@
+{
+  "signature": "approval-signature",
+  "receipt_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "canonicalization": "velvet.canonical_json.v1.sha256",
+  "receipt_id": "receipt_vector_001",
+  "request_id": "appr_vector_001",
+  "status": "approved",
+  "approver": "change-manager@example.com",
+  "decided_at": "2026-05-27T19:04:00Z",
+  "reason": "Approved for the release window.",
+  "bound_seal_id": "seal_001",
+  "warrant_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "conditions": [
+    "execute before 20:00Z"
+  ],
+  "metadata": {
+    "ticket": "CHG-123"
+  }
+}

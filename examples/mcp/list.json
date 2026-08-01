@@ -1,0 +1,47 @@
+{
+  "version": "velvet.mcp_list.v1",
+  "tools": [
+    {
+      "server": "servicenow",
+      "tool": "search_change_requests",
+      "risk_class": "low",
+      "approval_tier": "auto_approve",
+      "rationale": "Read-only change lookup used before production release triage.",
+      "expected_improvement": 0.9,
+      "novelty": 0.52,
+      "confidence": 0.84
+    },
+    {
+      "server": "servicenow",
+      "tool": "create_change_request",
+      "risk_class": "high",
+      "approval_tier": "concierge_review",
+      "rationale": "Creates production change-management work and can trigger release process.",
+      "usd_estimate": 75.0,
+      "expected_improvement": 0.84,
+      "novelty": 0.7,
+      "confidence": 0.76
+    },
+    {
+      "server": "linear",
+      "tool": "list_issues",
+      "risk_class": "low",
+      "approval_tier": "auto_approve",
+      "rationale": "Read-only issue lookup used before launch triage.",
+      "expected_improvement": 0.88,
+      "novelty": 0.55,
+      "confidence": 0.82
+    },
+    {
+      "server": "linear",
+      "tool": "create_issue",
+      "risk_class": "high",
+      "approval_tier": "concierge_review",
+      "rationale": "Writes to an external project system and can create operational work.",
+      "usd_estimate": 50.0,
+      "expected_improvement": 0.82,
+      "novelty": 0.72,
+      "confidence": 0.74
+    }
+  ]
+}

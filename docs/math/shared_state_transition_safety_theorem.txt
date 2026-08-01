@@ -1,0 +1,88 @@
+Shared-State Transition Safety Theorem
+======================================
+
+Theorem 1 (authorized current-state CAS transition safety).
+
+Let H(S) be the Velvet canonical hash of a shared state S. A proposed mutation m
+is admitted only by constructing a transition certificate C with:
+
+    pre_state_hash = H(S_t)
+    post_state_hash = H(S_{t+1})
+    canonical_patch_hash = H_canonical(patch(m, S_t, S_{t+1}))
+    declared_write_set_hash = actual_write_set_hash
+
+Assume:
+
+(H1) Atomic compare-and-swap or transaction. The transition commits only if the
+candidate pre_state_hash equals the currently sealed state hash at commit time,
+and the pre-state check plus state update are one atomic operation.
+
+(H2) Current-pre-state policy evaluation. The policy predicate named by
+policy_predicate_id was evaluated on the same current pre-state S_t whose hash is
+pre_state_hash. A policy decision from an earlier snapshot is not reusable.
+
+(H3) Canonical patch binding. canonical_patch_hash is computed over a canonical
+patch artifact that binds the write set and post-state commitment. Changing the
+write set, patch body, or post_state_hash changes the transition proof hash.
+
+(H4) Exclusive mediated writes. Every write to the shared state is mediated by
+Velvet's transition path. No external actor can mutate the state store without
+participating in the same CAS or transaction discipline.
+
+(H5) Ledger append after success. After the atomic transition succeeds, Velvet
+appends a ledger record containing the transition certificate or its hash-bound
+payload. The ledger record hash and signature cover the certificate data.
+
+Then every admitted committed mutation is an authorized transition from the
+immediately preceding sealed state to the recorded post-state, under the named
+policy predicate, invariant, warrant, patch, write set, CAS sequence, and ledger
+record.
+
+Proof.
+
+By (H1), a commit can occur only when the certificate pre_state_hash equals the
+current sealed state hash. Therefore a stale pre-state cannot win the CAS after a
+different transition has committed. By (H2), the authorization predicate was
+checked against that same current pre-state, not against an older snapshot. By
+(H3), the certificate hash binds the patch, write set, and post-state commitment,
+so a verifier can detect patch or write-set substitution. By (H4), there are no
+unmediated writes that could change the state outside the sealed sequence. By
+(H5), the successful transition is entered into the hash-chained ledger, so later
+tampering changes the record hash or breaks a subsequent previous_record_hash
+link.
+
+The claim is pathwise and deterministic. It does not depend on distributions,
+timing assumptions outside the atomic commit boundary, or trust in unsealed local
+memory snapshots.
+
+Counterexamples.
+
+Stale pre-state hash. Two writers read state hash h_0. Writer A commits h_0 ->
+h_1. Writer B then attempts h_0 -> h_2. Without atomic CAS, both could appear
+authorized. With H1, B fails because current state is h_1, not h_0.
+
+Out-of-band writes. An external database client mutates the shared state between
+Velvet transitions. Velvet's next certificate may be internally well-formed, but
+the global safety theorem is false because H4 is violated.
+
+Patch not hash-bound. A certificate records post_state_hash but not a canonical
+patch hash binding the write set. An attacker can swap the write set or patch
+description while preserving unrelated certificate fields. H3 is violated, so
+the transition is not a proof of the actual mutation surface.
+
+Policy checked on stale snapshot. Policy approves a transition against S_old,
+but the CAS pre-state is S_current. Even if the CAS succeeds, the theorem is
+false because H2 requires policy evaluation on the current pre-state named by
+pre_state_hash.
+
+Honest claim boundary.
+
+Velvet may claim shared-state transition safety only for writes that are
+exclusively mediated by Velvet, authorized against the current pre-state, bound
+to canonical patch and write-set hashes, committed by atomic CAS or transaction,
+and appended to the ledger after success.
+
+Velvet must not claim this safety if the state store accepts bypass writes, if
+policy is checked against a stale snapshot, if patch/write-set data is not
+hash-bound, or if successful commits are not ledgered under the same hash-chain
+and signature discipline.

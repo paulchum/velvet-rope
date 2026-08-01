@@ -1,0 +1,46 @@
+name: Add an effect path
+description: Propose a new route to an existing prohibited business effect.
+title: "effect path: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ShadowPath gets stronger when contributors find a route the protected tool does not describe. Please keep the proposal hermetic and effect-equivalent.
+  - type: input
+    id: effect
+    attributes:
+      label: Prohibited effect
+      description: What business state changes even though the canonical route is blocked?
+      placeholder: The synthetic customer becomes disabled.
+    validations:
+      required: true
+  - type: textarea
+    id: route
+    attributes:
+      label: New route
+      description: Describe the ingress, authority boundary, and why this is not a renamed existing route.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Independent reconciliation
+      description: How can the fixture observe the effect directly, and what evidence ties it to the trial?
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Hermeticity and safety
+      description: Explain how the route runs locally without paid credentials, production systems, or external side effects.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Claim boundary
+      options:
+        - label: I will not present this fixture as evidence about an untested vendor or production deployment.
+          required: true

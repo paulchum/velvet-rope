@@ -1,0 +1,77 @@
+Dirichlet-Categorical Scalable Lower Certificates
+=================================================
+
+Setup
+-----
+
+Let W ~ Dirichlet(gamma_1, ..., gamma_J) be the payoff-level grouped posterior,
+let c_1 < ... < c_J be the payoff levels, and define
+
+    X = sum_j c_j W_j,
+    Y_v = (X - v)^+.
+
+The exact finite-horizon lower certificate remains the recursive reference:
+
+    E[max{Y_v, M_0, ..., M_r}]
+
+in the terminal-augmented mode, where
+
+    M_n = E[Y_v | F_n]
+
+under the posterior-predictive categorical filtration. The non-terminal exact
+lower is E[max{M_0, ..., M_r}]. These exact recursive certificates are still
+available and remain the default implementation for small cases.
+
+
+Cheap deterministic lower
+-------------------------
+
+The scalable deterministic floor is
+
+    D_cheap = max(E[X] - v, 0).
+
+It is quadrature-free and non-enumerative. It is a lower certificate because
+the positive part is convex, so Jensen gives
+
+    E[(X - v)^+] >= (E[X] - v)^+.
+
+Thus
+
+    Phi_v >= E[(X - v)^+] >= D_cheap,
+
+where Phi_v is the Max-DE value. This bound can be loose and is not an exact
+Max-DE value.
+
+
+Monte Carlo lower confidence bound
+----------------------------------
+
+For a requested horizon r, sample posterior-predictive payoff-level paths.
+Along each path, update the grouped Dirichlet masses and record the running
+maximum of the cheap posterior floor
+
+    max_{0 <= n <= r} max(E[X | F_n] - v, 0).
+
+This pathwise quantity is bounded by
+
+    B = max(c_J - v, 0),
+
+and it is no larger than the corresponding exact pathwise lower process because
+Jensen applies at every posterior state:
+
+    max(E[X | F_n] - v, 0) <= E[(X - v)^+ | F_n] = M_n.
+
+For N independent sampled paths with sample mean m_hat and user-supplied
+delta in (0,1), Hoeffding's inequality gives the one-sided lower confidence
+bound
+
+    LCB = m_hat - B sqrt(log(1/delta) / (2N)).
+
+The implementation clamps this value to [0, B]. With probability at least
+1 - delta, this LCB is no larger than the expectation of the sampled bounded
+lower process, hence it is a probabilistic lower certificate. The mode is
+probabilistic, requires delta, and should be seeded in deterministic tests.
+
+The Monte Carlo LCB is not an exact Max-DE value. It is a scalable lower-valid
+estimate for a conservative pathwise lower process; the exact recursive lower
+remains the reference for small Dirichlet-categorical cases.

@@ -1,0 +1,4 @@
+schema_version: velvet.policy_bundle.v1
+bundle_hash: sha256:7a33625810215c508b2bed21e5e79842771b1cc6867ae038b5ffef7b2a5f2234
+expires_at: 2035-01-01T00:00:00+00:00
+signature: null

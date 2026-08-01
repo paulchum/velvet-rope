@@ -1,0 +1,152 @@
+[project]
+name = "velvet-rope"
+version = "1.1.0"
+description = "Effect-level authorization benchmark and verifiable admission layer for autonomous agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Velvet Contributors" }]
+keywords = [
+  "agents",
+  "agent-security",
+  "authorization",
+  "mcp",
+  "mcp-security",
+  "shadowpath",
+  "proof",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = [
+  "alembic>=1.17,<2",
+  "cryptography>=45,<49",
+  "duckdb>=1.4,<2",
+  "jsonschema>=4,<5",
+  "matplotlib>=3.9,<4",
+  "numpy>=2,<3",
+  "psycopg[binary]>=3.2,<4",
+  "scipy>=1.14,<2",
+  "sqlglot>=25,<27",
+  "starlette>=1.0.1,<2",
+  "uvicorn>=0.38,<0.39",
+]
+
+[project.optional-dependencies]
+live-openai = ["openai-agents>=0.3,<1"]
+live-guardrails = []
+live-nemo = []
+live-bedrock = ["boto3>=1.34,<2; python_version < '3.15'"]
+live-azure-safety = []
+live-lakera = []
+live-langgraph = ["langgraph>=1,<2", "langchain>=1,<2"]
+live-crewai = ["crewai>=1,<2"]
+live-autogen = ["autogen-agentchat>=0.7,<1"]
+live-semantic-kernel = ["semantic-kernel>=1,<2"]
+live-google-adk = ["google-adk>=1,<2"]
+live-llamaindex = ["llama-index>=0.14,<1"]
+live-zapier = ["mcp>=1,<2"]
+live-n8n = []
+shadowpath = ["playwright>=1.55,<2"]
+signing-ed25519 = ["cryptography>=45,<49"]
+enterprise-kms = ["boto3>=1.34,<2; python_version < '3.15'"]
+enterprise-vault = ["hvac>=2.4,<3"]
+
+[project.scripts]
+velvet = "velvet.cli:main"
+velvet-rope = "velvet.cli:main"
+velvet-bernoulli = "velvet.research.run_bernoulli:main"
+velvet-mcp-firewall = "velvet.mcp_firewall:main"
+
+[project.urls]
+Homepage = "https://github.com/paulchum/velvet-rope"
+Repository = "https://github.com/paulchum/velvet-rope"
+Issues = "https://github.com/paulchum/velvet-rope/issues"
+Documentation = "https://github.com/paulchum/velvet-rope#readme"
+
+[dependency-groups]
+dev = [
+  "bandit>=1.9,<2",
+  "httpx>=0.28,<0.29",
+  "hypothesis>=6.148,<7",
+  "maturin>=1.8,<2",
+  "mpmath>=1.3,<2",
+  "mypy>=1.19,<2",
+  "pip-audit>=2.9,<3",
+  "playwright>=1.55,<2",
+  "pytest>=9.0.3,<10",
+    "pytest-cov>=7,<8",
+    "ruff>=0.14,<0.15",
+    "types-jsonschema>=4.26",
+]
+
+[build-system]
+requires = ["maturin>=1.8,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "pyo3"
+manifest-path = "crates/velvet-py/Cargo.toml"
+module-name = "velvet._native"
+python-source = "src"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "S", "UP"]
+ignore = [
+  "S101", # pytest asserts are intentional in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+# Ported Max-DE falsification batteries and experiment harnesses are kept
+# near-verbatim to upstream (see src/velvet/verdict/UPSTREAM.md) so future
+# re-syncs stay reviewable; upstream style predates this repo's lint set.
+"tests/test_verdict_*.py" = ["S101", "E402", "E501", "E741", "S311", "UP031", "B905", "B007", "B023", "F841"]
+"tests/verdict_*.py" = ["S101", "E402", "E501", "E741", "S311", "UP031", "B905", "B007", "B023", "F841"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+pretty = true
+files = ["src", "tests"]
+
+# Ported Max-DE falsification batteries and experiment harnesses (see
+# src/velvet/verdict/UPSTREAM.md) are kept near-verbatim to upstream so future
+# re-syncs stay reviewable. Their assertions are runtime-verified by pytest;
+# strict typing applies to the product modules they exercise
+# (src/velvet/verdict/* is fully strict).
+[[tool.mypy.overrides]]
+module = [
+  "test_verdict_audit_glr",
+  "test_verdict_drift_expiry",
+  "test_verdict_lease",
+  "test_verdict_retirement",
+  "verdict_moonshot_sim",
+  "test_verdict_drift_expiry_f1",
+  "test_verdict_drift_expiry_t2",
+  "test_verdict_finite_horizon",
+  "test_verdict_fleet",
+  "test_verdict_flr_ebh",
+  "test_verdict_rescue_adjudication",
+  "test_verdict_retirement_frontier",
+  "test_verdict_truncation",
+  "test_verdict_upstream_parity",
+  "verdict_a4_alpha_side",
+  "verdict_drift_experiment",
+  "verdict_flr_experiment",
+  "verdict_glr_experiment",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=velvet --cov-report=term-missing"

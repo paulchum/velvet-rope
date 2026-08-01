@@ -1,0 +1,112 @@
+{
+  "benchmark_version": "0.4.0",
+  "commit_hash": "c6acc0acccbe54464c0c47df3d3a162603c551a1",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "repeat_count": 20,
+  "schema_version": "velvet.agent_authorization.results.v0.3",
+  "system_result": {
+    "adapter_kind": "cloud",
+    "capabilities": {
+      "certificate_emission": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: missing optional package import 'boto3', AWS_REGION, BEDROCK_GUARDRAIL_ID, BEDROCK_GUARDRAIL_VERSION",
+        "status": "not_measured",
+        "value": null
+      },
+      "certificate_expiry": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      },
+      "determinism": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: missing optional package import 'boto3', AWS_REGION, BEDROCK_GUARDRAIL_ID, BEDROCK_GUARDRAIL_VERSION",
+        "status": "not_measured",
+        "value": null
+      },
+      "effect_inventory": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed system result",
+        "status": "not_measured",
+        "value": null
+      },
+      "effect_prevention": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed system result",
+        "status": "not_measured",
+        "value": null
+      },
+      "effect_reconciliation": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed system result",
+        "status": "not_measured",
+        "value": null
+      },
+      "fleet_false_lockout_accounting": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      },
+      "independent_verifiability": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      },
+      "priced_inspection": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      },
+      "refusal_as_output": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      },
+      "replayability": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: missing optional package import 'boto3', AWS_REGION, BEDROCK_GUARDRAIL_ID, BEDROCK_GUARDRAIL_VERSION",
+        "status": "not_measured",
+        "value": null
+      },
+      "route_authorization": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed system result",
+        "status": "not_measured",
+        "value": null
+      },
+      "tamper_evidence": {
+        "evidence_pointer": "benchmarks/agent_authorization/liability_harness/liability_benchmark.json#/competitor_results/8",
+        "measurement": "No measurement was run for this capability.",
+        "reason": "not run: no completed decision artifact",
+        "status": "not_measured",
+        "value": null
+      }
+    },
+    "case_count": 10,
+    "completed_case_count": 0,
+    "measurement_status": "not_measured",
+    "not_run_reasons": [
+      "not run: missing optional package import 'boto3', AWS_REGION, BEDROCK_GUARDRAIL_ID, BEDROCK_GUARDRAIL_VERSION"
+    ],
+    "pass_k_reliability": {},
+    "system": "Amazon Bedrock Guardrails",
+    "system_version": "not_run"
+  }
+}

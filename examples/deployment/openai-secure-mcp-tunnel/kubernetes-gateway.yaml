@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: velvet-rope-proxy
+spec:
+  selector:
+    app: velvet-rope-proxy
+  ports:
+    - name: mcp
+      port: 8791
+      targetPort: 8791
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-mcp
+spec:
+  selector:
+    app: private-mcp
+  ports:
+    - name: mcp
+      port: 8443
+      targetPort: 8443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tunnel-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tunnel-client
+  template:
+    metadata:
+      labels:
+        app: tunnel-client
+    spec:
+      containers:
+        - name: tunnel-client
+          image: openai-secure-mcp-tunnel-client:latest
+          env:
+            - name: MCP_UPSTREAM_URL
+              value: http://velvet-rope-proxy:8791/mcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velvet-rope-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: velvet-rope-proxy
+  template:
+    metadata:
+      labels:
+        app: velvet-rope-proxy
+    spec:
+      containers:
+        - name: velvet-rope-proxy
+          image: velvet-mcp-proxy:latest
+          args: ["--config", "/etc/velvet/velvet-config.yaml"]
+          ports:
+            - containerPort: 8791
+          envFrom:
+            - secretRef:
+                name: velvet-mcp-proxy
+          volumeMounts:
+            - name: config
+              mountPath: /etc/velvet
+              readOnly: true
+            - name: ledger
+              mountPath: /var/lib/velvet/ledger
+      volumes:
+        - name: config
+          configMap:
+            name: velvet-openai-tunnel-config
+        - name: ledger
+          persistentVolumeClaim:
+            claimName: velvet-ledger
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: private-mcp
+  template:
+    metadata:
+      labels:
+        app: private-mcp
+    spec:
+      containers:
+        - name: private-mcp
+          image: private-mcp-server:latest
+          ports:
+            - containerPort: 8443
+          env:
+            - name: REQUIRE_MTLS_CLIENT_IDENTITY
+              value: "true"
+            - name: REQUIRE_PRIVATE_MCP_UPSTREAM_TOKEN
+              value: "true"
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tunnel-client-egress-only-to-velvet
+spec:
+  podSelector:
+    matchLabels:
+      app: tunnel-client
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: velvet-rope-proxy
+      ports:
+        - protocol: TCP
+          port: 8791
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: private-mcp-ingress-only-from-velvet
+spec:
+  podSelector:
+    matchLabels:
+      app: private-mcp
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: velvet-rope-proxy
+      ports:
+        - protocol: TCP
+          port: 8443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: velvet-egress-to-private-mcp
+spec:
+  podSelector:
+    matchLabels:
+      app: velvet-rope-proxy
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: private-mcp
+      ports:
+        - protocol: TCP
+          port: 8443
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/evidence_pack.schema.json",
+  "title": "Velvet Evidence Pack",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "ledger_path",
+    "summary",
+    "ledger_report",
+    "ledger_verification"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "ledger_path": { "type": "string", "minLength": 1 },
+    "thread_path": { "type": ["string", "null"] },
+    "summary": { "type": "object", "additionalProperties": true },
+    "ledger_report": { "type": "object", "additionalProperties": true },
+    "ledger_verification": { "type": "object", "additionalProperties": true }
+  }
+}

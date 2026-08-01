@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use Velvet or the Agent Authorization Benchmark, cite this repository."
+title: "Velvet: Verifiable Admission Evidence for Autonomous Agent Actions"
+authors:
+  - family-names: Chumbe
+    given-names: Paul
+version: 1.0.0
+license: Apache-2.0
+repository-code: "https://github.com/paulchum/velvet-rope"

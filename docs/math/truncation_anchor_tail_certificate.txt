@@ -1,0 +1,104 @@
+Hybrid Anytime Lockout Certificate: Truncation + Protected-Anchor Tail
+======================================================================
+
+Claim currency: [BP] — Bayesian-predictive under the real one-arm-per-round
+host-override kernel. Not, by itself, a fixed-mean frequentist regret theorem for
+unmodified greedy-host Max-DE, and no such claim may be inferred from it.
+
+The certified event and the rule.
+---------------------------------
+The certified event is the host-aware rescue set
+
+    S_R = { N^a >= c } u { h = a }:
+
+a lockout is safe only when the candidate is unlikely ever to become gate-eligible OR
+to be promoted to host. The production rule is a value-scale certified abstract Snell
+upper bound U~ with a tail-loaded terminal payoff:
+
+    U~_t^{a,T}(Gamma_t x) < c * delta
+        ==>  P_x( exists s >= t: N_s^a >= c  or  h(X_s) = a ) < delta.
+
+This is the one route where the value-scale threshold c*delta lives (Ville at level
+c); the drift-expiry route certifies on the probability scale directly.
+
+Structure: (finite horizon) the exact stopped DP on S_R, or a certified abstract
+Snell majorant over cells with frontier-residual LP transitions under explicit
+over-approximation invariants; (infinite tail) the protected-anchor terminal error
+e_c^final = min{ e_c^L2, e_c^prod } with
+
+    e_c^prod(y, a) = exp{ - sum_{b in S(y,a)} I_{alpha_b, beta_b}(r_c(y, a)) },
+    r_c(y, a)      = max{ z_c(Pi_a(y)), m_a(y) }      (the protected floor),
+    S(y, a)        = { b != a : m_b(y) > r_c(y, a) }  (separated anchors),
+
+where I_{alpha,beta}(r) = sup_{lambda >= 0} [ -lambda*r - log E e^{-lambda*theta} ]
+over theta ~ Beta(alpha, beta). The single floor r_c forecloses BOTH rescue channels
+at once: anchors above z_c(Pi_a) keep the candidate below the gate; anchors above m_a
+keep it from hostship. Late rescue therefore requires every separated anchor to
+downcross the protected floor simultaneously, and that event is controlled by one
+nonnegative Doob martingale under the actual one-arm-per-round filtration — no
+artificial, parallel, or product clocks — via Ville's inequality, time-uniformly over
+the entire infinite future.
+
+Gate-only crossing is a diagnostic, never a certificate (Corollary V.2).
+------------------------------------------------------------------------
+The gate-only event {sup_s N_s^a >= c} is a STRICT LOWER BOUND on rescue: a candidate
+can become the greedy host, and so be sampled again, without its gate score ever
+reaching c. Exact witness: arms [(2,1), (251,249)], candidate 1, c = 1/100, H = 1 —
+gate-only probability exactly 0, host-aware rescue exactly 1/3 (see
+theorem_v_finite_horizon_verdict.txt). The gate-only value is retained only as an
+explicit diagnostic. It must never be quoted as a no-touch or no-rescue certificate;
+every safety verdict is stated on the host-aware rescue probability, and safety is
+never inferred from a midpoint approximation or a lower bound.
+
+Rates and horizon compression.
+------------------------------
+The exponential anchor tail decays like exp{ -Theta(n_b * D_Ber(m_b || r_c)) } —
+orientation D_Ber(m_b || r_c), the Beta-posterior left-tail exponent, NOT
+D_Ber(r_c || m_b). Driving the tail to eps needs roughly
+n_b >~ log(1/eps) / D_Ber(m_b || r_c) anchor observations, versus O(1/eps) for the
+polynomial L2 fallback, which is retained as the robust backup term.
+
+Outputs. CertifiedSafe / CertifiedNotSafe / UncertifiedNeedsRefinement /
+UncertifiedNeedsMoreHorizon. If no separated anchor exists, if numeric certification
+of a tail term fails (that term is set to 1), or if no certified lower bound on
+future anchor observations exists (then no honest deterministic maximum horizon can
+be promised), the correct output is a refusal-family status — never an unsafe
+lockout. A rigorous system does not need to lock out every arm; it needs every arm it
+locks out to be safely locked out.
+
+Hypotheses. Independent Beta posteriors; measurable Markov override rule with
+deterministic tie-breaking (auxiliary randomness conditioned on or added to the
+state); abstract-solver over-approximation invariants — state coverage, host-aware
+certificate upper bound (a cell that can contain a host state for the candidate can
+never be certified safe), tail-error upper bound, transition containment, residual
+domination; cell-level anchor sets certified separated throughout the cell (split the
+cell otherwise); certification-grade numerics (interval-verified quadrature or
+rigorous guards; otherwise fall back to L2 or refuse).
+
+Not claimed. No universal computable truncation-error decay for every state — decay
+is conditional on certifiable anchor separation and growing anchor precision; no
+fixed-mean content; nothing from the gate-only diagnostic; no artificial-clock
+certificates; no drift robustness (the drifted, windowed analogue with its necessary
+shape hypothesis is drift_expiry_certificates.txt, a separate route with separate
+constants).
+
+Verification status.
+--------------------
+The host-aware reading of the product anchor tail — the protected floor covering both
+rescue channels — is re-proved analytically as Lemma 7 of the Theorem V result
+(Max-DE math packs, pack 01, work/RESULT.md), whose 52/52 exact-rational suite
+mechanically verifies the freeze lemma that Lemma 7's containment step reuses (the
+tail step is a proof, not a numeric check). The numeric evaluation contract for the
+shipped bound
+(outward rounding, upward-padded r_c, undershot rates) is hypothesis (U): an assumed,
+separately audited contract, not a theorem. Velvet port batteries:
+tests/test_verdict_truncation.py (5 tests) and golden-numeric pins in
+tests/test_verdict_upstream_parity.py.
+
+Provenance.
+-----------
+Imported summary-level from the Max-DE response theorem package at commit
+93c61cdd40bab8952e7e13ea24c69a7bdde54a1d (truncation_certificate.md,
+exponential_anchor_tail.md); host-aware instantiation per the Max-DE math packs
+(pack 01, work/RESULT.md, Lemma 7); implementation: src/velvet/verdict/truncation.py
+and src/velvet/verdict/rescue.py; tests: tests/test_verdict_truncation.py.

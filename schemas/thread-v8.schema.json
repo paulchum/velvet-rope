@@ -1,0 +1,2509 @@
+{
+  "$defs": {
+    "ActionMutation": {
+      "properties": {
+        "jurisdiction_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "metadata_updates": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "notes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parameter_updates": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "redactions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Redaction"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ActionType": {
+      "enum": [
+        "ANSWER_DIRECTLY",
+        "SEARCH_WEB",
+        "RETRIEVE_CONTEXT",
+        "READ_FILE",
+        "INSPECT_CODE",
+        "EXECUTE_CODE",
+        "CALL_TOOL",
+        "ASK_USER",
+        "STORE_MEMORY",
+        "ESCALATE_MODEL",
+        "CONCIERGE_REVIEW"
+      ],
+      "type": "string"
+    },
+    "AdmissionScore": {
+      "properties": {
+        "action_type": {
+          "$ref": "#/$defs/ActionType"
+        },
+        "clearance_score": {
+          "format": "double",
+          "type": "number"
+        },
+        "confidence": {
+          "format": "double",
+          "type": "number"
+        },
+        "cost": {
+          "$ref": "#/$defs/CostVector"
+        },
+        "cost_penalty": {
+          "format": "double",
+          "type": "number"
+        },
+        "expected_upside": {
+          "format": "double",
+          "type": "number"
+        },
+        "pricing_breakdown": {
+          "$ref": "#/$defs/PricingBreakdown"
+        },
+        "risk": {
+          "$ref": "#/$defs/RiskVector"
+        },
+        "risk_penalty": {
+          "format": "double",
+          "type": "number"
+        },
+        "scorer_version": {
+          "type": "string"
+        },
+        "surprisal": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "action_type",
+        "expected_upside",
+        "surprisal",
+        "confidence",
+        "cost",
+        "risk",
+        "cost_penalty",
+        "risk_penalty",
+        "clearance_score",
+        "pricing_breakdown",
+        "scorer_version"
+      ],
+      "type": "object"
+    },
+    "BudgetCertificate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeterministicBudgetCertificate"
+        },
+        {
+          "$ref": "#/$defs/ProbabilisticBudgetCertificate"
+        }
+      ]
+    },
+    "BudgetCertificateKind": {
+      "enum": [
+        "deterministic_hard_cap",
+        "cgf_ville",
+        "moment_cantelli"
+      ],
+      "type": "string"
+    },
+    "BudgetOutcome": {
+      "enum": [
+        "admit",
+        "block"
+      ],
+      "type": "string"
+    },
+    "BudgetScope": {
+      "enum": [
+        "task",
+        "user_daily",
+        "org_monthly"
+      ],
+      "type": "string"
+    },
+    "BudgetState": {
+      "properties": {
+        "api_calls_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "compute_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "concierge_reviews_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "confidence_deficit": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "dollars_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "fallback_triggers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "latency_ms_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "memory_slots_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "memory_writes_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "model_escalations_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "money_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "retrievals_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "task_horizon_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "task_importance": {
+          "default": 0.5,
+          "format": "double",
+          "type": "number"
+        },
+        "tokens_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "tool_calls_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "user_attention_remaining": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "BudgetTrace": {
+      "properties": {
+        "certificate_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "certificate_kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetCertificateKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "certifying": {
+          "default": false,
+          "type": "boolean"
+        },
+        "claim_mode": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cost_model_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delta_total": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "downgrade_reason": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "high_probability_bound_microusd": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "high_probability_bound_usd": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ledger_sequence": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pre_ledger_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projected_spend_microusd": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "projected_spend_usd": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetScope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "validation_error": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "CandidateAction": {
+      "properties": {
+        "action_type": {
+          "$ref": "#/$defs/ActionType"
+        },
+        "budget_certificate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetCertificate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "certificate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CertificateEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost_overrides": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "description": {
+          "default": "",
+          "type": "string"
+        },
+        "expected_improvement": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "novelty": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "risk_overrides": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "source": {
+          "$ref": "#/$defs/CandidateSource",
+          "default": "host"
+        }
+      },
+      "required": [
+        "action_type"
+      ],
+      "type": "object"
+    },
+    "CandidateSource": {
+      "enum": [
+        "host",
+        "scenario",
+        "registry",
+        "workflow",
+        "policy_fallback"
+      ],
+      "type": "string"
+    },
+    "CapProvenance": {
+      "enum": [
+        "provider_enforced",
+        "prepaid_reservation",
+        "enforced_token_cap",
+        "estimate_not_a_cap"
+      ],
+      "type": "string"
+    },
+    "CertificateEffect": {
+      "properties": {
+        "adaptation_marker": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "adapted": {
+          "type": "boolean"
+        },
+        "commutativity_certificate_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "continuation_condition_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "correlation_bound": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "covariance_reserve_gamma": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "declared_write_set_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dependence_group": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dependence_kind": {
+          "default": "unspecified",
+          "type": "string"
+        },
+        "filtration_hash": {
+          "type": "string"
+        },
+        "filtration_index": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_payoff": {
+          "format": "double",
+          "type": "number"
+        },
+        "mean_bound": {
+          "format": "double",
+          "type": "number"
+        },
+        "resource_scope": {
+          "type": "string"
+        },
+        "second_moment_bound": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "variance_bound": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "write_conflict_policy": {
+          "default": "exclusive",
+          "type": "string"
+        },
+        "write_footprint": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "max_payoff",
+        "mean_bound",
+        "resource_scope",
+        "write_footprint",
+        "filtration_hash",
+        "filtration_index",
+        "adapted"
+      ],
+      "type": "object"
+    },
+    "CertificateEvidence": {
+      "properties": {
+        "arm_id": {
+          "type": "string"
+        },
+        "baseline": {
+          "format": "double",
+          "type": "number"
+        },
+        "compensator_step": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompensatorStep"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "delight_scale": {
+          "format": "double",
+          "type": "number"
+        },
+        "family": {
+          "type": "string"
+        },
+        "inspection_lower_bound": {
+          "format": "double",
+          "type": "number"
+        },
+        "liability_mode": {
+          "type": "string"
+        },
+        "liability_price": {
+          "format": "double",
+          "type": "number"
+        },
+        "lookback_horizon": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "outcome": {
+          "$ref": "#/$defs/CertificateOutcome"
+        },
+        "reserve_price": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "safe_upper_bound": {
+          "format": "double",
+          "type": "number"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "theorem_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "threshold": {
+          "format": "double",
+          "type": "number"
+        },
+        "typed_effect": {
+          "$ref": "#/$defs/CertificateEffect"
+        },
+        "upside_value_scale": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "value_numeraire": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "family",
+        "arm_id",
+        "baseline",
+        "lookback_horizon",
+        "delight_scale",
+        "liability_price",
+        "threshold",
+        "inspection_lower_bound",
+        "safe_upper_bound",
+        "outcome",
+        "liability_mode",
+        "typed_effect"
+      ],
+      "type": "object"
+    },
+    "CertificateOutcome": {
+      "enum": [
+        "inspect",
+        "lockout",
+        "refinement"
+      ],
+      "type": "string"
+    },
+    "CompensatorStep": {
+      "properties": {
+        "arm": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "baseline": {
+          "format": "double",
+          "type": "number"
+        },
+        "cumulative_increment": {
+          "format": "double",
+          "type": "number"
+        },
+        "expected_z_next": {
+          "format": "double",
+          "type": "number"
+        },
+        "horizon": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "increment": {
+          "format": "double",
+          "type": "number"
+        },
+        "initial_optionality": {
+          "format": "double",
+          "type": "number"
+        },
+        "z_current": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "arm",
+        "baseline",
+        "horizon",
+        "z_current",
+        "expected_z_next",
+        "increment",
+        "initial_optionality",
+        "cumulative_increment"
+      ],
+      "type": "object"
+    },
+    "CompetitorResult": {
+      "properties": {
+        "adapter_kind": {
+          "type": "string"
+        },
+        "blocked": {
+          "type": "boolean"
+        },
+        "case_id": {
+          "type": "string"
+        },
+        "certificate_outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CertificateOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "certificate_supported": {
+          "type": "boolean"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "evidence_url": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "liability_cost": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "skip_reason": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skipped": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "system_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "system",
+        "system_version",
+        "adapter_kind",
+        "case_id",
+        "status",
+        "decision",
+        "certificate_supported",
+        "blocked",
+        "skipped"
+      ],
+      "type": "object"
+    },
+    "ConcurrencyModel": {
+      "enum": [
+        "single_writer_atomic",
+        "unserialized"
+      ],
+      "type": "string"
+    },
+    "ContainerRuntime": {
+      "enum": [
+        "podman",
+        "docker"
+      ],
+      "type": "string"
+    },
+    "CostVector": {
+      "properties": {
+        "api_calls": {
+          "format": "double",
+          "type": "number"
+        },
+        "compute": {
+          "format": "double",
+          "type": "number"
+        },
+        "context_pollution": {
+          "format": "double",
+          "type": "number"
+        },
+        "coordination_overhead": {
+          "format": "double",
+          "type": "number"
+        },
+        "latency": {
+          "format": "double",
+          "type": "number"
+        },
+        "memory_bloat": {
+          "format": "double",
+          "type": "number"
+        },
+        "money": {
+          "format": "double",
+          "type": "number"
+        },
+        "opportunity_cost": {
+          "format": "double",
+          "type": "number"
+        },
+        "privacy_exposure": {
+          "format": "double",
+          "type": "number"
+        },
+        "tokens": {
+          "format": "double",
+          "type": "number"
+        },
+        "user_attention": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "tokens",
+        "latency",
+        "money",
+        "compute",
+        "api_calls",
+        "context_pollution",
+        "memory_bloat",
+        "user_attention",
+        "privacy_exposure",
+        "coordination_overhead",
+        "opportunity_cost"
+      ],
+      "type": "object"
+    },
+    "DecisionType": {
+      "enum": [
+        "execute",
+        "skip",
+        "block",
+        "delay",
+        "ask_approval",
+        "escalate"
+      ],
+      "type": "string"
+    },
+    "DeterministicBudgetCertificate": {
+      "properties": {
+        "action_hash": {
+          "type": "string"
+        },
+        "budget_limit_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "budget_limit_usd": {
+          "format": "double",
+          "type": "number"
+        },
+        "cap_provenance": {
+          "$ref": "#/$defs/CapProvenance"
+        },
+        "certificate_kind": {
+          "$ref": "#/$defs/BudgetCertificateKind",
+          "default": "deterministic_hard_cap"
+        },
+        "concurrency_model": {
+          "$ref": "#/$defs/ConcurrencyModel"
+        },
+        "filtration_hash": {
+          "type": "string"
+        },
+        "hard_cap_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "hard_cap_usd": {
+          "format": "double",
+          "type": "number"
+        },
+        "ledger_sequence_before": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "obligations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observed_spend_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "observed_spend_usd": {
+          "format": "double",
+          "type": "number"
+        },
+        "outcome": {
+          "$ref": "#/$defs/BudgetOutcome"
+        },
+        "projected_spend_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "projected_spend_usd": {
+          "format": "double",
+          "type": "number"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/BudgetScope"
+        },
+        "slack_microusd": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "slack_usd": {
+          "format": "double",
+          "type": "number"
+        },
+        "theorem_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "scope",
+        "budget_limit_usd",
+        "observed_spend_usd",
+        "hard_cap_usd",
+        "cap_provenance",
+        "concurrency_model",
+        "action_hash",
+        "filtration_hash",
+        "ledger_sequence_before",
+        "projected_spend_usd",
+        "slack_usd",
+        "outcome"
+      ],
+      "type": "object"
+    },
+    "EgressRule": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "protocol": {
+          "default": "tcp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "type": "object"
+    },
+    "EscalationTarget": {
+      "properties": {
+        "fallback": {
+          "default": "deny",
+          "type": "string"
+        },
+        "mode": {
+          "default": "sync",
+          "type": "string"
+        },
+        "payload": {
+          "default": null
+        },
+        "target": {
+          "type": "string"
+        },
+        "target_type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "EvaluationContext": {
+      "properties": {
+        "arm_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "benchmark_suite": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "condition_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decision_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_action": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scenario_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "EvaluationOutcome": {
+      "properties": {
+        "action_type": {
+          "$ref": "#/$defs/ActionType"
+        },
+        "completed": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "content_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_cost": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "expected_reward": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "information_gain": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "memory_unique": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "realized_cost": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "realized_reward": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "action_type"
+      ],
+      "type": "object"
+    },
+    "Evidence": {
+      "properties": {
+        "details": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "evidence_type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "rule_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "evidence_type",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ExecutionResult": {
+      "properties": {
+        "action_type": {
+          "$ref": "#/$defs/ActionType"
+        },
+        "cost": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "normalized_output_hash": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "output": {
+          "default": null
+        },
+        "output_transforms": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/OutputTransform"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "sandbox_provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SandboxProvenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sandbox_violations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SandboxViolation"
+          },
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/ExecutionStatus"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_type",
+        "status",
+        "provider",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "ExecutionStatus": {
+      "enum": [
+        "not_run",
+        "succeeded",
+        "failed",
+        "blocked",
+        "timed_out",
+        "pending_concierge"
+      ],
+      "type": "string"
+    },
+    "MountMode": {
+      "enum": [
+        "read_only",
+        "read_write"
+      ],
+      "type": "string"
+    },
+    "MountSpec": {
+      "properties": {
+        "host_path": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/MountMode"
+        },
+        "sandbox_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "host_path",
+        "sandbox_path",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "NetworkPolicy": {
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "const": "deny_all",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "mode": {
+              "const": "list",
+              "type": "string"
+            },
+            "rules": {
+              "items": {
+                "$ref": "#/$defs/EgressRule"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "mode",
+            "rules"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "OutputTransform": {
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "strip_timestamps_v1",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PolicyDecision": {
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "allow",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "jurisdiction_evidence": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "kind": {
+              "const": "deny",
+              "type": "string"
+            },
+            "reason": {
+              "$ref": "#/$defs/PolicyReason"
+            }
+          },
+          "required": [
+            "kind",
+            "reason",
+            "jurisdiction_evidence"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "modify",
+              "type": "string"
+            },
+            "mutation": {
+              "$ref": "#/$defs/ActionMutation"
+            },
+            "reason": {
+              "$ref": "#/$defs/PolicyReason"
+            }
+          },
+          "required": [
+            "kind",
+            "mutation",
+            "reason"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "jurisdiction_evidence": {
+              "$ref": "#/$defs/Evidence"
+            },
+            "kind": {
+              "const": "defer",
+              "type": "string"
+            },
+            "reason": {
+              "$ref": "#/$defs/PolicyReason"
+            },
+            "to": {
+              "$ref": "#/$defs/EscalationTarget"
+            }
+          },
+          "required": [
+            "kind",
+            "to",
+            "reason",
+            "jurisdiction_evidence"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PolicyReason": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "default": "info",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "PolicyTraceEntry": {
+      "properties": {
+        "config_hash": {
+          "type": "string"
+        },
+        "config_version": {
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/PolicyDecision"
+        },
+        "elapsed_us": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "input_action_hash": {
+          "type": "string"
+        },
+        "jurisdiction_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Evidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "mutation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionMutation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "output_action_hash": {
+          "type": "string"
+        },
+        "policy_kind": {
+          "type": "string"
+        },
+        "policy_name": {
+          "type": "string"
+        },
+        "policy_version": {
+          "type": "string"
+        },
+        "short_circuit": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_name",
+        "policy_kind",
+        "policy_version",
+        "config_version",
+        "config_hash",
+        "status",
+        "decision",
+        "input_action_hash",
+        "output_action_hash",
+        "elapsed_us"
+      ],
+      "type": "object"
+    },
+    "PricingBreakdown": {
+      "properties": {
+        "action_cost": {
+          "$ref": "#/$defs/CostVector"
+        },
+        "action_cost_adjustment": {
+          "format": "double",
+          "type": "number"
+        },
+        "base_entry_price": {
+          "format": "double",
+          "type": "number"
+        },
+        "budget_state": {
+          "$ref": "#/$defs/BudgetState"
+        },
+        "cap_applied": {
+          "type": "boolean"
+        },
+        "clears_rope": {
+          "type": "boolean"
+        },
+        "differs_from_fixed": {
+          "type": "boolean"
+        },
+        "effective_horizon": {
+          "format": "double",
+          "type": "number"
+        },
+        "entry_price": {
+          "format": "double",
+          "type": "number"
+        },
+        "fail_safe_applied": {
+          "type": "boolean"
+        },
+        "fallback_triggers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "final_lambda": {
+          "format": "double",
+          "type": "number"
+        },
+        "fixed_baseline_price": {
+          "format": "double",
+          "type": "number"
+        },
+        "fixed_clears_rope": {
+          "type": "boolean"
+        },
+        "floor_applied": {
+          "type": "boolean"
+        },
+        "hard_budget_exhausted": {
+          "type": "boolean"
+        },
+        "horizon_multiplier": {
+          "format": "double",
+          "type": "number"
+        },
+        "override_rate": {
+          "format": "double",
+          "type": "number"
+        },
+        "override_rate_multiplier": {
+          "format": "double",
+          "type": "number"
+        },
+        "pricing_policy": {
+          "$ref": "#/$defs/PricingPolicy"
+        },
+        "pricing_policy_name": {
+          "type": "string"
+        },
+        "pricing_policy_version": {
+          "type": "string"
+        },
+        "risk_adjustment": {
+          "format": "double",
+          "type": "number"
+        },
+        "scarcity_multiplier": {
+          "format": "double",
+          "type": "number"
+        },
+        "scarcity_pressure": {
+          "format": "double",
+          "type": "number"
+        },
+        "uncertainty_adjustment": {
+          "format": "double",
+          "type": "number"
+        },
+        "weighted_scarcity": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "pricing_policy",
+        "pricing_policy_name",
+        "pricing_policy_version",
+        "base_entry_price",
+        "fixed_baseline_price",
+        "entry_price",
+        "final_lambda",
+        "budget_state",
+        "action_cost",
+        "horizon_multiplier",
+        "scarcity_multiplier",
+        "override_rate_multiplier",
+        "action_cost_adjustment",
+        "uncertainty_adjustment",
+        "risk_adjustment",
+        "scarcity_pressure",
+        "weighted_scarcity",
+        "effective_horizon",
+        "override_rate",
+        "cap_applied",
+        "floor_applied",
+        "fail_safe_applied",
+        "hard_budget_exhausted",
+        "clears_rope",
+        "fixed_clears_rope",
+        "differs_from_fixed",
+        "fallback_triggers"
+      ],
+      "type": "object"
+    },
+    "PricingPolicy": {
+      "enum": [
+        "fixed_price_baseline",
+        "linear_exhaustion",
+        "inverse_horizon",
+        "override_rate_aware",
+        "risk_weighted",
+        "uncertainty_compensated",
+        "hybrid_production"
+      ],
+      "type": "string"
+    },
+    "ProbabilisticBudgetCertificate": {
+      "properties": {
+        "action_hash": {
+          "type": "string"
+        },
+        "budget_limit": {
+          "format": "double",
+          "type": "number"
+        },
+        "budget_limit_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "certificate_kind": {
+          "$ref": "#/$defs/BudgetCertificateKind"
+        },
+        "certified_mean_sum": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "cgf_sum_by_lambda": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "cost_model_id": {
+          "type": "string"
+        },
+        "delta_total": {
+          "format": "double",
+          "type": "number"
+        },
+        "filtration_hash": {
+          "type": "string"
+        },
+        "hard_cap": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "high_probability_bound": {
+          "format": "double",
+          "type": "number"
+        },
+        "high_probability_bound_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "lambda_grid": {
+          "default": [],
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "ledger_sequence_before": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "mean_upper": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mixture_weights": {
+          "default": [],
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "obligations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observed_spend": {
+          "format": "double",
+          "type": "number"
+        },
+        "observed_spend_microusd": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "outcome": {
+          "$ref": "#/$defs/BudgetOutcome"
+        },
+        "pre_ledger_hash": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/BudgetScope"
+        },
+        "second_moment_upper": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "slack": {
+          "format": "double",
+          "type": "number"
+        },
+        "slack_microusd": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "theorem_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "variance_upper": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "certificate_kind",
+        "scope",
+        "budget_limit",
+        "delta_total",
+        "observed_spend",
+        "action_hash",
+        "filtration_hash",
+        "ledger_sequence_before",
+        "pre_ledger_hash",
+        "cost_model_id",
+        "high_probability_bound",
+        "slack",
+        "outcome"
+      ],
+      "type": "object"
+    },
+    "ProviderCost": {
+      "properties": {
+        "billed_cost": {
+          "format": "double",
+          "type": "number"
+        },
+        "currency": {
+          "default": "USD",
+          "type": "string"
+        },
+        "fixture_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": "string"
+        },
+        "reported_cost": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "provider",
+        "reported_cost",
+        "billed_cost"
+      ],
+      "type": "object"
+    },
+    "Redaction": {
+      "properties": {
+        "detector": {
+          "type": "string"
+        },
+        "field_path": {
+          "type": "string"
+        },
+        "original_hash": {
+          "type": "string"
+        },
+        "original_value": {
+          "type": "string"
+        },
+        "replacement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_path",
+        "original_value",
+        "replacement",
+        "original_hash",
+        "detector"
+      ],
+      "type": "object"
+    },
+    "ResourceLimits": {
+      "properties": {
+        "cpu_seconds": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_fs_writes_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_processes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_stdout_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "memory_bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wall_clock_ms": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cpu_seconds",
+        "memory_bytes",
+        "wall_clock_ms",
+        "max_fs_writes_bytes",
+        "max_stdout_bytes",
+        "max_processes"
+      ],
+      "type": "object"
+    },
+    "RiskVector": {
+      "properties": {
+        "compliance_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "external_side_effect_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "future_misuse_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "hallucination_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "irreversibility": {
+          "format": "double",
+          "type": "number"
+        },
+        "privacy_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "sensitivity": {
+          "format": "double",
+          "type": "number"
+        },
+        "source_quality_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "staleness_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "tool_risk": {
+          "format": "double",
+          "type": "number"
+        },
+        "user_trust_risk": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "privacy_risk",
+        "tool_risk",
+        "external_side_effect_risk",
+        "hallucination_risk",
+        "staleness_risk",
+        "source_quality_risk",
+        "irreversibility",
+        "sensitivity",
+        "compliance_risk",
+        "user_trust_risk",
+        "future_misuse_risk"
+      ],
+      "type": "object"
+    },
+    "SandboxBackendKind": {
+      "enum": [
+        "none",
+        "lightweight",
+        "container"
+      ],
+      "type": "string"
+    },
+    "SandboxExecutionPlan": {
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/SandboxBackendKind"
+        },
+        "command": {
+          "$ref": "#/$defs/SandboxedCommand"
+        },
+        "limits": {
+          "$ref": "#/$defs/ResourceLimits"
+        },
+        "output_transforms": {
+          "items": {
+            "$ref": "#/$defs/OutputTransform"
+          },
+          "type": "array"
+        },
+        "provenance": {
+          "$ref": "#/$defs/SandboxProvenance"
+        }
+      },
+      "required": [
+        "backend",
+        "command",
+        "limits",
+        "output_transforms",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "SandboxProvenance": {
+      "properties": {
+        "applied_limits": {
+          "$ref": "#/$defs/ResourceLimits"
+        },
+        "backend": {
+          "$ref": "#/$defs/SandboxBackendKind"
+        },
+        "backend_guarantees": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "container_runtime": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContainerRuntime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "image_digest": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mount_spec": {
+          "items": {
+            "$ref": "#/$defs/MountSpec"
+          },
+          "type": "array"
+        },
+        "network_policy": {
+          "$ref": "#/$defs/NetworkPolicy"
+        },
+        "profile_hash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "backend",
+        "profile_hash",
+        "mount_spec",
+        "network_policy",
+        "applied_limits"
+      ],
+      "type": "object"
+    },
+    "SandboxViolation": {
+      "properties": {
+        "details": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "message"
+      ],
+      "type": "object"
+    },
+    "SandboxedCommand": {
+      "properties": {
+        "argv": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "egress_list": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EgressRule"
+          },
+          "type": "array"
+        },
+        "env_list": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "mounts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/MountSpec"
+          },
+          "type": "array"
+        },
+        "stdin": {
+          "default": null,
+          "items": {
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "argv",
+        "cwd"
+      ],
+      "type": "object"
+    },
+    "ThreadCandidateAction": {
+      "properties": {
+        "admission_score": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AdmissionScore"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budget_certificate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetCertificate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "budget_trace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BudgetTrace"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "certificate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CertificateEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "decision": {
+          "$ref": "#/$defs/DecisionType"
+        },
+        "final_action": {
+          "$ref": "#/$defs/CandidateAction"
+        },
+        "mutation_ledger": {
+          "items": {
+            "$ref": "#/$defs/ActionMutation"
+          },
+          "type": "array"
+        },
+        "policy_trace": {
+          "items": {
+            "$ref": "#/$defs/PolicyTraceEntry"
+          },
+          "type": "array"
+        },
+        "raw_action": {
+          "$ref": "#/$defs/CandidateAction"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "short_circuit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "raw_action",
+        "final_action",
+        "policy_trace",
+        "mutation_ledger",
+        "decision",
+        "reason"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "action_registry_version": {
+      "type": "string"
+    },
+    "budget_state": {
+      "$ref": "#/$defs/BudgetState"
+    },
+    "competitor_results": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/CompetitorResult"
+      },
+      "type": "array"
+    },
+    "config_version": {
+      "type": "string"
+    },
+    "evaluation_context": {
+      "$ref": "#/$defs/EvaluationContext",
+      "default": {
+        "arm_id": null,
+        "benchmark_suite": null,
+        "condition_id": null,
+        "decision_id": null,
+        "expected_action": null,
+        "scenario_id": null
+      }
+    },
+    "evaluation_outcomes": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/EvaluationOutcome"
+      },
+      "type": "array"
+    },
+    "execution_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExecutionResult"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fallback_triggers": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "host_action": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActionType"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "policy_chain_name": {
+      "type": "string"
+    },
+    "policy_chain_revision": {
+      "type": "string"
+    },
+    "policy_filtered_candidates": {
+      "items": {
+        "$ref": "#/$defs/ThreadCandidateAction"
+      },
+      "type": "array"
+    },
+    "pricing_policy_name": {
+      "type": "string"
+    },
+    "pricing_policy_version": {
+      "type": "string"
+    },
+    "provider_costs": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ProviderCost"
+      },
+      "type": "array"
+    },
+    "raw_candidates": {
+      "items": {
+        "$ref": "#/$defs/CandidateAction"
+      },
+      "type": "array"
+    },
+    "rejected_actions": {
+      "items": {
+        "$ref": "#/$defs/ThreadCandidateAction"
+      },
+      "type": "array"
+    },
+    "router_version": {
+      "type": "string"
+    },
+    "sandbox_plan": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SandboxExecutionPlan"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "scored_candidates": {
+      "items": {
+        "$ref": "#/$defs/ThreadCandidateAction"
+      },
+      "type": "array"
+    },
+    "scorer_version": {
+      "type": "string"
+    },
+    "seal_id": {
+      "type": "string"
+    },
+    "seal_seed": {
+      "format": "uint64",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "seal_status": {
+      "type": "string"
+    },
+    "selected_action": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActionType"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "selected_candidate_index": {
+      "format": "uint",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "state": true,
+    "thread_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "thread_id",
+    "timestamp",
+    "router_version",
+    "scorer_version",
+    "pricing_policy_name",
+    "pricing_policy_version",
+    "policy_chain_name",
+    "policy_chain_revision",
+    "action_registry_version",
+    "config_version",
+    "seal_seed",
+    "seal_id",
+    "seal_status",
+    "state",
+    "raw_candidates",
+    "policy_filtered_candidates",
+    "scored_candidates",
+    "rejected_actions",
+    "budget_state",
+    "fallback_triggers",
+    "metadata"
+  ],
+  "title": "ThreadRecord",
+  "type": "object"
+}

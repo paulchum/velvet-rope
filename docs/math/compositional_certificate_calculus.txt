@@ -1,0 +1,59 @@
+Compositional Certificate Calculus for Adaptive Velvet Chains
+
+Object. A Velvet posterior-option certificate is not a scalar interval [L, U].
+It carries a typed effect:
+
+    C = (mu, B, V, scope, writes, dependence, filtration)
+
+where mu is a certified first-moment bound, B is a pathwise payoff/range
+bound, V is a variance or second-moment reserve for the payoff process, scope
+identifies the resource being certified, writes describe shared-state effects,
+dependence records conditional independence or a certified covariance reserve,
+and filtration records adaptedness/stopping-time metadata.
+
+Composite upper. For a composite posterior-option certificate, define
+
+    U_star = min{
+        B_star,
+        mu_star * (1 + log(B_star / mu_star)),
+        mu_star + 2 * sqrt(V_star)
+    }
+
+with U_star = 0 when mu_star = 0, and
+
+    V_star = sum_i V_i + Gamma
+    Gamma = 2 * sum_{i<j} Cov_hat_tau(Y_i, Y_j).
+
+Under certified conditional independence given the current filtration,
+Gamma = 0. Without that independence, Gamma must be supplied by an explicit
+certified dependence correction/reserve. Marginal-only parallel composition is
+not sound.
+
+Verdicts.
+
+1. Sequential/tower composition: PROVEN under adaptedness.
+   If each certificate is F_i-measurable and the filtration order is recorded,
+   tower conditioning composes the first moments and reserves along the chain.
+   The composite certificate uses summed mu, summed B, and summed V plus any
+   declared dependence reserve.
+
+2. Conditional continuation: PROVEN under optional pasting assumptions.
+   A continuation branch is certifying only when its trigger/condition is bound
+   to the prior filtration and the continuation certificate is adapted after
+   that stopping-time event.
+
+3. Parallel with certified dependence correction: PROVEN.
+   Parallel certificates compose when they either certify conditional
+   independence under the shared filtration or provide a finite Gamma reserve.
+   The reserve is part of the certificate data; it is not inferred from
+   marginals.
+
+4. Raw marginal-only parallel composition: KILLED.
+   Marginal [L, U] certificates do not identify covariance. Summing or taking
+   extrema of marginal-only bounds can understate composite posterior option
+   value when branches are dependent.
+
+5. Shared-state writes: require serialization or commutativity certificate.
+   Parallel branches with overlapping write footprints are not certifying
+   unless the execution is serialized or a commutativity certificate covers the
+   shared writes. Otherwise the certificate is advisory/non-certifying.

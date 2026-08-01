@@ -1,0 +1,714 @@
+{
+  "$defs": {
+    "ApiVersion": {
+      "enum": [
+        "velvet.io/v1alpha1"
+      ],
+      "type": "string"
+    },
+    "CostCeilingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "cost_model": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CostModel"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "per_org_monthly_usd_limit": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "per_task_usd_limit": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "per_user_daily_usd_limit": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "soft_ceiling_fraction": {
+          "default": 0.8,
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "CostModel": {
+      "additionalProperties": false,
+      "properties": {
+        "call_usd": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "default_usd": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "token_usd": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "volume_usd_per_unit": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "EscalationGateConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence_threshold": {
+          "default": 0.2,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost_threshold_usd": {
+          "default": 25.0,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "default_fallback": {
+          "default": "deny",
+          "type": "string"
+        },
+        "novelty_threshold": {
+          "default": 0.98,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "repeated_failure_threshold": {
+          "default": 3,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sensitive_actions": {
+          "default": [
+            "CALL_TOOL",
+            "EXECUTE_CODE"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "targets": {
+          "additionalProperties": {
+            "$ref": "#/$defs/TargetConfig"
+          },
+          "default": {
+            "concierge_review": {
+              "fallback": "deny",
+              "mode": "sync",
+              "target": "local://velvet-concierge",
+              "target_type": "velvet_concierge_queue"
+            },
+            "model_escalation": {
+              "fallback": "deny",
+              "mode": "sync",
+              "target": "local://model-escalation",
+              "target_type": "escalation_model"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "ExpectedDecision": {
+      "enum": [
+        "Allow",
+        "Deny",
+        "Modify",
+        "Defer"
+      ],
+      "type": "string"
+    },
+    "LlmAtomConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "certificate_class": {
+          "default": "compiled_policy_with_prebound_llm_atom",
+          "type": "string"
+        },
+        "default_action": {
+          "default": "deny",
+          "type": "string"
+        },
+        "extraction_question": {
+          "default": "Does the candidate action violate this policy atom?",
+          "type": "string"
+        },
+        "finding_keys": {
+          "default": [
+            "llm_atom_findings",
+            "policy_findings"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rule_id": {
+          "default": "llm_atom",
+          "type": "string"
+        },
+        "runtime_enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "severity": {
+          "default": "error",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "type": "object"
+    },
+    "PiiGuardConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "default_mode": {
+          "$ref": "#/$defs/ResponseMode",
+          "default": "redact"
+        },
+        "enabled_detectors": {
+          "default": [
+            "credit_card",
+            "email",
+            "iban",
+            "phone",
+            "postal_code",
+            "ssn"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "list_context_keys": {
+          "default": [
+            "own_email",
+            "account_email"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "per_action_mode": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ResponseMode"
+          },
+          "default": {},
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "PolicyChainSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "policies": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "policies"
+      ],
+      "type": "object"
+    },
+    "PolicySpec": {
+      "oneOf": [
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/CostCeilingConfig"
+            },
+            "type": {
+              "const": "cost_ceiling",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/PiiGuardConfig"
+            },
+            "type": {
+              "const": "pii_guard",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/PromptInjectionConfig"
+            },
+            "type": {
+              "const": "prompt_injection_detector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/RateLimiterConfig"
+            },
+            "type": {
+              "const": "rate_limiter",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/EscalationGateConfig"
+            },
+            "type": {
+              "const": "escalation_gate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "config": {
+              "$ref": "#/$defs/LlmAtomConfig"
+            },
+            "type": {
+              "const": "llm_atom",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "config"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PolicyTestExpectation": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/ExpectedDecision"
+        },
+        "reason_contains": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "type": "object"
+    },
+    "PolicyTestSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": true,
+        "context": {
+          "default": null
+        },
+        "expect": {
+          "$ref": "#/$defs/PolicyTestExpectation"
+        },
+        "policy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy",
+        "candidate",
+        "expect"
+      ],
+      "type": "object"
+    },
+    "PromptInjectionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "default_action": {
+          "default": "block",
+          "type": "string"
+        },
+        "distance_metric": {
+          "default": "cosine",
+          "type": "string"
+        },
+        "embedding_threshold": {
+          "default": 0.86,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "pid_classifier_path": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_rules": {
+          "additionalProperties": {
+            "items": {
+              "$ref": "#/$defs/PromptRule"
+            },
+            "type": "array"
+          },
+          "default": {
+            "default": [
+              {
+                "id": "ignore_previous_instructions",
+                "pattern": "(?i)\\b(ignore|disregard|forget)\\b.{0,40}\\b(previous|prior|system|developer)\\b.{0,30}\\b(instruction|message|prompt)s?\\b",
+                "severity": "error"
+              },
+              {
+                "id": "role_hijack",
+                "pattern": "(?i)\\b(you are now|act as|pretend to be)\\b.{0,40}\\b(system|developer|admin|root)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "jailbreak_marker",
+                "pattern": "(?i)\\b(DAN|jailbreak|do anything now|developer mode)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "secret_exfiltration",
+                "pattern": "(?i)\\b(reveal|print|dump|exfiltrate)\\b.{0,40}\\b(system prompt|hidden prompt|secrets?|api keys?)\\b",
+                "severity": "error"
+              }
+            ],
+            "retrieved_content": [
+              {
+                "id": "ignore_previous_instructions",
+                "pattern": "(?i)\\b(ignore|disregard|forget)\\b.{0,40}\\b(previous|prior|system|developer)\\b.{0,30}\\b(instruction|message|prompt)s?\\b",
+                "severity": "error"
+              },
+              {
+                "id": "role_hijack",
+                "pattern": "(?i)\\b(you are now|act as|pretend to be)\\b.{0,40}\\b(system|developer|admin|root)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "jailbreak_marker",
+                "pattern": "(?i)\\b(DAN|jailbreak|do anything now|developer mode)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "secret_exfiltration",
+                "pattern": "(?i)\\b(reveal|print|dump|exfiltrate)\\b.{0,40}\\b(system prompt|hidden prompt|secrets?|api keys?)\\b",
+                "severity": "error"
+              }
+            ],
+            "tool_output": [
+              {
+                "id": "ignore_previous_instructions",
+                "pattern": "(?i)\\b(ignore|disregard|forget)\\b.{0,40}\\b(previous|prior|system|developer)\\b.{0,30}\\b(instruction|message|prompt)s?\\b",
+                "severity": "error"
+              },
+              {
+                "id": "role_hijack",
+                "pattern": "(?i)\\b(you are now|act as|pretend to be)\\b.{0,40}\\b(system|developer|admin|root)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "jailbreak_marker",
+                "pattern": "(?i)\\b(DAN|jailbreak|do anything now|developer mode)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "secret_exfiltration",
+                "pattern": "(?i)\\b(reveal|print|dump|exfiltrate)\\b.{0,40}\\b(system prompt|hidden prompt|secrets?|api keys?)\\b",
+                "severity": "error"
+              }
+            ],
+            "user_input": [
+              {
+                "id": "ignore_previous_instructions",
+                "pattern": "(?i)\\b(ignore|disregard|forget)\\b.{0,40}\\b(previous|prior|system|developer)\\b.{0,30}\\b(instruction|message|prompt)s?\\b",
+                "severity": "error"
+              },
+              {
+                "id": "role_hijack",
+                "pattern": "(?i)\\b(you are now|act as|pretend to be)\\b.{0,40}\\b(system|developer|admin|root)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "jailbreak_marker",
+                "pattern": "(?i)\\b(DAN|jailbreak|do anything now|developer mode)\\b",
+                "severity": "error"
+              },
+              {
+                "id": "secret_exfiltration",
+                "pattern": "(?i)\\b(reveal|print|dump|exfiltrate)\\b.{0,40}\\b(system prompt|hidden prompt|secrets?|api keys?)\\b",
+                "severity": "error"
+              }
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "PromptRule": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "default": "unnamed",
+          "type": "string"
+        },
+        "pattern": {
+          "default": "",
+          "type": "string"
+        },
+        "severity": {
+          "default": "warning",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RateLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "burst_multiplier": {
+          "default": 1.5,
+          "format": "double",
+          "type": "number"
+        },
+        "max_requests": {
+          "default": 60,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sustained_per_second": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "window_ms": {
+          "default": 60000,
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "RateLimiterConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregate": {
+          "$ref": "#/$defs/RateLimit",
+          "default": {
+            "burst_multiplier": 1.5,
+            "max_requests": 1000000000,
+            "sustained_per_second": 1000000.0,
+            "window_ms": 60000
+          }
+        },
+        "per_action": {
+          "additionalProperties": {
+            "$ref": "#/$defs/RateLimit"
+          },
+          "default": {},
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "ResponseMode": {
+      "enum": [
+        "block",
+        "redact",
+        "flag"
+      ],
+      "type": "string"
+    },
+    "TargetConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "fallback": {
+          "default": "deny",
+          "type": "string"
+        },
+        "mode": {
+          "default": "sync",
+          "type": "string"
+        },
+        "target": {
+          "default": "local://velvet-concierge",
+          "type": "string"
+        },
+        "target_type": {
+          "default": "velvet_concierge_queue",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "properties": {
+        "apiVersion": {
+          "$ref": "#/$defs/ApiVersion"
+        },
+        "kind": {
+          "const": "Policy",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        },
+        "spec": {
+          "$ref": "#/$defs/PolicySpec"
+        }
+      },
+      "required": [
+        "kind",
+        "apiVersion",
+        "metadata",
+        "spec"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "apiVersion": {
+          "$ref": "#/$defs/ApiVersion"
+        },
+        "kind": {
+          "const": "PolicyChain",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        },
+        "spec": {
+          "$ref": "#/$defs/PolicyChainSpec"
+        }
+      },
+      "required": [
+        "kind",
+        "apiVersion",
+        "metadata",
+        "spec"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "apiVersion": {
+          "$ref": "#/$defs/ApiVersion"
+        },
+        "kind": {
+          "const": "PolicyTest",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        },
+        "spec": {
+          "$ref": "#/$defs/PolicyTestSpec"
+        }
+      },
+      "required": [
+        "kind",
+        "apiVersion",
+        "metadata",
+        "spec"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "Document"
+}

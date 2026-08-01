@@ -1,0 +1,75 @@
+{
+  "benchmark_version": "0.4.0",
+  "commit_hash": "37c94176e6315a810c0d16d81fd60a851d266829",
+  "generated_at": "1970-01-01T00:00:00Z",
+  "repeat_count": 20,
+  "schema_version": "velvet.agent_authorization.comparison.v0.1",
+  "system_result": {
+    "adapter_kind": "pinned_schema_fixture",
+    "capabilities": {
+      "binding_depth": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Pinned OAP decision fixture does not bind the full Velvet required field set.",
+        "status": "fail",
+        "value": false
+      },
+      "deterministic_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Identical fixture decision across N=20 runs.",
+        "status": "pass",
+        "value": true
+      },
+      "drift_rejection": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Fixture has no permit-bound execution claim step to reject a mutated action.",
+        "status": "fail",
+        "value": false
+      },
+      "pre_execution_decision": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Fixture emitted an allow decision before simulated dispatch.",
+        "status": "pass",
+        "value": true
+      },
+      "public_verification": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Signature record verified with public key material only.",
+        "status": "pass",
+        "value": true
+      },
+      "replayable_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Fixture has no replay command or stable Velvet-style seal reproduction contract.",
+        "status": "fail",
+        "value": false
+      },
+      "signed_artifact": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Local OAP-shaped fixture decision was signed and verified with public key material.",
+        "status": "pass",
+        "value": true
+      },
+      "tamper_evidence": {
+        "evidence_pointer": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+        "measurement": "Changing one signed decision field failed signature verification.",
+        "status": "pass",
+        "value": true
+      }
+    },
+    "evidence_path": "benchmarks/agent_authorization/comparison/evidence/oap_aport_pinned_schema_fixture_evidence.json",
+    "measurement_boundary": "local OAP-shaped fixture, not hosted APort",
+    "public_claim_status": "not_claimable_against_live_product",
+    "source_urls": [
+      "third_party/oap/OAP_SPEC_LOCK.json",
+      "https://sandbox.aport.io/spec/spec/oap/oap-spec.md/"
+    ],
+    "strict_oap_schema_validation_errors": [
+      "<root>: 'passport_id' is a required property",
+      "<root>: 'issued_at' is a required property",
+      "<root>: 'expires_at' is a required property"
+    ],
+    "strict_oap_schema_validation_passed": false,
+    "system": "OAP/APort pinned schema fixture",
+    "system_version": "pinned_a706c64"
+  }
+}

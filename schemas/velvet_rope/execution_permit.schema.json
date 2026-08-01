@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/execution_permit.schema.json",
+  "title": "Velvet Execution Permit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonicalization",
+    "permit_id",
+    "issuer",
+    "tenant_id",
+    "environment",
+    "audience",
+    "subject",
+    "scope",
+    "policy",
+    "lineage",
+    "constraints",
+    "obligations",
+    "validity",
+    "permit_hash",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": { "const": "velvet.execution_permit.v1" },
+    "canonicalization": {
+      "const": "velvet.canonical_json.v1.sha256.unsigned_payload"
+    },
+    "permit_id": {
+      "type": "string",
+      "pattern": "^vpermit_[0-9a-f]{32,64}$"
+    },
+    "issuer": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "environment": { "type": "string", "minLength": 1 },
+    "audience": { "type": "string", "minLength": 1 },
+    "subject": { "$ref": "#/$defs/subject" },
+    "scope": { "$ref": "#/$defs/scope" },
+    "policy": { "$ref": "#/$defs/policy" },
+    "lineage": { "$ref": "#/$defs/lineage" },
+    "constraints": { "$ref": "#/$defs/constraints" },
+    "obligations": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "verify_trusted_signature",
+          "verify_scope",
+          "verify_lineage",
+          "claim_before_dispatch",
+          "record_execution_receipt"
+        ]
+      }
+    },
+    "validity": { "$ref": "#/$defs/validity" },
+    "permit_hash": { "$ref": "#/$defs/hash" },
+    "signature": {
+      "allOf": [
+        { "$ref": "#/$defs/signature" },
+        {
+          "type": "object",
+          "properties": {
+            "purpose": { "const": "velvet.execution_permit.v1" }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3,9})?Z$"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subject_id_hash": { "$ref": "#/$defs/hash" },
+        "agent_id_hash": { "$ref": "#/$defs/hash" },
+        "client_id_hash": { "$ref": "#/$defs/hash" },
+        "session_id_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "method",
+        "tool_key",
+        "operation",
+        "request_hash",
+        "canonical_action_hash",
+        "arguments_hash",
+        "tool_schema_hash"
+      ],
+      "properties": {
+        "surface": { "type": "string", "minLength": 1 },
+        "method": { "type": "string", "minLength": 1 },
+        "tool_key": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string", "minLength": 1 },
+        "request_hash": { "$ref": "#/$defs/hash" },
+        "canonical_action_hash": { "$ref": "#/$defs/hash" },
+        "arguments_hash": { "$ref": "#/$defs/hash" },
+        "tool_schema_hash": { "$ref": "#/$defs/hash" },
+        "read_set_hash": { "$ref": "#/$defs/hash" },
+        "resource": { "$ref": "#/$defs/resource" },
+        "subgoal_id_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id_hash"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "id_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_hash", "policy_version"],
+      "properties": {
+        "policy_hash": { "$ref": "#/$defs/hash" },
+        "policy_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_type", "artifact_id", "artifact_hash"],
+      "properties": {
+        "artifact_type": { "type": "string", "minLength": 1 },
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "artifact_hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_artifact",
+        "pre_execution_record",
+        "supporting_artifacts"
+      ],
+      "properties": {
+        "decision_artifact": { "$ref": "#/$defs/artifact_reference" },
+        "pre_execution_record": {
+          "allOf": [
+            { "$ref": "#/$defs/artifact_reference" },
+            {
+              "type": "object",
+              "properties": {
+                "artifact_type": { "const": "ledger_record" }
+              }
+            }
+          ]
+        },
+        "supporting_artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifact_reference" }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "single_use",
+        "claim_before_dispatch",
+        "deny_on_scope_drift",
+        "receipt_required",
+        "idempotency_key"
+      ],
+      "properties": {
+        "single_use": { "const": true },
+        "claim_before_dispatch": { "const": true },
+        "deny_on_scope_drift": { "const": true },
+        "receipt_required": { "const": true },
+        "idempotency_key": {
+          "type": "string",
+          "pattern": "^vdispatch_[0-9a-f]{32,64}$"
+        }
+      }
+    },
+    "validity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issued_at", "not_before", "expires_at"],
+      "properties": {
+        "issued_at": { "$ref": "#/$defs/timestamp" },
+        "not_before": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "issued_at_logical_step": { "type": "integer", "minimum": 0 },
+        "expires_at_logical_step": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "provider_name",
+        "algorithm",
+        "key_id",
+        "key_version",
+        "purpose",
+        "tenant_id",
+        "payload_hash",
+        "signature",
+        "signed_at",
+        "metadata"
+      ],
+      "properties": {
+        "schema_version": { "enum": ["velvet.signature.v1", "velvet.signature.v2"] },
+        "provider_name": { "type": "string", "minLength": 1 },
+        "algorithm": { "type": "string", "minLength": 1 },
+        "key_id": { "type": "string", "minLength": 1 },
+        "key_version": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "payload_hash": { "$ref": "#/$defs/hash" },
+        "signature": { "type": "string", "minLength": 1 },
+        "signed_at": { "$ref": "#/$defs/timestamp" },
+        "public_verification_material": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+The vendored OAP/APort specification snapshot is copied from:
+
+  https://github.com/aporthq/aport-spec
+
+Pinned commit:
+
+  a706c64b0b7ef4bcff9756a926f9a278e577e8b0
+
+The upstream repository license at that commit is MIT; see
+`third_party/oap/LICENSE`. File hashes and vendored paths are recorded in
+`third_party/oap/OAP_SPEC_LOCK.json`.

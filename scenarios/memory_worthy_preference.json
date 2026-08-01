@@ -1,0 +1,22 @@
+{
+  "state": {
+    "user_request": "Remember that I prefer Velvet framed as a control plane, not a framework.",
+    "available_context": [],
+    "freshness_required": false,
+    "ambiguous": false,
+    "memory_candidate_value": 0.82,
+    "memory_novelty": 0.76,
+    "memory_confidence": 0.84,
+    "memory_type": "project_positioning",
+    "sensitivity": 0.18,
+    "expected_action": "ANSWER_DIRECTLY"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    {
+      "action_type": "STORE_MEMORY",
+      "description": "Persist a durable project positioning preference.",
+      "metadata": { "budget_affecting": false, "non_budget_affecting": true }
+    }
+  ]
+}

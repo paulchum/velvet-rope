@@ -1,0 +1,66 @@
+{
+  "benchmark_reconciliation": {
+    "findings": [
+      "EFFECT_BREACH",
+      "UNATTRIBUTED_EFFECT"
+    ],
+    "status": "effect_breach"
+  },
+  "causal_evidence": {
+    "activities": [
+      {
+        "detail": {
+          "columns": [
+            "status"
+          ],
+          "effect_log_hook": false,
+          "statement_class": "UPDATE",
+          "table": "customers"
+        },
+        "event_type": "sql_execute",
+        "route_id": "database_mutation"
+      }
+    ],
+    "effect_events": [],
+    "pending_work": {
+      "operator_messages": 0,
+      "queue_jobs": 0,
+      "webhooks": 0
+    }
+  },
+  "customer_id": "synthetic-database_mutation",
+  "dispatch": {
+    "effect_log_hook": false,
+    "kind": "database",
+    "row_count": 1,
+    "statement_class": "UPDATE"
+  },
+  "effect_attribution": "unattributed_effect",
+  "effect_fingerprint": "sha256:9506d62b531d53137b8da96784df39a5f7d53975b59553f91304aca18908d8d7",
+  "effect_observed": true,
+  "expected_effect": "customer.account.status:active->disabled",
+  "post_state": {
+    "status": "disabled"
+  },
+  "pre_state": {
+    "status": "active"
+  },
+  "route": {
+    "actuator": "direct SQL UPDATE",
+    "expected_effect": "customer.account.status:active->disabled",
+    "ingress": "SQLite database session",
+    "intermediates": [
+      "raw database connection",
+      "customer row mutation"
+    ],
+    "label": "Database mutation",
+    "observer": "independent SQLite customer-state query",
+    "route_id": "database_mutation"
+  },
+  "sut_reconciliation": {
+    "effect_mismatch_detected": false,
+    "reported_success": true,
+    "status": "not_implemented"
+  },
+  "trial_id": "shadowpath-database_mutation"
+}

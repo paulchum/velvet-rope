@@ -1,0 +1,16 @@
+{
+  "state": {
+    "user_request": "Summarize this uploaded paper.",
+    "available_context": ["uploaded_file"],
+    "file_available": true,
+    "freshness_required": false,
+    "ambiguous": false,
+    "expected_action": "READ_FILE"
+  },
+  "candidates": [
+    { "action_type": "ANSWER_DIRECTLY", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "READ_FILE", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "SEARCH_WEB", "metadata": { "budget_affecting": false, "non_budget_affecting": true } },
+    { "action_type": "ASK_USER", "metadata": { "budget_affecting": false, "non_budget_affecting": true } }
+  ]
+}

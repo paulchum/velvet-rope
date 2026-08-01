@@ -1,0 +1,71 @@
+mode: strict
+transport: streamable_http
+identity:
+  tenant_id: tenant-prod
+  environment: prod
+  product_surface: velvet_gateway.mcp.openai_secure_tunnel
+oap:
+  enabled: true
+  policy_id: velvet.mcp.call.v1
+  require_max_de_certificate: true
+  require_max_de_for_all_tool_calls: true
+  allow_missing_max_de_in_development: false
+  oap_private_key_env: VELVET_OAP_ED25519_PRIVATE_KEY
+  velvet_private_key_env: VELVET_MAXDE_ED25519_PRIVATE_KEY
+  transport_context:
+    kind: mcp
+    openai_secure_mcp_tunnel:
+      enabled: true
+      tunnel_id_env: VELVET_OPENAI_TUNNEL_ID
+      workspace_id_env: VELVET_OPENAI_WORKSPACE_ID
+      connector_subject_env: VELVET_CONNECTOR_SUBJECT
+upstream:
+  server: private-mcp
+  endpoint: https://private-mcp.default.svc.cluster.local:8443/mcp
+  boundary:
+    required: true
+    require_bearer: true
+    require_mtls: true
+    bearer:
+      header_name: Authorization
+      scheme: Bearer
+      token_env: VELVET_PRIVATE_MCP_UPSTREAM_TOKEN
+    mtls:
+      identity_pem_env: VELVET_PRIVATE_MCP_CLIENT_IDENTITY_PEM
+      ca_bundle_pem_env: VELVET_PRIVATE_MCP_CA_BUNDLE_PEM
+policy:
+  dir: /etc/velvet/policies
+  chain: mcp_prod
+  bundle_manifest: /etc/velvet/policy-bundle.yaml
+  require_signature: true
+  trusted_signature_public_key_hex_env: VELVET_POLICY_BUNDLE_ED25519_PUBLIC_KEY
+tools: []
+method_dispositions:
+  resources: block
+  prompts: block
+  tasks: block
+  notifications: block
+  unknown: block
+ledger_path: /var/lib/velvet/ledger/velvet_ledger.vledger
+ledger:
+  strict: true
+  fsync: true
+  segment_manifest_path: /var/lib/velvet/ledger/ledger_manifest.json
+inventory_path: /var/lib/velvet/ledger/inventory.json
+approval_requests_path: /var/lib/velvet/ledger/approval_requests.jsonl
+evidence_pack_path: /var/lib/velvet/ledger/evidence_pack.json
+schema_drift_action: deny
+auth:
+  require_bearer: true
+  bearer_token_env: VELVET_MCP_PROXY_TOKEN
+  forward_authorization: false
+  subject_header: x-velvet-subject-id
+  trust_subject_header: false
+http:
+  bind: 0.0.0.0:8791
+  endpoint_path: /mcp
+  allow_plaintext_loopback_upstream: false
+  allowed_origins:
+    - https://chatgpt.com
+  supported_protocol_versions:
+    - 2025-11-25

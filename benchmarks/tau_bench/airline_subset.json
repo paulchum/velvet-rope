@@ -1,0 +1,43 @@
+[
+  {
+    "id": "airline_search_policy",
+    "state": {
+      "freshness_required": true,
+      "user_request": "Check current baggage policy for my flight.",
+      "expected_action": "SEARCH_WEB"
+    },
+    "candidates": [
+      { "action_type": "ANSWER_DIRECTLY" },
+      { "action_type": "SEARCH_WEB", "parameters": { "query": "airline baggage policy" } }
+    ]
+  },
+  {
+    "id": "airline_concierge_review",
+    "state": {
+      "requires_concierge_review": true,
+      "user_request": "Refund a non-refundable international ticket.",
+      "expected_action": "CONCIERGE_REVIEW"
+    },
+    "candidates": [
+      { "action_type": "ANSWER_DIRECTLY" },
+      {
+        "action_type": "CONCIERGE_REVIEW",
+        "expected_improvement": 1.0,
+        "novelty": 0.95,
+        "confidence": 1.0
+      }
+    ]
+  },
+  {
+    "id": "airline_retrieve_booking",
+    "state": {
+      "retrieval_available": true,
+      "user_request": "Find the booking policy snippet in the local corpus.",
+      "expected_action": "RETRIEVE_CONTEXT"
+    },
+    "candidates": [
+      { "action_type": "ANSWER_DIRECTLY" },
+      { "action_type": "RETRIEVE_CONTEXT", "parameters": { "query": "booking policy" } }
+    ]
+  }
+]

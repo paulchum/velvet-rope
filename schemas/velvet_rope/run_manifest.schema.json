@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velvet.dev/schemas/velvet_rope/run_manifest.schema.json",
+  "title": "Velvet Rope Run Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "suite",
+    "suite_version",
+    "created_at",
+    "adapter_versions",
+    "artifact_files"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "suite": { "const": "velvet_rope_liability" },
+    "suite_version": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "adapter_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "artifact_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

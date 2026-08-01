@@ -1,0 +1,27 @@
+{
+  "signature": "policy-signature",
+  "policy_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "canonicalization": "velvet.canonical_json.v1.sha256",
+  "schema_version": "velvet.policy_bundle.v1",
+  "bundle_id": "policy_bundle_default",
+  "generated_at": "2026-05-27T19:02:00Z",
+  "policies": [
+    {
+      "name": "cost_ceiling",
+      "version": "v1",
+      "config": {
+        "hard_ceiling_usd": "250.00",
+        "soft_ceiling_fraction": "0.8000",
+        "max_calls": 40
+      }
+    },
+    {
+      "name": "pii_guard",
+      "version": "v1",
+      "config": {
+        "mode": "detect_and_redact",
+        "enabled": true
+      }
+    }
+  ]
+}
