@@ -7,7 +7,7 @@ and then query the backing system directly.
 Start with:
 
 ```bash
-uvx velvet-rope shadowpath init agent-effect-test
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath init agent-effect-test
 ```
 
 In `adapter.py`, keep `dispatch` and `observe` separate. For example, dispatch

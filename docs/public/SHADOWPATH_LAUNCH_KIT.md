@@ -95,7 +95,7 @@ Body:
 
 5. Replay it, inspect the JSON, then scaffold your own effect:
 
-   `uvx velvet-rope shadowpath demo`
+   `uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo`
 
    https://shadowpath-replay.pc9i.chatgpt.site
 

@@ -41,8 +41,10 @@ synthetic local fixture designed to make the measurement reproducible.
 See the committed result and generate shareable evidence immediately:
 
 ```bash
-uvx velvet-rope shadowpath demo
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo
 ```
+
+That command runs the public GitHub source directly—no clone or global install.
 
 The instant demo is explicitly a replay of the committed hermetic run. It
 writes exact SVG, PNG, HTML, Markdown, and badge artifacts under
@@ -87,9 +89,9 @@ clean, commit-bound benchmark artifact.
 Scaffold an executable effect inventory and independent observer:
 
 ```bash
-uvx velvet-rope shadowpath init my-effect
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath init my-effect
 cd my-effect
-uvx velvet-rope shadowpath run \
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath run \
   --project shadowpath.json \
   --output-dir reports/shadowpath
 ```

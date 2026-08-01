@@ -7,7 +7,7 @@ from the route control being tested.
 ## 1. See the result immediately
 
 ```bash
-uvx velvet-rope shadowpath demo
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo
 ```
 
 This replays the committed hermetic fixture and generates exact SVG, PNG,
@@ -28,9 +28,9 @@ uv run velvet shadowpath demo --execute
 ## 2. Scaffold your effect
 
 ```bash
-uvx velvet-rope shadowpath init my-effect
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath init my-effect
 cd my-effect
-uvx velvet-rope shadowpath run \
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath run \
   --project shadowpath.json \
   --output-dir reports/shadowpath
 ```
@@ -63,7 +63,7 @@ summary, and leaves the complete evidence directory available for upload.
 ## 5. Share the evidence, not a slogan
 
 ```bash
-uvx velvet-rope shadowpath render \
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath render \
   reports/shadowpath/results/shadowpath-project.json \
   --output-dir reports/shadowpath/share
 ```

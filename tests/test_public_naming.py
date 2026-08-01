@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEPRECATED_PRODUCT_NAME = re.compile(r"Velvet Gate(?!way)")
+UNPUBLISHED_REGISTRY_COMMAND = re.compile(r"\buvx velvet-rope\b")
 PUBLIC_TEXT_ROOTS = (
     ROOT / "README.md",
     ROOT / "IMPLEMENTATION_STATUS.md",
@@ -43,3 +44,22 @@ def test_public_docs_and_reports_do_not_brand_velvet_gate() -> None:
             offenders.append(str(path.relative_to(ROOT)))
 
     assert offenders == []
+
+
+def test_public_launch_commands_do_not_require_an_unpublished_registry_release() -> None:
+    surfaces = [
+        ROOT / "README.md",
+        ROOT / "src" / "velvet" / "shadowpath_product.py",
+        *sorted((ROOT / "docs" / "public").rglob("*.md")),
+    ]
+    offenders = [
+        str(path.relative_to(ROOT))
+        for path in surfaces
+        if UNPUBLISHED_REGISTRY_COMMAND.search(path.read_text(encoding="utf-8"))
+    ]
+
+    assert offenders == []
+    assert (
+        "uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope"
+        in (ROOT / "README.md").read_text(encoding="utf-8")
+    )

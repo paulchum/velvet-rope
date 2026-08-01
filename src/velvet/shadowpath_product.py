@@ -887,7 +887,7 @@ def _carousel_slides(payload: Mapping[str, Any]) -> list[JsonObject]:
         {
             "kicker": "05 / RUN IT",
             "title": ["Proof before pitch."],
-            "accent": ["uvx velvet-rope", "shadowpath demo"],
+            "accent": ["Get the source", "Run ShadowPath"],
             "body": ["Replay the committed result.", "Then define your own effect."],
             "footer": "github.com/paulchum/velvet-rope",
         },
@@ -1113,7 +1113,10 @@ the prohibited outcome through every equivalent path?
 4. Run:
 
 ```bash
-uvx velvet-rope shadowpath run --project shadowpath.json --output-dir reports/shadowpath
+uvx --from git+https://github.com/paulchum/velvet-rope.git \\
+  velvet-rope shadowpath run \\
+  --project shadowpath.json \\
+  --output-dir reports/shadowpath
 ```
 
 Exit `3` means the independent observer saw the prohibited effect. The generated

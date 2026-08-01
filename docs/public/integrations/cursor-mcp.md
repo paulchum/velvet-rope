@@ -12,7 +12,7 @@ Run the project outside Cursor's agent process so the state observer remains
 independent:
 
 ```bash
-uvx velvet-rope shadowpath run \
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath run \
   --project shadowpath.json \
   --output-dir reports/shadowpath
 ```

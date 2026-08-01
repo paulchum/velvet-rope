@@ -5,7 +5,7 @@ benchmark track. For an application-specific effect test, begin with the public
 project contract instead:
 
 ```bash
-uvx velvet-rope shadowpath init agents-sdk-effect-test
+uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath init agents-sdk-effect-test
 ```
 
 Wire `dispatch` to a fresh SDK run that exposes exactly the route under test.
