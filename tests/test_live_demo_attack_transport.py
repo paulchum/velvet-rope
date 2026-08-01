@@ -12,6 +12,35 @@ ProxyClient = attack_common.ProxyClient
 dispatcher = cast(Any, importlib.import_module("demo.live_target.dispatcher"))
 
 
+def test_live_target_receives_the_permit_signers_trust_anchor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    class FakeProcess:
+        def terminate(self) -> None:
+            return
+
+        def wait(self, timeout: int) -> int:
+            captured["wait_timeout"] = timeout
+            return 0
+
+    def fake_popen(*_args: Any, **kwargs: Any) -> FakeProcess:
+        captured.update(kwargs)
+        return FakeProcess()
+
+    monkeypatch.setattr(attack_common.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(attack_common, "wait_for_target", lambda: None)
+
+    with attack_common.LiveTarget(reset=False):
+        pass
+
+    assert captured["env"]["VELVET_LIVE_TRUSTED_PUBLIC_KEY"] == (
+        attack_common.DEMO_MAXDE_PUBLIC_KEY_HEX
+    )
+    assert captured["wait_timeout"] == 5
+
+
 def test_proxy_binds_attack_label_before_admission(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

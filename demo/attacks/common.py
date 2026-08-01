@@ -100,12 +100,15 @@ class LiveTarget(AbstractContextManager["LiveTarget"]):
         if self.reset:
             args.append("--reset-db")
         args.extend(["--http", "--port", "8891"])
+        env = os.environ.copy()
+        env["VELVET_LIVE_TRUSTED_PUBLIC_KEY"] = DEMO_MAXDE_PUBLIC_KEY_HEX
         self.process = subprocess.Popen(  # noqa: S603
             args,
             cwd=ROOT,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=env,
         )
         try:
             wait_for_target()
