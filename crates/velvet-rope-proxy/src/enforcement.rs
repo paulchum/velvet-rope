@@ -807,9 +807,10 @@ pub(crate) fn canonical_action_hash_for_mcp_request(
         "contract_version": "velvet.contract.v1",
         "policy_version": config.policy.chain,
     });
-    Ok(normalize_action_v1(&proposal, Some(&contract))
+    let digest = normalize_action_v1(&proposal, Some(&contract))
         .map_err(|error| anyhow!(error.to_string()))?
-        .canonical_action_hash())
+        .canonical_action_hash();
+    Ok(format!("sha256:{digest}"))
 }
 
 pub(crate) fn ensure_request_within_limits(

@@ -1,6 +1,19 @@
 use super::*;
 
 #[test]
+fn canonical_mcp_action_hash_uses_sha256_wire_format() -> Result<()> {
+    let temp = TempDir::new()?;
+    let config = test_config(temp.path())?;
+    let hash = canonical_action_hash_for_mcp_request(&config, &call("search_change_requests"))?;
+    let digest = hash
+        .strip_prefix("sha256:")
+        .expect("canonical action hash must identify its algorithm");
+    assert_eq!(digest.len(), 64);
+    assert!(digest.bytes().all(|byte| byte.is_ascii_hexdigit()));
+    Ok(())
+}
+
+#[test]
 fn safe_read_admitted_and_reaches_fake_server() -> Result<()> {
     let temp = TempDir::new()?;
     let mut runtime = runtime(temp.path())?;
