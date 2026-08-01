@@ -15,7 +15,11 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from demo.live_target.common import stable_hash, tool_schema_hash
+from velvet.signing import Ed25519SigningProvider
+from velvet.verdict import issue_verdict_certificate
 
 JsonObject = dict[str, Any]
 
@@ -206,7 +210,14 @@ class ProxyClient(AbstractContextManager["ProxyClient"]):
         name: str,
         arguments: Mapping[str, Any],
         request_id: object = 1,
+        *,
+        meta: Mapping[str, Any] | None = None,
     ) -> JsonObject:
+        request_meta: JsonObject = {
+            "user_request": "Velvet live drift demonstration.",
+        }
+        if meta is not None:
+            request_meta.update(meta)
         return self.send(
             {
                 "jsonrpc": "2.0",
@@ -215,9 +226,7 @@ class ProxyClient(AbstractContextManager["ProxyClient"]):
                 "params": {
                     "name": name,
                     "arguments": dict(arguments),
-                    "_meta": {
-                        "user_request": "Velvet live drift demonstration.",
-                    },
+                    "_meta": request_meta,
                 },
             }
         )
@@ -300,8 +309,49 @@ def tool_approval(tool: Mapping[str, Any]) -> JsonObject:
             "theorem_ref": "docs/math/certified_max_de_theorem.txt",
             "maxde_version": "maxde/1.0",
         },
-        "metadata": {},
+        # The static destructive approval is trusted demo configuration. Mark it
+        # as present for the admission engine; strict mode still independently
+        # requires a signed, short-lived Verdict Certificate before dispatch.
+        "metadata": {"approval_valid": True} if destructive else {},
     }
+
+
+def proxy_safe_kill_verdict(tool_name: str) -> JsonObject:
+    private_key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(DEMO_MAXDE_KEY_HEX))
+    signer = Ed25519SigningProvider(
+        private_key,
+        key_id="velvet:maxde:local",
+        key_version="v1",
+        verification_tier="demo",
+    )
+    tool_key = f"velvet-live-target/{tool_name}"
+    return issue_verdict_certificate(
+        verdict="safe_kill",
+        decision_id=f"live-demo:{tool_name}",
+        decision_class="retire_tool_route",
+        target_id_hash=stable_hash({"tool_key": tool_key}),
+        claim_currency="BP",
+        delta=0.05,
+        gate_c=1.5,
+        rho=0.2,
+        method="exact_dp",
+        hypotheses=["deterministic local live-demo fixture"],
+        theorem_refs=["docs/math/finite_horizon_safe_kill_theorem_v.txt"],
+        inputs_hash=stable_hash({"attack": "approval_replay", "tool_key": tool_key}),
+        expected_rounds_to_gate_crossing=12.5,
+        tail_probability_bound=0.01,
+        tail_crossing_probability=0.004,
+        tail_drift_penalty=0.0,
+        tail_posterior_expected_shortfall=0.02,
+        horizon_rounds=128.0,
+        rounds_remaining=64.0,
+        tenant_id="local-dev",
+        environment="local",
+        reason_code="live_demo_executor_replay_test",
+        ttl_seconds=900,
+        signer=signer,
+        signing_key_id="velvet:maxde:local",
+    )
 
 
 def state() -> JsonObject:
@@ -439,6 +489,11 @@ def attack_approval_replay(_: Path, config_path: Path) -> Mapping[str, Any]:
                 "customer_id": "cust_boreal",
                 "reason": "replayed receipt for different customer",
                 "approval_receipt": receipt,
+            },
+            meta={
+                "velvet_verdict_certificate": proxy_safe_kill_verdict(
+                    "delete_customer_records"
+                )
             },
         )
     refusal = assert_refusal(response, "approval receipt action hash mismatch")
