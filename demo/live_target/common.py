@@ -329,6 +329,42 @@ def normalize_for_tool(
     )
 
 
+def normalize_for_execution_permit(
+    request: Mapping[str, Any],
+    tool_name: str,
+    arguments: Mapping[str, Any],
+    permit: ExecutionPermit,
+) -> CanonicalAction:
+    """Rebuild the proxy's signed MCP action at the executor boundary."""
+
+    request_id = request.get("id")
+    if request_id is not None and not isinstance(request_id, str):
+        request_id = json.dumps(request_id, sort_keys=True, separators=(",", ":"))
+    params = request.get("params")
+    meta = params.get("_meta") if isinstance(params, Mapping) else None
+    request_session_id = meta.get("session_id") if isinstance(meta, Mapping) else None
+    session_id = request_session_id if isinstance(request_session_id, str) else None
+    upstream_server, separator, _ = permit.scope.tool_key.partition("/")
+    if not separator:
+        upstream_server = os.environ.get("VELVET_LIVE_UPSTREAM_SERVER", "velvet-live-target")
+    proposal: JsonObject = {
+        "surface": "mcp",
+        "server": upstream_server,
+        "tool": tool_name,
+        "arguments": dict(arguments),
+        "tenant_id": permit.tenant_id,
+        "environment": permit.environment,
+        "actor_id": os.environ.get("VELVET_LIVE_ACTOR_ID"),
+        "agent_id": os.environ.get("VELVET_LIVE_AGENT_ID"),
+        "session_id": session_id or os.environ.get("VELVET_LIVE_SESSION_ID"),
+        "request_id": request_id,
+    }
+    return VelvetActionNormalizer().normalize(
+        proposal,
+        AdmissionContract(policy_version=permit.policy.policy_version),
+    )
+
+
 def admission_bundle(meta: Mapping[str, Any]) -> Mapping[str, Any]:
     value = meta.get("velvet_execution")
     return cast(Mapping[str, Any], value) if isinstance(value, Mapping) else {}
@@ -353,7 +389,13 @@ def guard_dispatch(
     bundle = admission_bundle(meta)
     permit = execution_permit_from_bundle(bundle)
 
-    attempted_action = normalize_for_tool(conn, tool_name, actual_arguments)
+    attempted_effect_action = normalize_for_tool(conn, tool_name, actual_arguments)
+    attempted_action = normalize_for_execution_permit(
+        request,
+        tool_name,
+        actual_arguments,
+        permit,
+    )
     admitted_action_hash = permit.scope.canonical_action_hash
     attempted_action_hash = f"sha256:{attempted_action.canonical_action_hash}"
     admitted_args_hash = permit.scope.arguments_hash
@@ -384,7 +426,7 @@ def guard_dispatch(
         raise _refusal("arguments hash mismatch", result)
     _validate_execution_permit(conn, permit, request, tool_name, result)
     if tool_name == "delete_customer_records":
-        _validate_approval_receipt(actual_arguments, result)
+        _validate_approval_receipt(actual_arguments, attempted_effect_action, result)
     return result
 
 
@@ -446,7 +488,11 @@ def _validate_execution_permit(
         raise _refusal("execution permit replay", result)
 
 
-def _validate_approval_receipt(arguments: Mapping[str, Any], result: GuardResult) -> None:
+def _validate_approval_receipt(
+    arguments: Mapping[str, Any],
+    attempted_effect_action: CanonicalAction,
+    result: GuardResult,
+) -> None:
     receipt = arguments.get("approval_receipt")
     if not isinstance(receipt, Mapping):
         raise _refusal("approval receipt required", result)
@@ -463,7 +509,7 @@ def _validate_approval_receipt(arguments: Mapping[str, Any], result: GuardResult
         signer=signer,
     ):
         raise _refusal("approval receipt signature invalid", result)
-    if payload.get("canonical_action_hash") != result.attempted_action.canonical_action_hash:
+    if payload.get("canonical_action_hash") != attempted_effect_action.canonical_action_hash:
         raise _refusal("approval receipt action hash mismatch", result)
 
 

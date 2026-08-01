@@ -22,6 +22,44 @@ def _load_common_module() -> ModuleType:
 common: Any = _load_common_module()
 
 
+def test_executor_rebuilds_proxy_mcp_action_hash(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in (
+        "VELVET_LIVE_ACTOR_ID",
+        "VELVET_LIVE_AGENT_ID",
+        "VELVET_LIVE_SESSION_ID",
+        "VELVET_LIVE_UPSTREAM_SERVER",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    arguments = {"customer_id": "cust_boreal", "reason": "replayed receipt"}
+    request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "delete_customer_records",
+            "arguments": arguments,
+            "_meta": {},
+        },
+    }
+    permit = SimpleNamespace(
+        tenant_id="local-dev",
+        environment="local",
+        policy=SimpleNamespace(policy_version="mcp_demo"),
+        scope=SimpleNamespace(tool_key="velvet-live-target/delete_customer_records"),
+    )
+
+    action = common.normalize_for_execution_permit(
+        request,
+        "delete_customer_records",
+        arguments,
+        permit,
+    )
+
+    assert action.canonical_action_hash == (
+        "760f3c37fb23f711da80eb5514f9201ecd77dda361e64edf27da976e3609e8dd"
+    )
+
+
 @pytest.mark.parametrize(
     ("schema_drift", "expected_reason"),
     [
@@ -52,9 +90,16 @@ def test_dispatch_guard_prioritizes_explicit_signed_scope_mismatches(
     monkeypatch.setattr(common, "execution_permit_from_bundle", lambda _bundle: permit)
     monkeypatch.setattr(
         common,
+        "normalize_for_execution_permit",
+        lambda _request, _tool_name, _arguments, _permit: SimpleNamespace(
+            canonical_action_hash=attempted_hash.removeprefix("sha256:")
+        ),
+    )
+    monkeypatch.setattr(
+        common,
         "normalize_for_tool",
         lambda _conn, _tool_name, _arguments: SimpleNamespace(
-            canonical_action_hash=attempted_hash.removeprefix("sha256:")
+            canonical_action_hash="effect-action-hash"
         ),
     )
     monkeypatch.setattr(common, "tool_by_name", lambda _conn, _tool_name: {})
