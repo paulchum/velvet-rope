@@ -1,3 +1,4 @@
+import base64
 import importlib
 import sys
 from pathlib import Path
@@ -36,8 +37,11 @@ def test_live_target_receives_the_permit_signers_trust_anchor(
         pass
 
     assert captured["env"]["VELVET_LIVE_TRUSTED_PUBLIC_KEY"] == (
-        attack_common.DEMO_MAXDE_PUBLIC_KEY_HEX
+        attack_common.DEMO_MAXDE_PUBLIC_KEY_BASE64
     )
+    assert base64.b64decode(
+        captured["env"]["VELVET_LIVE_TRUSTED_PUBLIC_KEY"], validate=True
+    ).hex() == attack_common.DEMO_MAXDE_PUBLIC_KEY_HEX
     assert captured["wait_timeout"] == 5
 
 

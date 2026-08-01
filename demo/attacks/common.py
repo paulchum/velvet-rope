@@ -33,6 +33,7 @@ DEMO_MAXDE_KEY_HEX = "0909090909090909090909090909090909090909090909090909090909
 DEMO_MAXDE_PUBLIC_KEY_HEX = (
     "fd1724385aa0c75b64fb78cd602fa1d991fdebf76b13c58ed702eac835e9f618"
 )
+DEMO_MAXDE_PUBLIC_KEY_BASE64 = "/RckOFqgx1tk+3jNYC+h2ZH96/drE8WO1wLqyDXp9hg="
 
 
 class DemoFailure(AssertionError):
@@ -101,7 +102,7 @@ class LiveTarget(AbstractContextManager["LiveTarget"]):
             args.append("--reset-db")
         args.extend(["--http", "--port", "8891"])
         env = os.environ.copy()
-        env["VELVET_LIVE_TRUSTED_PUBLIC_KEY"] = DEMO_MAXDE_PUBLIC_KEY_HEX
+        env["VELVET_LIVE_TRUSTED_PUBLIC_KEY"] = DEMO_MAXDE_PUBLIC_KEY_BASE64
         self.process = subprocess.Popen(  # noqa: S603
             args,
             cwd=ROOT,
