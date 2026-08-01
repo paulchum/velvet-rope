@@ -437,11 +437,11 @@ def _validate_execution_permit(
     tool_name: str,
     result: GuardResult,
 ) -> None:
-    expected_scope = ExecutionPermitScope.from_action(
-        result.attempted_action,
+    expected_scope = ExecutionPermitScope.from_permit_request(
+        permit.scope,
         actual_request=request,
-        method=permit.scope.method,
-        tool_key=permit.scope.tool_key,
+        operation=tool_name,
+        canonical_action_hash=result.attempted_action_hash,
         arguments_hash=result.attempted_arguments_hash,
         tool_schema_hash=result.attempted_tool_schema_hash,
     )

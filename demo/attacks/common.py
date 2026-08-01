@@ -384,7 +384,14 @@ def assert_refusal(response: Mapping[str, Any], expected_reason: str | None = No
         raise DemoFailure(f"missing dispatch refusal: {data}")
     reason = str(refusal.get("reason"))
     if expected_reason and expected_reason not in reason:
-        raise DemoFailure(f"expected refusal containing {expected_reason!r}, got {reason!r}")
+        metadata = refusal.get("metadata")
+        permit_failures = (
+            metadata.get("permit_check_failures") if isinstance(metadata, Mapping) else None
+        )
+        raise DemoFailure(
+            f"expected refusal containing {expected_reason!r}, got {reason!r}; "
+            f"permit_check_failures={permit_failures!r}"
+        )
     return dict(refusal)
 
 

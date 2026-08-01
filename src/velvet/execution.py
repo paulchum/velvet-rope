@@ -147,6 +147,7 @@ class ExecutionPermitScope:
     tool_schema_hash: str
     read_set_hash: str | None = None
     resource: ResourceScope | None = None
+    subgoal_id_hash: str | None = None
 
     @classmethod
     def from_action(
@@ -198,6 +199,40 @@ class ExecutionPermitScope:
             resource=ResourceScope.from_dict(cast(Mapping[str, Any], resource))
             if isinstance(resource, Mapping)
             else None,
+            subgoal_id_hash=_optional_string(data.get("subgoal_id_hash")),
+        )
+
+    @classmethod
+    def from_permit_request(
+        cls,
+        permit_scope: ExecutionPermitScope,
+        *,
+        actual_request: Mapping[str, Any],
+        operation: str,
+        canonical_action_hash: str,
+        arguments_hash: str,
+        tool_schema_hash: str,
+    ) -> ExecutionPermitScope:
+        """Rebuild runtime-computed fields without replacing issuer-owned scope.
+
+        Gateways and executors can use different action normalizers. The
+        gateway's surface, resource, read-set, and logical bindings therefore
+        remain authoritative while request-derived fields are recomputed at
+        the executor boundary.
+        """
+        request_payload = strip_model_controlled_execution_metadata(actual_request)
+        return cls(
+            surface=permit_scope.surface,
+            method=permit_scope.method,
+            tool_key=permit_scope.tool_key,
+            operation=operation,
+            request_hash=canonical_hash_sha256(request_payload),
+            canonical_action_hash=_prefixed_hash(canonical_action_hash),
+            arguments_hash=_prefixed_hash(arguments_hash),
+            tool_schema_hash=_prefixed_hash(tool_schema_hash),
+            read_set_hash=permit_scope.read_set_hash,
+            resource=permit_scope.resource,
+            subgoal_id_hash=permit_scope.subgoal_id_hash,
         )
 
     def to_dict(self) -> JsonObject:
@@ -215,6 +250,8 @@ class ExecutionPermitScope:
             payload["read_set_hash"] = _prefixed_hash(self.read_set_hash)
         if self.resource is not None:
             payload["resource"] = self.resource.to_dict()
+        if self.subgoal_id_hash is not None:
+            payload["subgoal_id_hash"] = _prefixed_hash(self.subgoal_id_hash)
         return payload
 
 

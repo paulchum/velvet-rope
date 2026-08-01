@@ -15,8 +15,10 @@ from velvet.cli import main
 from velvet.contracts import AdmissionContract
 from velvet.execution import (
     ExecutionPermitError,
+    ExecutionPermitScope,
     PermitClaimStore,
     PermitValidationContext,
+    ResourceScope,
     VelvetExecutor,
     build_pre_execution_record,
     prepare_execution,
@@ -25,6 +27,7 @@ from velvet.execution import (
     verify_execution_permit,
 )
 from velvet.executor import VelvetAdmissionLayer
+from velvet.serialization import canonical_hash_sha256
 from velvet.signing import (
     DEMO_ED25519_KEY_ID,
     DEMO_ED25519_PUBLIC_KEY_PATH,
@@ -232,6 +235,55 @@ def test_model_supplied_execution_metadata_is_not_authority_scope() -> None:
     assert prepared.permit.scope.request_hash == record["request_hash"]
     assert "velvet_execution" not in prepared.actual_request["params"]["_meta"]
     assert "velvet_admission" not in prepared.actual_request["params"]["_meta"]
+
+
+def test_executor_rebuilds_request_fields_without_reinterpreting_issuer_scope() -> None:
+    bound_scope = ExecutionPermitScope(
+        surface="velvet_inline_gateway.mcp",
+        method="tools/call",
+        tool_key="velvet-live-target/delete_customer_records",
+        operation="delete_customer_records",
+        request_hash="sha256:" + "1" * 64,
+        canonical_action_hash="sha256:" + "2" * 64,
+        arguments_hash="sha256:" + "3" * 64,
+        tool_schema_hash="sha256:" + "4" * 64,
+        resource=ResourceScope(kind="customer", id_hash="5" * 64),
+        subgoal_id_hash="6" * 64,
+    )
+    request = {
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+            "name": "delete_customer_records",
+            "_meta": {
+                "attack": "approval_replay",
+                "velvet_execution": {"execution_permit": {"permit_id": "runtime"}},
+            },
+        },
+    }
+
+    rebuilt = ExecutionPermitScope.from_permit_request(
+        bound_scope,
+        actual_request=request,
+        operation="delete_customer_records",
+        canonical_action_hash="7" * 64,
+        arguments_hash="8" * 64,
+        tool_schema_hash="sha256:" + "9" * 64,
+    )
+
+    sanitized = strip_model_controlled_execution_metadata(request)
+    assert rebuilt.request_hash == canonical_hash_sha256(sanitized)
+    assert sanitized["params"]["_meta"] == {"attack": "approval_replay"}
+    assert rebuilt.surface == bound_scope.surface
+    assert rebuilt.method == bound_scope.method
+    assert rebuilt.tool_key == bound_scope.tool_key
+    assert rebuilt.operation == "delete_customer_records"
+    assert rebuilt.read_set_hash == bound_scope.read_set_hash
+    assert rebuilt.resource == bound_scope.resource
+    assert rebuilt.subgoal_id_hash == bound_scope.subgoal_id_hash
+    assert rebuilt.to_dict()["canonical_action_hash"] == "sha256:" + "7" * 64
+    assert rebuilt.to_dict()["arguments_hash"] == "sha256:" + "8" * 64
+    assert rebuilt.to_dict()["subgoal_id_hash"] == "sha256:" + "6" * 64
 
 
 def test_second_use_fails_after_claim() -> None:

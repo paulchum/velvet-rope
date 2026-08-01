@@ -7,7 +7,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-ProxyClient = cast(Any, importlib.import_module("demo.attacks.common").ProxyClient)
+attack_common = cast(Any, importlib.import_module("demo.attacks.common"))
+ProxyClient = attack_common.ProxyClient
 dispatcher = cast(Any, importlib.import_module("demo.live_target.dispatcher"))
 
 
@@ -71,3 +72,24 @@ def test_argument_drift_changes_only_the_governed_argument(
         "order_id": "ord_1001",
         "amount": 20.0,
     }
+
+
+def test_refusal_mismatch_reports_failed_permit_check() -> None:
+    response = {
+        "error": {
+            "data": {
+                "boundary": "executor_dispatch_validation",
+                "velvet_dispatch_refusal": {
+                    "reason": "execution permit verification failed",
+                    "metadata": {
+                        "permit_check_failures": [
+                            {"name": "scope", "status": "fail", "code": "scope_mismatch"}
+                        ]
+                    },
+                },
+            }
+        }
+    }
+
+    with pytest.raises(attack_common.DemoFailure, match="scope_mismatch"):
+        attack_common.assert_refusal(response, "approval receipt action hash mismatch")
