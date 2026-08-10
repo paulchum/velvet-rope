@@ -2,7 +2,7 @@
 
 Benchmark version: `0.4.0`
 Generated: `1970-01-01T00:00:00Z`
-Commit: `37c94176e6315a810c0d16d81fd60a851d266829`
+Commit: `3010669dca833fd730fafd989d1a389e0481c3f0`
 Commit repository: `velvet (private monorepo)`; this hash is not expected to resolve in the standalone benchmark repository.
 Repeat count for deterministic decisions: `20`
 

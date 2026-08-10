@@ -31,7 +31,7 @@
   },
   "decision": {
     "admission_evidence": {
-      "admission_evidence_hash": "sha256:8c785da18c5bc473b6a4a250c8d72e5de276c08797a77446795ab371e549d307",
+      "admission_evidence_hash": "sha256:d904bf0d307adc5010e70f601241a3501ac85d3b1ab08037975f266ba2782c74",
       "authority": {
         "authority_budget_after": 600,
         "authority_budget_before": 750,
@@ -150,7 +150,7 @@
           "verification_tier": "demo",
           "warning": "Demo Ed25519 key is committed test material, not production."
         },
-        "payload_hash": "sha256:8c785da18c5bc473b6a4a250c8d72e5de276c08797a77446795ab371e549d307",
+        "payload_hash": "sha256:d904bf0d307adc5010e70f601241a3501ac85d3b1ab08037975f266ba2782c74",
         "provider_name": "velvet_ed25519",
         "public_verification_material": {
           "encoding": "pem+raw-base64",
@@ -161,7 +161,7 @@
         },
         "purpose": "velvet.admission_evidence.v1",
         "schema_version": "velvet.signature.v2",
-        "signature": "hoE0OrJQ2x/dV1Mz39iDuy4j/GqTMU5wKelqifRq2wCtHSuAtjeihsii80DSvtjckcr/YrEwNpN/0vnzCYyEAQ==",
+        "signature": "y/F4IPgPWgZnVMnxXIT83FUJ3aO8WsMurI+1CE2UhLndUFcD0hWmzGfl/FLYUZy2PNjXxmqWUSKLVYGmcWpODw==",
         "signed_at": "1970-01-01T00:00:00Z",
         "tenant_id": "velvet-demo-tenant"
       },
@@ -176,7 +176,7 @@
         "tool_schema_hash": "sha256:0ec62f35cb9b248dd7dec0f015a8e4b13f48714d53c7636213787b0178f8879d"
       }
     },
-    "admission_evidence_hash": "sha256:8c785da18c5bc473b6a4a250c8d72e5de276c08797a77446795ab371e549d307",
+    "admission_evidence_hash": "sha256:d904bf0d307adc5010e70f601241a3501ac85d3b1ab08037975f266ba2782c74",
     "admission_evidence_ref": {
       "artifact_id": "raw_814f98d05173067df8f19b38f7f02d2c",
       "content_type": "application/json",
@@ -208,11 +208,11 @@
     "decision": "execute",
     "generated_at": "1970-01-01T00:00:00Z",
     "ledger_record": {
-      "admission_evidence_hash": "sha256:8c785da18c5bc473b6a4a250c8d72e5de276c08797a77446795ab371e549d307",
+      "admission_evidence_hash": "sha256:d904bf0d307adc5010e70f601241a3501ac85d3b1ab08037975f266ba2782c74",
       "canonical_action_hash": "sha256:13138909f59343ac117c2ccca9dd75987154dc1fc1a038687855eeac08d224e8",
       "phase": "pre_execution",
       "previous_record_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "record_hash": "sha256:a864fffee05304288402840250298fcb028359977cb3c413f70b739cd1172eb7",
+      "record_hash": "sha256:12021361bef5330afd074054446e2ad215374422b71f86535ff046ae5809e01f",
       "recorded_at": "1970-01-01T00:00:00Z",
       "schema_version": "velvet.ledger.record.v1",
       "seal_id": "env_dd6ffe0b686488d2e225ad670e80f757",

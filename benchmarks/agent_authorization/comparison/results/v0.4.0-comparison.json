@@ -416,7 +416,7 @@
     "status": "fixture_evidence_only",
     "summary": "This harness proves local fixture behavior and repo artifact properties. It is not a live APort, Pipelock, Attested Intelligence, Cerbos, Kong, Cloudflare, or other gateway product evaluation."
   },
-  "commit_hash": "37c94176e6315a810c0d16d81fd60a851d266829",
+  "commit_hash": "3010669dca833fd730fafd989d1a389e0481c3f0",
   "commit_repo": "velvet (private monorepo)",
   "fixture_dir": "benchmarks/agent_authorization/comparison/fixtures",
   "fixture_hashes": {
@@ -451,10 +451,10 @@
   "schema_version": "velvet.agent_authorization.comparison.v0.1",
   "source_lockfile_hashes": {
     "hashes": {
-      "Cargo.lock": "1c8474f1bb0c1814a14c69f48039f1e082a9a931b1fd2717b665f0a9f5336ba9",
+      "Cargo.lock": "a25cfc6fc61815a09120f9fbe211d97087eab8e7d2c6d43b75ecf45e516c363a",
       "pyproject.toml": "4869edbe3362574abe7832d11717cb2d52e9e73424b6bba69df45619d165629d",
       "rust-toolchain.toml": "24ef3b9d3edbd850aa386cb0a98e10450b0030991a4537cb359f54d49dbbb33a",
-      "uv.lock": "80b15f8194f05d8abda3498a11cae03c1235e055e7eeb56a8800da7423504320"
+      "uv.lock": "e6edd336fdd5ea4c2d52ea5cb79e40225e881a7f01338ca6dda43742e3710e76"
     },
     "note": "hashes of lockfiles in the private source monorepo at commit_hash; not shipped in this repo"
   },

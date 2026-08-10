@@ -16,3 +16,4 @@ target/
 outputs/**/node_modules/
 reports/**/*.log
 reports/**/*.pid
+/site/
