@@ -7,7 +7,7 @@ vendor evaluation.
 
 ## Primary links
 
-- [Interactive replay](https://shadowpath-replay.pc9i.chatgpt.site)
+- [Interactive replay](https://shadowpath.coriolislabs.ca)
 - [Repository](https://github.com/paulchum/velvet-rope)
 - [Committed result](../../benchmarks/agent_authorization/shadowpath/SHADOWPATH_RESULTS.md)
 - [15-minute custom-effect guide](shadowpath-quickstart.md)
@@ -68,7 +68,7 @@ Body:
 > This is deliberately not a vendor benchmark. It is a reproducible local
 > fixture and a small adapter contract for testing your own effect surface.
 >
-> Live replay: https://shadowpath-replay.pc9i.chatgpt.site
+> Live replay: https://shadowpath.coriolislabs.ca
 >
 > Source: https://github.com/paulchum/velvet-rope
 
@@ -97,7 +97,7 @@ Body:
 
    `uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo`
 
-   https://shadowpath-replay.pc9i.chatgpt.site
+   https://shadowpath.coriolislabs.ca
 
 ### Technical Reddit post
 

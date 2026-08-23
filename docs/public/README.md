@@ -39,6 +39,6 @@ Velvet is positioned as the open outcome-assurance layer for autonomous agents.
 ShadowPath leads with one question: **your agent blocked the tool; did it block
 the outcome?** It measures equivalent effect paths and independent reconciliation.
 Teams can then roll protected effects into a portfolio, enforce supported paths
-with Velvet Gate, and preserve signed evidence with Velvet Vault.
+with Velvet Gateway, and preserve signed evidence with Velvet Vault.
 
 Campaign line: **Block the outcome, not just the tool.**

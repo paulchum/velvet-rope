@@ -1,16 +1,34 @@
+---
+import "../styles/global.css";
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+---
+
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
       content="Velvet is the open outcome-assurance layer for autonomous agents. Map every route to a consequential effect, test controls, and retain verifiable evidence."
-    >
-    <meta name="theme-color" content="#f4f0e8">
+    />
+    <meta name="theme-color" content="#f4f0e8" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Velvet" />
+    <meta property="og:title" content="Velvet — Outcome assurance for autonomous agents" />
+    <meta
+      property="og:description"
+      content="Map every route to a consequential effect, test controls, and retain verifiable evidence."
+    />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content="https://shadowpath.coriolislabs.ca/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>Velvet — Outcome assurance for autonomous agents</title>
-    <link rel="stylesheet" href="./styles.css">
-    <script src="./app.js" defer></script>
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -38,6 +56,7 @@
           <a
             class="button button-small button-dark"
             href="https://github.com/paulchum/velvet-rope"
+            data-track-event="github_opened"
           >
             View GitHub
           </a>
@@ -63,6 +82,7 @@
             <a
               class="button button-quiet"
               href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/shadowpath-quickstart.md"
+              data-track-event="custom_effect_opened"
             >
               Test your own effect
             </a>
@@ -152,7 +172,7 @@
           </article>
           <article class="product-card">
             <p class="card-label">Enforce</p>
-            <h3>Velvet Gate</h3>
+            <h3>Velvet Gateway</h3>
             <p>
               Admit, block, or escalate typed actions before dispatch with short-lived permits bound
               to the exact request, policy, identity, and proof lineage.
@@ -369,8 +389,9 @@
             </p>
             <div class="pilot-actions">
               <a
-                class="button button-light"
-                href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/pilot.md"
+              class="button button-light"
+              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/pilot.md"
+              data-track-event="custom_effect_opened"
               >
                 Review the pilot
               </a>
@@ -418,11 +439,14 @@
           inventory, adapters, observers, signing assumptions, and deployment architecture.
         </p>
         <div class="footer-links">
-          <a href="https://github.com/paulchum/velvet-rope">GitHub</a>
+          <a href="https://github.com/paulchum/velvet-rope" data-track-event="github_opened">GitHub</a>
           <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/CLAIMS.md">Claim boundaries</a>
           <a href="https://github.com/paulchum/velvet-rope/blob/main/LICENSE">Apache-2.0</a>
         </div>
       </div>
     </footer>
+    <script>
+      import "../scripts/replay";
+    </script>
   </body>
 </html>

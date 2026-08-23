@@ -50,7 +50,7 @@ failed a live test.
 
 - **ShadowPath:** single-effect projects, route inventory, isolated execution, independent state
   reconciliation, strict exits, result rendering, and outcome portfolios.
-- **Velvet Gate:** local pre-dispatch MCP enforcement, signed policy bundles, approvals, short-lived
+- **Velvet Gateway:** local pre-dispatch MCP enforcement, signed policy bundles, approvals, short-lived
   execution permits, receipts, and deterministic replay.
 - **Velvet Vault:** local tamper-evident evidence, Merkle proofs, Signed Tree Heads, attestations, and
   offline verification.

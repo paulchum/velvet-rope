@@ -16,7 +16,7 @@ be verified offline.
 | Product surface | Job |
 | --- | --- |
 | **ShadowPath** | Test every declared route to the same prohibited business effect. |
-| **Velvet Gate** | Admit, block, or escalate typed agent actions before dispatch. |
+| **Velvet Gateway** | Admit, block, or escalate typed agent actions before dispatch. |
 | **Velvet Vault** | Preserve tamper-evident evidence and portable verification artifacts. |
 
 [Explore the product site](site/) · [Review the design-partner pilot](docs/public/pilot.md) ·
@@ -53,7 +53,7 @@ synthetic local fixture designed to make the measurement reproducible.
 [Inspect the result](benchmarks/agent_authorization/shadowpath/SHADOWPATH_RESULTS.md)
 · [Read the v0.4 benchmark spec](benchmarks/agent_authorization/SPEC.md)
 · [Add an effect path](docs/public/SHADOWPATH_CONTRIBUTING.md)
-· [Replay it live](https://shadowpath-replay.pc9i.chatgpt.site)
+· [Replay it live](https://shadowpath.coriolislabs.ca)
 
 ## Run it
 

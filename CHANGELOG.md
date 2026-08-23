@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Migrated the public product site to Astro 7 on Cloudflare Workers Static
+  Assets at `shadowpath.coriolislabs.ca`, with a managed custom domain, canonical
+  metadata, hardened response headers, a custom 404, and a privacy-bounded event
+  endpoint that accepts only allowlisted aggregate events.
+- Updated the transitive Rust `h2` dependency to `0.4.16` to resolve
+  `RUSTSEC-2026-0258` in the release dependency graph.
 - Positioned Velvet as the open outcome-assurance layer above agent identity and
   route authorization, with a buyer-facing static product site, design-partner
   pilot, current market thesis, and updated claim boundaries.
