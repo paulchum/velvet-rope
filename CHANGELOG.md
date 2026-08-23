@@ -8,6 +8,8 @@
   endpoint that accepts only allowlisted aggregate events.
 - Updated the transitive Rust `h2` dependency to `0.4.16` to resolve
   `RUSTSEC-2026-0258` in the release dependency graph.
+- Raised the Python `cryptography` and `pip` security floors to patched releases,
+  and added a dedicated Astro build, test, audit, and Cloudflare dry-run CI job.
 - Positioned Velvet as the open outcome-assurance layer above agent identity and
   route authorization, with a buyer-facing static product site, design-partner
   pilot, current market thesis, and updated claim boundaries.
