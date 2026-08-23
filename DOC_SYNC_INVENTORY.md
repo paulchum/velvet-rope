@@ -1,6 +1,6 @@
 # Velvet Documentation Sync Inventory
 
-Generated: 2026-06-13.
+Generated: 2026-06-13. Incrementally updated: 2026-08-23.
 
 This inventory is the claim source for the docs-sync pass. Capability statements in the updated docs should map to a row below. If a capability is partial, environment-dependent, or absent, docs must say so directly.
 
@@ -20,6 +20,17 @@ This inventory is the claim source for the docs-sync pass. Capability statements
 | `docker info --format '{{.ServerVersion}}'` | Pass, Docker Server `28.5.1`. |
 | `make live-demo` | Pass; six attacks passed and the incident path completed with Vault verification `pass`, Claims Pack Assurance verification `pass`, and segment `1-2`. |
 
+### 2026-08-23 incremental verification
+
+| Command | Result |
+| --- | --- |
+| `.venv/bin/ruff check` on changed Python files | Pass. |
+| `pytest tests/test_product_site.py -q --no-cov` | Pass, `3 passed`. |
+| isolated ShadowPath portfolio smoke test | Pass, two projects, six routes, six deliberate fixture breaches, strict exit `3`. |
+| `scripts/check-claim-language.py --extra-paths site docs/strategy ...` | Pass. |
+| `scripts/check_no_npm.py` | Pass. |
+| Full native-extension and Rust suite | Not run in this workspace because no Rust toolchain is installed. |
+
 ## Registered CLI Surface
 
 Confirmed in `src/velvet/cli.py` and `uv run velvet --help`:
@@ -35,6 +46,7 @@ Confirmed in `src/velvet/cli.py` and `uv run velvet --help`:
 - `policy-bundle`, `registry`, `gateway`, `approvals`, `evidence`, `policy-simulate`, `ops`
 - `launch-demo`, `shell-code-demo`, `mcp-firewall`, `openai-bypass-demo`, `mcp-proxy-demo`
 - `liability-benchmark`, `agent-auth-benchmark`, `liability-live`, `dashboard`, `vc-demo`, `investor-demo`, `investor-video-html`, `outreach-proof`, `bernoulli`
+- `shadowpath demo`, `shadowpath init`, `shadowpath run --project`, `shadowpath portfolio`, `shadowpath render`
 
 ## Artifact Naming
 
@@ -46,6 +58,7 @@ Confirmed in `src/velvet/cli.py` and `uv run velvet --help`:
 | Attestation | attestation pack, coverage report, manifest | `src/velvet/attestation/` |
 | Assurance | control-state attestation, attestation series, consistency proofs, claims pack | `src/velvet/assurance/`, `src/velvet/cli.py`, `assurance/verifier/` |
 | Live demo | attack report, incident bundle, derived Vault ledger/STH, Claims Pack, offline verification report | `demo/attacks/`, `demo/incident/` |
+| ShadowPath | effect project, route result, outcome portfolio, portfolio report, share pack | `src/velvet/shadowpath_product.py`, `docs/public/outcome-portfolios.md` |
 
 ## Component Inventory
 
@@ -71,6 +84,9 @@ Confirmed in `src/velvet/cli.py` and `uv run velvet --help`:
 | Assurance verifier SDK | Implemented offline verifier packages | `assurance/verifier/velvet_assurance_verifier/verifier.py`, `assurance/verifier/velvet-assurance-verifier.js` | `tests/test_assurance_attestation.py` Python and Node verifier tests | Independent offline verification, not a hosted service. |
 | Claims Pack CLI | Implemented local CLI | `src/velvet/cli.py::claims_pack_main`, `src/velvet/attestation/pack.py` | `tests/test_assurance_attestation.py::test_assurance_and_claims_pack_cli` | Requires vault artifacts and passing Assurance verification. |
 | Claims Pack and live-demo integration | Implemented local bridge | `demo/incident/vault_bridge.py`, `demo/incident/run.py`, `src/velvet/cli.py` | `make live-demo` passed locally on 2026-06-13 with Docker Server `28.5.1` | The Vault ledger/STH are derived demo evidence artifacts for Claims Pack generation; the original Rust proxy ledger remains preserved separately. |
+| ShadowPath custom effect project | Implemented local runner | `src/velvet/shadowpath_product.py` | `tests/test_shadowpath_product.py` and isolated smoke test | Result covers only the user-declared effect, routes, adapter, and observer. |
+| ShadowPath outcome portfolio | Implemented local aggregation | `src/velvet/shadowpath_product.py::run_shadowpath_portfolio` | portfolio tests plus isolated two-project smoke test | Does not discover missing effects/routes or imply continuous hosted assurance. |
+| Static product site | Implemented buyer-facing narrative | `site/` | local asset, route-parity, JavaScript syntax, and claim-boundary checks | Portfolio panel is labelled illustrative; site does not imply customer traction or a hosted control plane. |
 | Live drift-rejection demo code | Implemented, environment-dependent run | `Makefile`, `demo/live_target/`, `demo/attacks/`, `demo/incident/` | `make live-demo` passed locally on 2026-06-13 with Docker Server `28.5.1` | Docs can claim a passing local run only when Docker/Postgres are available. |
 | Certified Spend | Implemented bounded helper | `src/velvet/budget_safety.py`, `crates/velvet-core/src/types.rs` | `tests/test_budget_safety_deterministic.py`, Rust router/type tests | Valid only under H1 true hard caps and H2 single-writer atomic accounting. |
 | Certified Lockout | Implemented bounded Max-DE helper | `src/velvet/max_de.py`, `src/velvet/research/gamma_rate.py` | `tests/test_max_de.py`, `tests/test_gamma_rate_max_de.py`, proxy Max-DE tests | Covers posterior-typed classes only. |

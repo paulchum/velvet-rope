@@ -323,6 +323,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print("       velvet shadowpath init [DIRECTORY] [--force]")
         print("       velvet shadowpath run --project shadowpath.json [--output-dir DIR]")
+        print("       velvet shadowpath portfolio --manifest portfolio.json [--output-dir DIR]")
         print("       velvet shadowpath run [agent-auth-benchmark options]")
         print("       velvet shadowpath render RESULT.json [--output-dir DIR]")
         print(
@@ -2489,6 +2490,7 @@ def shadowpath_main(argv: Sequence[str]) -> int:
         print("demo instantly replays the committed hermetic result and creates a share pack.")
         print("demo --execute runs the Playwright-backed fixture from scratch.")
         print("init and run --project test one effect in your own local system.")
+        print("portfolio rolls many user-owned effect projects into one assurance summary.")
         print("run without --project keeps strict benchmark exit codes for measurement and CI.")
         return 0
 

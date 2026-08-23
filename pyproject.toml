@@ -1,7 +1,7 @@
 [project]
 name = "velvet-rope"
 version = "1.1.0"
-description = "Effect-level authorization benchmark and verifiable admission layer for autonomous agents."
+description = "Open outcome assurance, effect-level testing, and verifiable admission for autonomous agents."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
@@ -12,6 +12,7 @@ keywords = [
   "authorization",
   "mcp",
   "mcp-security",
+  "outcome-assurance",
   "shadowpath",
   "proof",
 ]

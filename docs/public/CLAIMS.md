@@ -12,6 +12,7 @@ Use this file before forwarding the repo or copying language into outbound mater
 - Velvet Assurance can emit signed, aggregate-only control-state attestations for auditor or underwriter review. The attestation omits prompts, action arguments, tool names, customer identities, and per-action records.
 - Velvet includes offline verifier packages for Assurance attestations.
 - Velvet includes a Claims Pack CLI for vault-backed incident windows when the required ledger, Signed Tree Head, public key, and signing configuration are supplied.
+- ShadowPath can run user-owned local effect projects and aggregate them into an outcome portfolio with owners, criticality, strict exits, and underlying per-effect artifacts.
 - Velvet Certified Spend is a deterministic budget-safety helper under H1 true hard caps and H2 single-writer atomic accounting.
 - Velvet Certified Lockout is a Max-DE helper for posterior-typed classes only.
 - Velvet Certified Decisions issues signed, expiring Verdict Certificates (`safe_kill`, `required_inspection`, `refusal`) for posterior-typed irreversible decisions, delta-bounded under the stated hypotheses in exactly one claim currency, with quoted inspection and tail prices in native units.
@@ -42,6 +43,7 @@ Use this file before forwarding the repo or copying language into outbound mater
 | Certified Lockout | Max-DE certificates for posterior-typed classes. | Certificates for every agent action or every irreversible decision. |
 | Certified Decisions | Signed, expiring verdict at level delta under the modeled kernel and stated hypotheses; one claim currency per certificate; priced inspection quote in native rounds (dollars only with a stated `dollars_source`). | That a `safe_kill` shows the retired option performed worse in truth; any fixed-mean guarantee from a Bayesian-predictive certificate; insurance pricing, premium effects, or underwriting eligibility. |
 | Fleet Gating | Fleet false-lockout rate at or below delta via e-BH under the documented selection-closure contract. | Per-decision error control; validity under evidence-selected submission outside the contract. |
+| Outcome Portfolio | Local aggregation of declared user-owned effect projects, including owner, criticality, result, strict process exit, and artifact pointers. | Automatic discovery of missing effects or routes, continuous hosted assurance, or safety outside the declared adapters and observers. |
 
 ## Forbidden Language Guide
 

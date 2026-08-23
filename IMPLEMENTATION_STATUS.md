@@ -1,20 +1,23 @@
 # Velvet Implementation Status
 
-Last updated: 2026-07-04 closure-bound Execution Permit lifecycle.
+Last updated: 2026-08-23 outcome portfolio and product-positioning pass.
 
 ## Executive Summary
 
 Velvet is a local, deterministic pre-execution admission and evidence system for
-autonomous-agent actions. The current repo has an implemented Gate layer,
+autonomous-agent actions plus a local effect-level assurance harness. The current repo has an implemented Gate layer,
 proof-derived Execution Permits and Receipts, an implemented local Vault
 evidence plane, Article 12-oriented technical attestation packs, an aggregate
-Assurance attestation surface, and bounded certificate helpers.
+Assurance attestation surface, ShadowPath single-effect and portfolio runners,
+and bounded certificate helpers.
 
 The defensible current claim is a self-hosted, warrant-bound admission and evidence layer. The repo does not implement a hosted enterprise service, a legal compliance outcome, or an insurer-facing hosted API.
 
 ## Implemented
 
 - Rust routing core for typed candidate actions.
+- ShadowPath user-owned effect projects and outcome portfolios with strict exits,
+  per-effect artifacts, owner/criticality metadata, and conservative aggregate statuses.
 - Policy-chain evaluation before scoring.
 - Entry pricing, scarcity pressure, and clearance scoring.
 - Decision outcomes including execute, block, escalate, defer, and skip.
@@ -109,6 +112,8 @@ Certified Lockout is a Max-DE capability for posterior-typed classes only. It do
 | `src/velvet/budget_safety.py` | Implemented bounded certificate helper | H1/H2 deterministic spend safety. `tests/test_budget_safety_deterministic.py` passed inside `uv run pytest`. |
 | `src/velvet/max_de.py` and `src/velvet/research/gamma_rate.py` | Implemented bounded research engines | Posterior-typed Max-DE helpers. `tests/test_max_de.py` and `tests/test_gamma_rate_max_de.py` passed inside `uv run pytest`. |
 | `src/velvet/dashboard.py` | Partial | Local inspection dashboard only. |
+| `src/velvet/shadowpath_product.py` | Implemented local assurance loop | Committed-result replay, custom effect scaffolding, user-owned project runs, outcome portfolio aggregation, deterministic share artifacts, and strict breach/error exits. |
+| `site/` | Implemented static product narrative | Dependency-free buyer-facing site and interactive replay grounded in the committed eight-route fixture. The portfolio panel is labelled illustrative and does not imply a hosted control plane. |
 
 ## Risk Register
 
@@ -128,8 +133,11 @@ Certified Lockout is a Max-DE capability for posterior-typed classes only. It do
 
 ## Current Positioning
 
-Use this repo as evidence for a founder-built, local, warrant-bound pre-execution admission and evidence layer:
+Use this repo as evidence for a founder-built, local outcome-assurance and
+warrant-bound admission/evidence layer:
 
+- ShadowPath tests declared equivalent routes to a prohibited effect and reconciles substrate state.
+- Outcome portfolios roll many user-owned effect projects into one conservative estate-level result.
 - Gate decides whether proposed agent actions may execute.
 - Execution Permits define the exact short-lived authority that may be
   dispatched after that decision is durable.

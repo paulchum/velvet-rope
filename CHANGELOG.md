@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Positioned Velvet as the open outcome-assurance layer above agent identity and
+  route authorization, with a buyer-facing static product site, design-partner
+  pilot, current market thesis, and updated claim boundaries.
+- Added `velvet shadowpath portfolio`, which runs multiple user-owned effect
+  projects and writes one conservative estate-level JSON/Markdown result with
+  owner, criticality, strict exits, and per-effect artifact pointers.
+- Added portfolio validation, output-path-safe effect identifiers, focused tests,
+  and a public outcome portfolio guide.
+
 ## 1.1.0 - 2026-08-01 - ShadowPath
 
 - Added Agent Authorization Benchmark `0.4.0` and ShadowPath: a hermetic
