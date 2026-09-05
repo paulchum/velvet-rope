@@ -9,6 +9,11 @@ export function GET() {
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://shadowpath.coriolislabs.ca/protected-refunds/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
 `,
     { headers: { "content-type": "application/xml; charset=utf-8" } },

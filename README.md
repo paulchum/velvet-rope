@@ -13,11 +13,20 @@ be verified offline.
 
 **Authorize the route. Assure the outcome.**
 
+**New: protected refund contract.** Commit exact-command authorization, order limits,
+a shared budget, operation identity and journal evidence in one PostgreSQL transaction.
+Closure and refunds share the same lock. A separate database identity exports a signed
+snapshot for offline replay and reconciliation.
+[Read the contract and reproduce it](docs/public/protected-refunds.md) ·
+[Inspect the recorded PostgreSQL evidence](https://shadowpath.coriolislabs.ca/protected-refunds/).
+This is a single-database reference ledger; external payment rails are outside its claim.
+
 | Product surface | Job |
 | --- | --- |
 | **ShadowPath** | Test every declared route to the same prohibited business effect. |
 | **Velvet Gateway** | Admit, block, or escalate typed agent actions before dispatch. |
 | **Velvet Vault** | Preserve tamper-evident evidence and portable verification artifacts. |
+| **Protected refunds** | Enforce business constraints and operation identity at the PostgreSQL commit boundary. |
 
 [Explore the product site](site/) · [Review the design-partner pilot](docs/public/pilot.md) ·
 [Read the outcome portfolio guide](docs/public/outcome-portfolios.md)
