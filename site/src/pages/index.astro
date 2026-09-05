@@ -1,0 +1,452 @@
+---
+import "../styles/global.css";
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Velvet connects declared agent actions to business constraints and verifiable evidence. Inspect its PostgreSQL refund contract and offline-verifiable checkpoint."
+    />
+    <meta name="theme-color" content="#f4f0e8" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Velvet" />
+    <meta property="og:title" content="Velvet — Outcome assurance for autonomous agents" />
+    <meta
+      property="og:description"
+      content="Declared action paths, business constraints, and verifiable evidence. Inspect the protected PostgreSQL refund contract."
+    />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content="https://shadowpath.coriolislabs.ca/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Velvet — Outcome assurance for autonomous agents</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <div class="nav-shell">
+        <a class="brand" href="#top" aria-label="Velvet home">
+          <span class="brand-mark" aria-hidden="true">S/P</span>
+          <span>Velvet</span>
+          <span class="brand-note">Outcome assurance</span>
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="primary-nav"
+          data-nav-toggle
+        >
+          Menu
+        </button>
+        <nav id="primary-nav" class="primary-nav" aria-label="Main navigation" data-nav>
+          <a href="#product">Product</a>
+          <a href="#proof">Proof</a>
+          <a href="/protected-refunds/">Refund contract</a>
+          <a
+            class="button button-small button-dark"
+            href="https://github.com/paulchum/velvet-rope"
+            data-track-event="github_opened"
+          >
+            View GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="top" class="hero section-shell">
+        <div class="hero-copy">
+          <p class="eyebrow">The open outcome-assurance layer</p>
+          <h1>
+            Your agent passed policy.
+            <span>Did the outcome stay safe?</span>
+          </h1>
+          <p class="hero-lede">
+            Velvet connects declared action paths to business constraints and verifiable evidence.
+            Its protected refund ledger checks authorization, order state, and a shared budget in
+            the transaction that commits.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/protected-refunds/">Inspect protected refunds</a>
+            <a
+              class="button button-quiet"
+              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/shadowpath-quickstart.md"
+              data-track-event="custom_effect_opened"
+            >
+              Test your own effect
+            </a>
+          </div>
+          <p class="hero-proof-note">
+            Apache-2.0 · Self-hosted · Recorded PostgreSQL evidence · No vendor claims
+          </p>
+        </div>
+
+        <section class="proof-console" aria-labelledby="console-title">
+          <div class="console-topline">
+            <div>
+              <p class="console-kicker">Live proof replay</p>
+              <h2 id="console-title">Customer account remains active</h2>
+            </div>
+            <span class="console-state" data-console-state>READY</span>
+          </div>
+
+          <div class="protected-route">
+            <div>
+              <span>Protected route</span>
+              <code>customer.disable</code>
+            </div>
+            <strong data-protected-status>NOT TESTED</strong>
+          </div>
+
+          <div class="route-summary">
+            <div>
+              <span>Equivalent routes</span>
+              <strong><span data-tested-count>0</span>/8 tested</strong>
+            </div>
+            <div>
+              <span>Observed breaches</span>
+              <strong><span data-breach-count>0</span>/8</strong>
+            </div>
+          </div>
+
+          <ol class="route-list" data-route-list aria-label="Equivalent effect routes"></ol>
+
+          <div class="console-verdict" aria-live="polite">
+            <span>Verdict</span>
+            <strong data-verdict>WAITING FOR REPLAY</strong>
+          </div>
+          <div class="console-actions">
+            <button class="button button-console" type="button" data-run-proof>
+              Run eight-path proof
+            </button>
+            <button class="button button-console-quiet" type="button" data-reset-proof>
+              Reset
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section class="signal-strip" aria-label="Product promise">
+        <div class="section-shell signal-grid">
+          <p>One protected outcome</p>
+          <p>Every reachable path</p>
+          <p>Independent reconciliation</p>
+          <p>Offline-verifiable evidence</p>
+        </div>
+      </section>
+
+      <section id="product" class="product-section section-shell section-space">
+        <div class="section-heading">
+          <p class="section-number">01 / THE PRODUCT</p>
+          <h2>From a blocked call to an assured outcome.</h2>
+          <p>
+            Velvet sits above the tools you already use. It turns scattered agent controls into a
+            measurable system of protected business outcomes.
+          </p>
+        </div>
+
+        <div class="product-grid">
+          <article class="product-card product-card-featured">
+            <p class="card-label">Assess</p>
+            <h3>ShadowPath</h3>
+            <p>
+              Define a prohibited state change, inventory every equivalent route, execute isolated
+              trials, and reconcile the real substrate after each one.
+            </p>
+            <ul>
+              <li>Effect graph and route inventory</li>
+              <li>CI-safe, non-zero breach exits</li>
+              <li>Portfolio rollups across critical outcomes</li>
+            </ul>
+          </article>
+          <article class="product-card">
+            <p class="card-label">Enforce</p>
+            <h3>Velvet Gateway</h3>
+            <p>
+              Admit, block, or escalate typed actions before dispatch with short-lived permits bound
+              to the exact request, policy, identity, and proof lineage.
+            </p>
+            <ul>
+              <li>Rust MCP proxy</li>
+              <li>Single-use execution permits</li>
+              <li>Signed policy bundles and approvals</li>
+            </ul>
+          </article>
+          <article class="product-card">
+            <p class="card-label">Prove</p>
+            <h3>Velvet Vault</h3>
+            <p>
+              Preserve tamper-evident decision evidence, issue aggregate attestations, and let a
+              reviewer verify the chain offline without exposing prompts or customer content.
+            </p>
+            <ul>
+              <li>Signed receipts and binary ledger</li>
+              <li>Merkle inclusion and consistency proofs</li>
+              <li>Claims and record-keeping packs</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="comparison-section section-space">
+        <div class="section-shell comparison-layout">
+          <div class="section-heading comparison-copy">
+            <p class="section-number">02 / THE WEDGE</p>
+            <h2>Authorization is necessary. It is not the finish line.</h2>
+            <p>
+              Agent identity, policy, and gateways answer whether a caller may use one route. Velvet
+              measures whether the business effect still happened through another route.
+            </p>
+          </div>
+
+          <div class="comparison-table-wrap">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th scope="col">Control question</th>
+                  <th scope="col">Identity / gateway</th>
+                  <th scope="col">Velvet</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Who is acting?</th>
+                  <td>Primary</td>
+                  <td>Bound into evidence</td>
+                </tr>
+                <tr>
+                  <th scope="row">May this call execute?</th>
+                  <td>Primary</td>
+                  <td>Pre-dispatch enforcement</td>
+                </tr>
+                <tr>
+                  <th scope="row">What other routes reach the same effect?</th>
+                  <td>Usually undeclared</td>
+                  <td>Explicit effect inventory</td>
+                </tr>
+                <tr>
+                  <th scope="row">Did the prohibited state change anyway?</th>
+                  <td>Route telemetry</td>
+                  <td>Independent reconciliation</td>
+                </tr>
+                <tr>
+                  <th scope="row">Can a reviewer verify the evidence offline?</th>
+                  <td>Vendor-dependent</td>
+                  <td>Signed, portable artifacts</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof" class="proof-section section-shell section-space">
+        <div class="section-heading proof-heading">
+          <p class="section-number">03 / THE PROOF</p>
+          <h2>The deny worked. The conclusion failed.</h2>
+          <p>
+            The committed local fixture blocks <code>customer.disable</code>, then reaches the same
+            prohibited state through eight equivalent paths. That is a control false success.
+          </p>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-card result-card-dark">
+            <span>Protected route</span>
+            <strong>Blocked before dispatch</strong>
+            <p>The named tool control behaved exactly as configured.</p>
+          </div>
+          <div class="result-card result-card-alert">
+            <span>Equivalent paths</span>
+            <strong>8 / 8 reached the effect</strong>
+            <p>Browser, API, database, queue, webhook, admin, credential, and human routes.</p>
+          </div>
+          <div class="result-card result-card-verdict">
+            <span>Measured verdict</span>
+            <strong>CONTROL_FALSE_SUCCESS</strong>
+            <p>The fixture is synthetic and local. The evidence is reproducible and inspectable.</p>
+          </div>
+        </div>
+
+        <div class="command-card">
+          <div>
+            <p class="console-kicker">Zero-setup committed replay</p>
+            <code data-command>uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo</code>
+          </div>
+          <button class="button button-copy" type="button" data-copy-command>Copy command</button>
+        </div>
+      </section>
+
+      <section class="portfolio-section section-space">
+        <div class="section-shell portfolio-layout">
+          <div class="portfolio-copy">
+            <p class="section-number section-number-light">04 / THE CONTROL PLANE</p>
+            <h2>Protect an estate, not one demo.</h2>
+            <p>
+              The portfolio runner groups many effect projects into one conservative result for
+              security leaders: which outcomes are assured, which routes escaped, and who owns the
+              remediation.
+            </p>
+            <a
+              class="button button-light"
+              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/outcome-portfolios.md"
+            >
+              Read the portfolio guide
+            </a>
+          </div>
+
+          <div class="portfolio-panel" aria-label="Illustrative portfolio report structure">
+            <div class="portfolio-panel-top">
+              <div>
+                <span>Outcome portfolio</span>
+                <strong>Agent production estate</strong>
+              </div>
+              <span class="portfolio-status">ACTION REQUIRED</span>
+            </div>
+            <div class="portfolio-metrics">
+              <div><strong>3</strong><span>outcomes</span></div>
+              <div><strong>18</strong><span>routes</span></div>
+              <div><strong>4</strong><span>breaches</span></div>
+            </div>
+            <div class="portfolio-row">
+              <span class="severity severity-critical">Critical</span>
+              <div><strong>Payment release</strong><small>Payments platform</small></div>
+              <b>3 / 6</b>
+            </div>
+            <div class="portfolio-row">
+              <span class="severity severity-high">High</span>
+              <div><strong>Customer lockout</strong><small>Identity platform</small></div>
+              <b>1 / 8</b>
+            </div>
+            <div class="portfolio-row">
+              <span class="severity severity-medium">Medium</span>
+              <div><strong>Support refund</strong><small>Support automation</small></div>
+              <b class="held">0 / 4</b>
+            </div>
+            <p class="illustrative-note">Illustrative UI using the implemented portfolio schema.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="standards-section section-shell section-space">
+        <div class="section-heading">
+          <p class="section-number">05 / WHY NOW</p>
+          <h2>Secure agent action is becoming infrastructure.</h2>
+          <p>
+            Standards bodies and enterprise guidance are converging on agent identity,
+            authorization, monitoring, and accountable evidence. Velvet makes the outcome layer
+            testable today.
+          </p>
+        </div>
+        <div class="standards-grid">
+          <a
+            class="standard-card"
+            href="https://www.nist.gov/artificial-intelligence/ai-agent-standards-initiative"
+          >
+            <span>NIST · 2026</span>
+            <strong>AI Agent Standards Initiative</strong>
+            <p>Secure, interoperable agents and research into agent security and identity.</p>
+          </a>
+          <a
+            class="standard-card"
+            href="https://www.weforum.org/publications/ai-agents-in-action-a-playbook-for-trusted-adoption-authorization-and-scaling/"
+          >
+            <span>World Economic Forum · 2026</span>
+            <strong>Agent Capability and Authorization Profile</strong>
+            <p>Deployment-level authorization designed to be auditable and enforceable.</p>
+          </a>
+          <a
+            class="standard-card"
+            href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+          >
+            <span>OWASP · 2026</span>
+            <strong>Top 10 for Agentic Applications</strong>
+            <p>Practical risk guidance for autonomous, multi-step agent systems.</p>
+          </a>
+        </div>
+      </section>
+
+      <section id="pilot" class="pilot-section section-space">
+        <div class="section-shell pilot-layout">
+          <div class="pilot-copy">
+            <p class="section-number section-number-light">06 / DESIGN-PARTNER PILOT</p>
+            <h2>Start with the outcome your team cannot afford to get wrong.</h2>
+            <p>
+              In a focused pilot, your team defines one consequential state change, inventories the
+              reachable authority surface, runs isolated trials, and leaves with a verifiable
+              baseline and remediation plan.
+            </p>
+            <div class="pilot-actions">
+              <a
+              class="button button-light"
+              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/pilot.md"
+              data-track-event="custom_effect_opened"
+              >
+                Review the pilot
+              </a>
+              <a
+                class="button button-outline-light"
+                href="https://github.com/paulchum/velvet-rope/issues/new?template=effect_path.yml"
+              >
+                Propose an effect path
+              </a>
+            </div>
+          </div>
+          <ol class="pilot-steps">
+            <li>
+              <span>01</span>
+              <div><strong>Name the effect</strong><p>Choose one irreversible or high-cost business state change.</p></div>
+            </li>
+            <li>
+              <span>02</span>
+              <div><strong>Map the routes</strong><p>Inventory APIs, UIs, queues, credentials, humans, and direct substrates.</p></div>
+            </li>
+            <li>
+              <span>03</span>
+              <div><strong>Run and reconcile</strong><p>Execute isolated trials and observe the state independently.</p></div>
+            </li>
+            <li>
+              <span>04</span>
+              <div><strong>Retest the control</strong><p>Close the escaped paths and retain a machine-verifiable evidence pack.</p></div>
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="section-shell footer-grid">
+        <div>
+          <a class="brand brand-footer" href="#top">
+            <span class="brand-mark" aria-hidden="true">S/P</span>
+            <span>Velvet</span>
+          </a>
+          <p>Outcome assurance for autonomous agents.</p>
+        </div>
+        <p class="footer-boundary">
+          Velvet is currently local and self-hosted. Results are bounded by the declared effect
+          inventory, adapters, observers, signing assumptions, and deployment architecture.
+        </p>
+        <div class="footer-links">
+          <a href="https://github.com/paulchum/velvet-rope" data-track-event="github_opened">GitHub</a>
+          <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/CLAIMS.md">Claim boundaries</a>
+          <a href="https://github.com/paulchum/velvet-rope/blob/main/LICENSE">Apache-2.0</a>
+        </div>
+      </div>
+    </footer>
+    <script>
+      import "../scripts/replay";
+    </script>
+  </body>
+</html>

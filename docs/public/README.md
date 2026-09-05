@@ -1,6 +1,6 @@
 # Velvet Public Launch Pages
 
-Updated: 2026-08-01
+Updated: 2026-08-23
 
 This folder contains page-ready copy for the first public Velvet launch surface.
 It is written so the pages can be deployed as Markdown-backed routes or copied
@@ -22,6 +22,8 @@ Lead with public proof, not gated sales copy:
 | --- | --- | --- |
 | `/shadowpath` | [`shadowpath-quickstart.md`](shadowpath-quickstart.md) | Replay, then test one effect |
 | `/shadowpath/launch-kit` | [`SHADOWPATH_LAUNCH_KIT.md`](SHADOWPATH_LAUNCH_KIT.md) | Share an exact result artifact |
+| `/outcome-portfolios` | [`outcome-portfolios.md`](outcome-portfolios.md) | Roll declared effects into one assurance result |
+| `/pilot` | [`pilot.md`](pilot.md) | Scope one consequential outcome |
 | `/agent-authorization-benchmark` | [`agent-authorization-benchmark.md`](agent-authorization-benchmark.md) | Run or submit to the benchmark |
 | `/verify` | [`verify.md`](verify.md) | Verify a warrant with public key material |
 | `/mcp-firewall` | [`mcp-firewall.md`](mcp-firewall.md) | Book a 14-day MCP tool-call assessment |
@@ -33,9 +35,10 @@ Lead with public proof, not gated sales copy:
 
 ## Core Message
 
-ShadowPath leads the public launch with one question: **your agent blocked the
-tool; did it block the outcome?** It measures equivalent effect paths and
-independent reconciliation. Teams that need enforcement can then use Velvet's
-pre-execution proxy and signed, replayable evidence.
+Velvet is positioned as the open outcome-assurance layer for autonomous agents.
+ShadowPath leads with one question: **your agent blocked the tool; did it block
+the outcome?** It measures equivalent effect paths and independent reconciliation.
+Teams can then roll protected effects into a portfolio, enforce supported paths
+with Velvet Gateway, and preserve signed evidence with Velvet Vault.
 
 Campaign line: **Block the outcome, not just the tool.**

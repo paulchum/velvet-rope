@@ -8,11 +8,15 @@ import pytest
 from velvet.cli import main as velvet_main
 from velvet.shadowpath_product import (
     EXIT_EFFECT_BREACH,
+    PORTFOLIO_RESULTS_SCHEMA_VERSION,
+    PORTFOLIO_SCHEMA_VERSION,
     PROJECT_RESULTS_SCHEMA_VERSION,
     build_demo_payload,
     init_shadowpath_project,
     render_share_pack,
+    run_shadowpath_portfolio,
     run_shadowpath_project,
+    validate_portfolio,
 )
 
 
@@ -91,3 +95,100 @@ def test_share_pack_is_exact_and_deterministic(tmp_path: Path) -> None:
         b"\x89PNG\r\n\x1a\n"
     )
     assert {item["preset"] for item in first["files"] if "preset" in item} == {"x"}
+
+
+def test_portfolio_rolls_multiple_effects_into_one_conservative_result(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    first_project = tmp_path / "projects" / "customer-lockout"
+    second_project = tmp_path / "projects" / "payment-release"
+    init_shadowpath_project(first_project)
+    init_shadowpath_project(second_project)
+    manifest_path = tmp_path / "portfolio.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": PORTFOLIO_SCHEMA_VERSION,
+                "name": "Production agent outcomes",
+                "effects": [
+                    {
+                        "id": "customer-lockout",
+                        "name": "Customer account lockout",
+                        "criticality": "critical",
+                        "owner": "Identity platform",
+                        "project": "projects/customer-lockout/shadowpath.json",
+                    },
+                    {
+                        "id": "payment-release",
+                        "name": "Payment release",
+                        "criticality": "medium",
+                        "owner": "Payments platform",
+                        "project": "projects/payment-release/shadowpath.json",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    output_dir = tmp_path / "reports"
+    assert (
+        velvet_main(
+            [
+                "shadowpath",
+                "portfolio",
+                "--manifest",
+                str(manifest_path),
+                "--output-dir",
+                str(output_dir),
+                "--expect-breach",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["schema_version"] == PORTFOLIO_RESULTS_SCHEMA_VERSION
+    assert payload["summary"]["status"] == "ACTION_REQUIRED"
+    assert payload["summary"]["effects_tested"] == 2
+    assert payload["summary"]["routes_tested"] == 6
+    assert payload["summary"]["effect_breach_count"] == 6
+    assert payload["summary"]["critical_breach_count"] == 1
+    assert (output_dir / "results" / "shadowpath-portfolio.json").is_file()
+    assert (output_dir / "SHADOWPATH_PORTFOLIO.md").is_file()
+
+
+def test_portfolio_validation_rejects_duplicate_effect_ids(tmp_path: Path) -> None:
+    config = {
+        "schema_version": PORTFOLIO_SCHEMA_VERSION,
+        "name": "Duplicate estate",
+        "effects": [
+            {"id": "same", "project": "a.json", "criticality": "high"},
+            {"id": "same", "project": "b.json", "criticality": "low"},
+        ],
+    }
+    assert "effect ids must be unique" in validate_portfolio(config)
+
+    manifest_path = tmp_path / "portfolio.json"
+    manifest_path.write_text(json.dumps(config), encoding="utf-8")
+    result = run_shadowpath_portfolio(manifest_path, tmp_path / "reports")
+    assert result["exit_code"] == 2
+    assert result["summary"]["status"] == "ACTION_REQUIRED"
+
+
+def test_portfolio_validation_rejects_effect_ids_that_escape_output_paths() -> None:
+    config = {
+        "schema_version": PORTFOLIO_SCHEMA_VERSION,
+        "name": "Unsafe path estate",
+        "effects": [
+            {
+                "id": "../outside",
+                "project": "effect/shadowpath.json",
+                "criticality": "critical",
+            }
+        ],
+    }
+
+    assert any("id must use lowercase" in error for error in validate_portfolio(config))

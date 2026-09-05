@@ -1,8 +1,35 @@
-# Velvet Rope
+# Velvet
 
 [![CI](https://img.shields.io/github/actions/workflow/status/paulchum/velvet-rope/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/paulchum/velvet-rope/actions/workflows/ci.yml)
 [![Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-7c3aed?style=flat-square)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/paulchum/velvet-rope?style=flat-square)](https://github.com/paulchum/velvet-rope/stargazers)
+
+## Outcome assurance for autonomous agents
+
+Velvet is a local, self-hosted system for teams moving agents from impressive demos to
+consequential business actions. It maps every declared route to a protected outcome, tests whether
+controls hold across those routes, gates supported execution paths, and preserves evidence that can
+be verified offline.
+
+**Authorize the route. Assure the outcome.**
+
+**New: protected refund contract.** Commit exact-command authorization, order limits,
+a shared budget, operation identity and journal evidence in one PostgreSQL transaction.
+Closure and refunds share the same lock. A separate database identity exports a signed
+snapshot for offline replay and reconciliation.
+[Read the contract and reproduce it](docs/public/protected-refunds.md) ·
+[Inspect the recorded PostgreSQL evidence](https://shadowpath.coriolislabs.ca/protected-refunds/).
+This is a single-database reference ledger; external payment rails are outside its claim.
+
+| Product surface | Job |
+| --- | --- |
+| **ShadowPath** | Test every declared route to the same prohibited business effect. |
+| **Velvet Gateway** | Admit, block, or escalate typed agent actions before dispatch. |
+| **Velvet Vault** | Preserve tamper-evident evidence and portable verification artifacts. |
+| **Protected refunds** | Enforce business constraints and operation identity at the PostgreSQL commit boundary. |
+
+[Explore the product site](site/) · [Review the design-partner pilot](docs/public/pilot.md) ·
+[Read the outcome portfolio guide](docs/public/outcome-portfolios.md)
 
 ## Your agent blocked the tool. Did it block the outcome?
 
@@ -10,7 +37,8 @@ Most agent controls watch a named tool or API route. An agent can still reach
 the same business effect through a browser, a second API, a database, a queue,
 a webhook, delegated credentials, or a human operator.
 
-**ShadowPath tests the effect, not just the route.**
+**ShadowPath tests the effect, not just the route.** It is Velvet's open-source assessment wedge:
+the fastest way to show why a route-level deny is not yet an outcome-level assurance claim.
 
 ![ShadowPath: the protected route was blocked while eight equivalent routes produced the prohibited effect](docs/public/assets/shadowpath/shadowpath-hero.svg)
 
@@ -34,7 +62,7 @@ synthetic local fixture designed to make the measurement reproducible.
 [Inspect the result](benchmarks/agent_authorization/shadowpath/SHADOWPATH_RESULTS.md)
 · [Read the v0.4 benchmark spec](benchmarks/agent_authorization/SPEC.md)
 · [Add an effect path](docs/public/SHADOWPATH_CONTRIBUTING.md)
-· [Replay it live](https://shadowpath-replay.pc9i.chatgpt.site)
+· [Replay it live](https://shadowpath.coriolislabs.ca)
 
 ## Run it
 
@@ -105,6 +133,23 @@ independent observation logic, then add every path your agent can reach.
 [Add ShadowPath to GitHub Actions](examples/shadowpath/github-action.yml) ·
 [Browse integration recipes](docs/public/integrations/)
 
+## Roll protected outcomes into a portfolio
+
+Once one effect project is useful, group many projects into an estate-level result with owners and
+criticality:
+
+```bash
+uv run velvet shadowpath portfolio \
+  --manifest shadowpath-portfolio.json \
+  --output-dir reports/outcome-portfolio
+```
+
+The portfolio runner preserves every underlying effect result and writes one conservative status:
+`ASSURED`, `DEGRADED`, or `ACTION_REQUIRED`. The status is bounded by the outcomes, routes, and
+observers declared in the manifest; it does not infer coverage for missing paths.
+
+[Read the outcome portfolio guide](docs/public/outcome-portfolios.md)
+
 ## The eight routes
 
 | Route | Ingress | Effect attribution |
@@ -122,9 +167,9 @@ Each route starts from a fresh fixture state. The benchmark records dispatch
 evidence, observes the substrate directly, and distinguishes attributed effects
 from effects the system under test never saw.
 
-## What Velvet Rope is
+## What Velvet is
 
-Velvet Rope is an Apache-2.0 agent authorization project with two related jobs:
+Velvet is an Apache-2.0 agent outcome-assurance and authorization project with three related jobs:
 
 1. **Test the whole effect surface.** ShadowPath measures whether a control
    prevents a prohibited outcome across equivalent routes, inventories those
@@ -132,6 +177,9 @@ Velvet Rope is an Apache-2.0 agent authorization project with two related jobs:
 2. **Control and prove execution.** The Rust MCP proxy and Python SDK admit,
    block, or escalate consequential actions before dispatch, then emit evidence
    that can be verified offline.
+3. **Roll up protected outcomes.** Outcome portfolios group user-owned effect
+   projects into a conservative estate-level status without hiding the underlying
+   route evidence or claim boundary.
 
 The open core includes:
 

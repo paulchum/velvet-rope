@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+- Migrated the public product site to Astro 7 on Cloudflare Workers Static
+  Assets at `shadowpath.coriolislabs.ca`, with a managed custom domain, canonical
+  metadata, hardened response headers, a custom 404, and a privacy-bounded event
+  endpoint that accepts only allowlisted aggregate events.
+- Updated the transitive Rust `h2` dependency to `0.4.16` to resolve
+  `RUSTSEC-2026-0258` in the release dependency graph.
+- Raised the Python `cryptography` and `pip` security floors to patched releases,
+  and added a dedicated Astro build, test, audit, and Cloudflare dry-run CI job.
+- Positioned Velvet as the open outcome-assurance layer above agent identity and
+  route authorization, with a buyer-facing static product site, design-partner
+  pilot, current market thesis, and updated claim boundaries.
+- Added `velvet shadowpath portfolio`, which runs multiple user-owned effect
+  projects and writes one conservative estate-level JSON/Markdown result with
+  owner, criticality, strict exits, and per-effect artifact pointers.
+- Added portfolio validation, output-path-safe effect identifiers, focused tests,
+  and a public outcome portfolio guide.
+
 ## 1.1.0 - 2026-08-01 - ShadowPath
 
 - Added Agent Authorization Benchmark `0.4.0` and ShadowPath: a hermetic

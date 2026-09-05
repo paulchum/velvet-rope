@@ -1,0 +1,25 @@
+{
+  "name": "velvet-product-site",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "check:worker": "tsc --project worker/tsconfig.json",
+    "build": "astro check && npm run check:worker && astro build",
+    "preview": "astro preview",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "deploy": "npm run test && wrangler deploy",
+    "deploy:dry-run": "npm run test && wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@cloudflare/workers-types": "^5.20260823.1",
+    "astro": "^7.2.4",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.125.0"
+  }
+}

@@ -11,25 +11,32 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 import shlex
 import subprocess  # nosec B404 - executes the adapter explicitly configured by the user.
 import sys
 from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
+from uuid import uuid4
 
 from velvet.agent_authorization_benchmark import BENCHMARK_VERSION, FIXED_GENERATED_AT
+from velvet.serialization import canonical_hash_sha256
 
 JsonObject = dict[str, Any]
 
 PROJECT_SCHEMA_VERSION = "velvet.shadowpath.project.v0.1"
 PROJECT_RESULTS_SCHEMA_VERSION = "velvet.shadowpath.project-results.v0.1"
+PORTFOLIO_SCHEMA_VERSION = "velvet.shadowpath.portfolio.v0.1"
+PORTFOLIO_RESULTS_SCHEMA_VERSION = "velvet.shadowpath.portfolio-results.v0.1"
 DEMO_RESULTS_SCHEMA_VERSION = "velvet.shadowpath.results.v0.1"
 
 EXIT_OK = 0
 EXIT_PROJECT_INVALID = 2
 EXIT_EFFECT_BREACH = 3
 EXIT_ADAPTER_ERROR = 4
+EXIT_ROUTE_CONTROL_FAILED = 5
 
 PUBLIC_REPOSITORY = "https://github.com/paulchum/velvet-rope"
 DEMO_RESULT_URL = (
@@ -167,9 +174,7 @@ def run_shadowpath_project(
     try:
         config_raw = json.loads(config_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
-        return _project_failure(
-            "PROJECT_INVALID", str(error), output_dir, EXIT_PROJECT_INVALID
-        )
+        return _project_failure("PROJECT_INVALID", str(error), output_dir, EXIT_PROJECT_INVALID)
     if not isinstance(config_raw, dict):
         return _project_failure(
             "PROJECT_INVALID", "project root must be an object", output_dir, EXIT_PROJECT_INVALID
@@ -211,9 +216,7 @@ def run_shadowpath_project(
             for route in cast(Sequence[object], config["routes"])
         ]
     except ShadowPathProjectError as error:
-        return _project_failure(
-            "ADAPTER_ERROR", str(error), output_path, EXIT_ADAPTER_ERROR
-        )
+        return _project_failure("ADAPTER_ERROR", str(error), output_path, EXIT_ADAPTER_ERROR)
 
     breaches = [route for route in routes if route["effect_observed"]]
     protected_passed = bool(protected["route_authorization_passed"])
@@ -228,7 +231,10 @@ def run_shadowpath_project(
     payload: JsonObject = {
         "schema_version": PROJECT_RESULTS_SCHEMA_VERSION,
         "project_schema_version": PROJECT_SCHEMA_VERSION,
-        "generated_at": FIXED_GENERATED_AT,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "run_id": str(uuid4()),
+        "config_hash": canonical_hash_sha256(config),
+        "observation_scope": "one observation immediately before and after each dispatch",
         "mode": "user_owned_project",
         "project": str(config["name"]),
         "prohibited_effect": str(config["prohibited_effect"]),
@@ -254,19 +260,249 @@ def run_shadowpath_project(
                 6,
             )
             if breaches
-            else 1.0,
+            else None,
         },
         "claim_boundary": (
             "This result describes the local adapter and effect oracle configured by its "
-            "owner. Review the adapter, inventory, and evidence before relying on it."
+            "owner, at the declared observation points. Delayed or transient effects outside "
+            "those points are unmeasured. Review the adapter, inventory, and evidence."
         ),
-        "exit_code": EXIT_EFFECT_BREACH if breaches else EXIT_OK,
+        "exit_code": (
+            EXIT_EFFECT_BREACH
+            if breaches
+            else EXIT_OK
+            if protected_passed
+            else EXIT_ROUTE_CONTROL_FAILED
+        ),
         "results_path": result_path.as_posix(),
         "markdown_path": (output_path / "SHADOWPATH_RESULTS.md").as_posix(),
     }
     _write_json(result_path, payload)
     _write_text(Path(cast(str, payload["markdown_path"])), render_result_markdown(payload))
     return payload
+
+
+def run_shadowpath_portfolio(
+    manifest_path: str | Path,
+    output_dir: str | Path,
+) -> JsonObject:
+    """Run an estate-level portfolio of user-owned prohibited effects.
+
+    A portfolio turns ShadowPath's single-effect contract into the minimum
+    useful enterprise loop: name the outcomes that matter, run each local
+    adapter in isolation, and produce one conservative assurance summary.
+    """
+
+    config_path = Path(manifest_path).resolve()
+    output_path = Path(output_dir)
+    try:
+        config_raw = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        return _portfolio_failure(str(error), output_path, EXIT_PROJECT_INVALID)
+    if not isinstance(config_raw, dict):
+        return _portfolio_failure(
+            "portfolio root must be an object", output_path, EXIT_PROJECT_INVALID
+        )
+    config = cast(JsonObject, config_raw)
+    errors = validate_portfolio(config)
+    if errors:
+        return _portfolio_failure("; ".join(errors), output_path, EXIT_PROJECT_INVALID)
+
+    effect_results: list[JsonObject] = []
+    for effect in cast(Sequence[object], config["effects"]):
+        effect_config = cast(Mapping[str, Any], effect)
+        effect_id = str(effect_config["id"])
+        project_reference = str(effect_config["project"])
+        project_path = (config_path.parent / project_reference).resolve()
+        result = run_shadowpath_project(
+            project_path,
+            output_path / "effects" / effect_id,
+        )
+        summary = _summary(result)
+        effect_results.append(
+            {
+                "id": effect_id,
+                "name": str(effect_config.get("name", effect_id)),
+                "criticality": str(effect_config["criticality"]),
+                "owner": str(effect_config.get("owner", "unassigned")),
+                "project": project_reference,
+                "prohibited_effect": result.get("prohibited_effect"),
+                "verdict": str(summary.get("overall_verdict", "UNKNOWN")),
+                "routes_tested": int(summary.get("routes_tested", 0)),
+                "effect_breach_count": int(summary.get("effect_breach_count", 0)),
+                "exit_code": int(result.get("exit_code", EXIT_ADAPTER_ERROR)),
+                "error": result.get("error"),
+                "artifacts": {
+                    "result": result.get("results_path"),
+                    "report": result.get("markdown_path"),
+                },
+            }
+        )
+
+    routes_tested = sum(int(item["routes_tested"]) for item in effect_results)
+    breach_count = sum(int(item["effect_breach_count"]) for item in effect_results)
+    false_success_count = sum(item["verdict"] == "CONTROL_FALSE_SUCCESS" for item in effect_results)
+    route_control_failure_count = sum(
+        item["verdict"] == "ROUTE_CONTROL_FAILED" for item in effect_results
+    )
+    execution_error_count = sum(
+        int(item["exit_code"]) not in {EXIT_OK, EXIT_EFFECT_BREACH, EXIT_ROUTE_CONTROL_FAILED}
+        or item["verdict"]
+        not in {"EFFECT_PREVENTED", "CONTROL_FALSE_SUCCESS", "ROUTE_CONTROL_FAILED"}
+        for item in effect_results
+    )
+    critical_breach_count = sum(
+        int(item["effect_breach_count"]) > 0 and item["criticality"] in {"critical", "high"}
+        for item in effect_results
+    )
+    if execution_error_count or critical_breach_count or route_control_failure_count:
+        status = "ACTION_REQUIRED"
+    elif breach_count:
+        status = "DEGRADED"
+    else:
+        status = "ASSURED"
+
+    exit_codes = {int(item["exit_code"]) for item in effect_results}
+    exit_code = (
+        EXIT_ADAPTER_ERROR
+        if execution_error_count
+        else EXIT_PROJECT_INVALID
+        if EXIT_PROJECT_INVALID in exit_codes
+        else EXIT_ROUTE_CONTROL_FAILED
+        if route_control_failure_count
+        else EXIT_EFFECT_BREACH
+        if breach_count
+        else EXIT_OK
+    )
+    result_path = output_path / "results" / "shadowpath-portfolio.json"
+    markdown_path = output_path / "SHADOWPATH_PORTFOLIO.md"
+    payload: JsonObject = {
+        "schema_version": PORTFOLIO_RESULTS_SCHEMA_VERSION,
+        "portfolio_schema_version": PORTFOLIO_SCHEMA_VERSION,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "run_id": str(uuid4()),
+        "mode": "user_owned_portfolio",
+        "portfolio": str(config["name"]),
+        "config_hash": canonical_hash_sha256(config),
+        "summary": {
+            "status": status,
+            "effects_tested": len(effect_results),
+            "effects_assured": sum(
+                item["verdict"] == "EFFECT_PREVENTED" for item in effect_results
+            ),
+            "control_false_success_count": false_success_count,
+            "route_control_failure_count": route_control_failure_count,
+            "execution_error_count": execution_error_count,
+            "critical_breach_count": critical_breach_count,
+            "routes_tested": routes_tested,
+            "effect_breach_count": breach_count,
+            "effect_prevention_rate": (
+                round(1 - breach_count / routes_tested, 6) if routes_tested else None
+            ),
+        },
+        "effect_results": effect_results,
+        "claim_boundary": (
+            "This portfolio summarizes local effect adapters configured by its owner. "
+            "Coverage is limited to the declared effects, routes, observers, and execution time."
+        ),
+        "exit_code": exit_code,
+        "results_path": result_path.as_posix(),
+        "markdown_path": markdown_path.as_posix(),
+    }
+    _write_json(result_path, payload)
+    _write_text(markdown_path, render_portfolio_markdown(payload))
+    return payload
+
+
+def validate_portfolio(config: Mapping[str, Any]) -> list[str]:
+    """Validate the deliberately small portfolio manifest contract."""
+
+    errors: list[str] = []
+    if config.get("schema_version") != PORTFOLIO_SCHEMA_VERSION:
+        errors.append(f"schema_version must be {PORTFOLIO_SCHEMA_VERSION!r}")
+    if not isinstance(config.get("name"), str) or not str(config.get("name")).strip():
+        errors.append("name must be a non-empty string")
+    effects = config.get("effects")
+    if not isinstance(effects, list) or not effects:
+        errors.append("effects must be a non-empty array")
+        return errors
+    effect_ids: list[str] = []
+    for index, effect in enumerate(effects):
+        if not isinstance(effect, Mapping):
+            errors.append(f"effects[{index}] must be an object")
+            continue
+        for key in ("id", "project"):
+            if not isinstance(effect.get(key), str) or not str(effect.get(key)).strip():
+                errors.append(f"effects[{index}].{key} must be a non-empty string")
+        effect_id = effect.get("id")
+        if (
+            isinstance(effect_id, str)
+            and effect_id.strip()
+            and not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", effect_id)
+        ):
+            errors.append(
+                f"effects[{index}].id must use lowercase letters, numbers, dots, dashes, "
+                "or underscores"
+            )
+        criticality = effect.get("criticality")
+        if criticality not in {"critical", "high", "medium", "low"}:
+            errors.append(f"effects[{index}].criticality must be critical, high, medium, or low")
+        if "owner" in effect and (
+            not isinstance(effect.get("owner"), str) or not str(effect.get("owner")).strip()
+        ):
+            errors.append(f"effects[{index}].owner must be a non-empty string")
+        if "name" in effect and (
+            not isinstance(effect.get("name"), str) or not str(effect.get("name")).strip()
+        ):
+            errors.append(f"effects[{index}].name must be a non-empty string")
+        effect_ids.append(str(effect.get("id", "")))
+    if len(set(effect_ids)) != len(effect_ids):
+        errors.append("effect ids must be unique")
+    return errors
+
+
+def render_portfolio_markdown(payload: Mapping[str, Any]) -> str:
+    """Render a conservative, executive-readable outcome portfolio report."""
+
+    summary_raw = payload.get("summary", {})
+    summary = cast(Mapping[str, Any], summary_raw) if isinstance(summary_raw, Mapping) else {}
+    effects_raw = payload.get("effect_results", [])
+    effects = (
+        [cast(Mapping[str, Any], item) for item in effects_raw if isinstance(item, Mapping)]
+        if isinstance(effects_raw, Sequence) and not isinstance(effects_raw, (str, bytes))
+        else []
+    )
+    lines = [
+        "# ShadowPath Outcome Portfolio",
+        "",
+        f"Portfolio: **{payload.get('portfolio', 'Unnamed portfolio')}**",
+        "",
+        f"Status: **{summary.get('status', 'UNKNOWN')}**",
+        "",
+        "| Protected outcome | Criticality | Owner | Verdict | Breaches |",
+        "| --- | --- | --- | --- | ---: |",
+    ]
+    for effect in effects:
+        lines.append(
+            f"| {effect.get('name', effect.get('id', 'unknown'))} | "
+            f"{effect.get('criticality', 'unknown')} | {effect.get('owner', 'unassigned')} | "
+            f"`{effect.get('verdict', 'UNKNOWN')}` | "
+            f"{effect.get('effect_breach_count', 0)}/{effect.get('routes_tested', 0)} |"
+        )
+    lines.extend(
+        [
+            "",
+            f"Effects tested: **{summary.get('effects_tested', 0)}**",
+            "",
+            f"Equivalent routes tested: **{summary.get('routes_tested', 0)}**",
+            "",
+            f"Observed effect breaches: **{summary.get('effect_breach_count', 0)}**",
+            "",
+            f"Claim boundary: {payload.get('claim_boundary', 'Review every effect adapter.')}",
+            "",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def validate_project(config: Mapping[str, Any]) -> list[str]:
@@ -288,8 +524,10 @@ def validate_project(config: Mapping[str, Any]) -> list[str]:
         if states.get("safe") == states.get("prohibited"):
             errors.append("states.safe and states.prohibited must differ")
     command = config.get("adapter_command")
-    if not isinstance(command, list) or not command or not all(
-        isinstance(item, str) and item for item in command
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(item, str) and item for item in command)
     ):
         errors.append("adapter_command must be a non-empty string array")
     protected = config.get("protected_route")
@@ -507,13 +745,33 @@ def shadowpath_product_main(argv: Sequence[str]) -> int | None:
             print(f"  Report: {payload['markdown_path']}")
         code = int(payload["exit_code"])
         return EXIT_OK if args.expect_breach and code == EXIT_EFFECT_BREACH else code
+    if mode == "portfolio":
+        parser = argparse.ArgumentParser(
+            description="Run a portfolio of protected business outcomes."
+        )
+        parser.add_argument("--manifest", required=True)
+        parser.add_argument("--output-dir", default="reports/shadowpath-portfolio")
+        parser.add_argument("--expect-breach", action="store_true")
+        parser.add_argument("--json", action="store_true")
+        args = parser.parse_args(argv[1:])
+        payload = run_shadowpath_portfolio(args.manifest, args.output_dir)
+        if args.json:
+            print(json.dumps(payload, sort_keys=True))
+        else:
+            summary = cast(Mapping[str, Any], payload.get("summary", {}))
+            print("\nSHADOWPATH / OUTCOME PORTFOLIO\n")
+            print(f"  status             {summary.get('status', 'UNKNOWN')}")
+            print(f"  effects tested     {summary.get('effects_tested', 0)}")
+            print(f"  routes tested      {summary.get('routes_tested', 0)}")
+            print(f"  effect breaches    {summary.get('effect_breach_count', 0)}")
+            print(f"\n  Report: {payload['markdown_path']}")
+        code = int(payload["exit_code"])
+        return EXIT_OK if args.expect_breach and code == EXIT_EFFECT_BREACH else code
     if mode == "render":
         parser = argparse.ArgumentParser(description="Render a ShadowPath share pack.")
         parser.add_argument("result")
         parser.add_argument("--output-dir", default="reports/shadowpath/share")
-        parser.add_argument(
-            "--preset", choices=["all", *_PRESETS], default="all"
-        )
+        parser.add_argument("--preset", choices=["all", *_PRESETS], default="all")
         parser.add_argument("--json", action="store_true")
         args = parser.parse_args(argv[1:])
         try:
@@ -544,17 +802,30 @@ def _execute_project_trial(
     prohibited_state: str,
 ) -> JsonObject:
     route_id = str(route["id"])
-    trial_id = f"shadowpath-{route_id}"
+    trial_id = f"shadowpath-{route_id}-{uuid4()}"
     base = {"trial_id": trial_id, "route_id": route_id, "protected": protected}
     _call_adapter(command, cwd, {**base, "operation": "reset"}, timeout_seconds)
     pre = _call_adapter(command, cwd, {**base, "operation": "observe"}, timeout_seconds)
+    if pre.get("state") != safe_state:
+        raise ShadowPathProjectError(f"{route_id}: reset baseline is not the declared safe state")
     dispatch = _call_adapter(command, cwd, {**base, "operation": "dispatch"}, timeout_seconds)
     post = _call_adapter(command, cwd, {**base, "operation": "observe"}, timeout_seconds)
-    before_state = str(pre.get("state", ""))
-    after_state = str(post.get("state", ""))
+    if post.get("state") not in (safe_state, prohibited_state):
+        raise ShadowPathProjectError(f"{route_id}: post-dispatch observation is indeterminate")
+    if (
+        dispatch.get("decision") not in ("deny", "execute", "escalate")
+        or type(dispatch.get("dispatch_attempted")) is not bool
+        or (
+            "effect_mismatch_detected" in dispatch
+            and type(dispatch["effect_mismatch_detected"]) is not bool
+        )
+    ):
+        raise ShadowPathProjectError(f"{route_id}: dispatch response is malformed")
+    before_state = str(pre["state"])
+    after_state = str(post["state"])
     effect_observed = before_state == safe_state and after_state == prohibited_state
-    decision = str(dispatch.get("decision", "execute"))
-    dispatch_attempted = bool(dispatch.get("dispatch_attempted", decision != "deny"))
+    decision = dispatch["decision"]
+    dispatch_attempted = dispatch["dispatch_attempted"]
     protected_passed = (
         protected
         and decision == "deny"
@@ -570,9 +841,9 @@ def _execute_project_trial(
             "label": str(route["label"]),
             "ingress": str(route["ingress"]),
         },
-        "pre_state": {"state": before_state},
+        "pre_state": pre,
         "dispatch": dispatch,
-        "post_state": {"state": after_state},
+        "post_state": post,
         "effect_observed": effect_observed,
         "effect_attribution": str(dispatch.get("attribution", "attributed")),
         "route_authorization_passed": protected_passed,
@@ -634,7 +905,8 @@ def _project_failure(status: str, error: str, output_dir: str | Path, code: int)
     output_path = Path(output_dir)
     payload: JsonObject = {
         "schema_version": PROJECT_RESULTS_SCHEMA_VERSION,
-        "generated_at": FIXED_GENERATED_AT,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "run_id": str(uuid4()),
         "status": status,
         "error": error,
         "summary": {"overall_verdict": status, "routes_tested": 0, "effect_breach_count": 0},
@@ -644,6 +916,33 @@ def _project_failure(status: str, error: str, output_dir: str | Path, code: int)
     }
     _write_json(Path(cast(str, payload["results_path"])), payload)
     _write_text(Path(cast(str, payload["markdown_path"])), render_result_markdown(payload))
+    return payload
+
+
+def _portfolio_failure(error: str, output_dir: str | Path, code: int) -> JsonObject:
+    output_path = Path(output_dir)
+    result_path = output_path / "results" / "shadowpath-portfolio.json"
+    markdown_path = output_path / "SHADOWPATH_PORTFOLIO.md"
+    payload: JsonObject = {
+        "schema_version": PORTFOLIO_RESULTS_SCHEMA_VERSION,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "run_id": str(uuid4()),
+        "status": "PORTFOLIO_INVALID",
+        "error": error,
+        "summary": {
+            "status": "ACTION_REQUIRED",
+            "effects_tested": 0,
+            "routes_tested": 0,
+            "effect_breach_count": 0,
+        },
+        "effect_results": [],
+        "claim_boundary": "No portfolio assurance claim is available for an invalid manifest.",
+        "exit_code": code,
+        "results_path": result_path.as_posix(),
+        "markdown_path": markdown_path.as_posix(),
+    }
+    _write_json(result_path, payload)
+    _write_text(markdown_path, render_portfolio_markdown(payload))
     return payload
 
 
@@ -697,7 +996,7 @@ def _render_svg(payload: Mapping[str, Any], *, width: int, height: int) -> str:
             f'font-family="ui-monospace, monospace" font-weight="700">{status}</text>'
             f'<text x="{pad + int(width * 0.13)}" y="{y}" fill="#ddd7eb" '
             f'font-size="{int(width * 0.018)}" font-family="ui-monospace, monospace">'
-            f'{route_id}</text>'
+            f"{route_id}</text>"
         )
     subtitle_y = int(height * 0.18)
     number_y = int(height * 0.37)
@@ -706,7 +1005,7 @@ def _render_svg(payload: Mapping[str, Any], *, width: int, height: int) -> str:
         f'viewBox="0 0 {width} {height}" role="img" aria-label="ShadowPath result {verdict}">'
         '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">'
         '<stop offset="0" stop-color="#09070f"/><stop offset="1" stop-color="#21102f"/>'
-        '</linearGradient></defs>'
+        "</linearGradient></defs>"
         f'<rect width="{width}" height="{height}" fill="url(#bg)"/>'
         f'<circle cx="{int(width * 0.9)}" cy="{int(height * 0.12)}" r="{int(width * 0.16)}" '
         'fill="#7c3aed" opacity="0.16"/>'
@@ -717,25 +1016,23 @@ def _render_svg(payload: Mapping[str, Any], *, width: int, height: int) -> str:
         'font-family="Arial, sans-serif" font-weight="800">The tool was blocked.</text>'
         f'<text x="{pad}" y="{subtitle_y + int(title_size * 1.1)}" fill="#ffffff" '
         f'font-size="{title_size}" font-family="Arial, sans-serif" font-weight="800">'
-        'The outcome was not.</text>'
+        "The outcome was not.</text>"
         f'<text x="{pad}" y="{number_y}" fill="#ff4d6d" font-size="{number_size}" '
         f'font-family="Arial, sans-serif" font-weight="900">{breaches}/{tested}</text>'
         f'<text x="{pad + int(width * (0.37 if portrait else 0.31))}" y="{number_y}" '
         f'fill="#d7d0df" font-size="{int(width * 0.025)}" font-family="Arial, sans-serif">'
-        'equivalent paths reached the prohibited effect</text>'
+        "equivalent paths reached the prohibited effect</text>"
         + "".join(rows)
         + f'<text x="{pad}" y="{height - int(height * 0.075)}" fill="#ff4d6d" '
         f'font-size="{int(width * 0.024)}" font-family="ui-monospace, monospace" '
         f'font-weight="800">{verdict}</text>'
         f'<text x="{width - pad}" y="{height - int(height * 0.075)}" fill="#bca6e8" '
         f'font-size="{int(width * 0.018)}" font-family="Arial, sans-serif" text-anchor="end">'
-        'github.com/paulchum/velvet-rope</text></svg>\n'
+        "github.com/paulchum/velvet-rope</text></svg>\n"
     )
 
 
-def _render_png(
-    payload: Mapping[str, Any], path: Path, *, width: int, height: int
-) -> None:
+def _render_png(payload: Mapping[str, Any], path: Path, *, width: int, height: int) -> None:
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
 
@@ -851,7 +1148,7 @@ def _render_badge(payload: Mapping[str, Any]) -> str:
         '<g fill="#fff" text-anchor="middle" font-family="Verdana, sans-serif" font-size="11">'
         f'<text x="{label_width / 2}" y="14">ShadowPath</text>'
         f'<text x="{label_width + value_width / 2}" y="14">{html.escape(status)}</text>'
-        '</g></svg>\n'
+        "</g></svg>\n"
     )
 
 
@@ -993,7 +1290,7 @@ def _render_carousel_png(slide: Mapping[str, Any], path: Path) -> None:
 def _render_html(payload: Mapping[str, Any]) -> str:
     summary = _summary(payload)
     rows = "".join(
-        "<li><strong class=\"breach\">"
+        '<li><strong class="breach">'
         + ("BREACH" if route["effect_observed"] else "HELD")
         + "</strong><code>"
         + html.escape(str(route["id"]))
@@ -1139,12 +1436,12 @@ jobs:
   effect-paths:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: paulchum/velvet-rope/shadowpath-action@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: paulchum/velvet-rope/shadowpath-action@main
         with:
           project: shadowpath.json
           output-dir: reports/shadowpath
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: shadowpath-evidence

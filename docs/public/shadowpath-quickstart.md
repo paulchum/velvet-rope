@@ -54,6 +54,18 @@ The adapter reads one JSON request from stdin and writes one JSON object to
 stdout. Keep credentials in the surrounding environment; never place them in
 the project file or generated evidence.
 
+Observations must report exactly the configured safe or prohibited state. A reset must
+produce the safe baseline before dispatch. Missing/unknown states or malformed dispatch
+responses return exit `4`; failed protected-route control returns exit `5` when no alternate
+route breach was observed. Dispatch must include `decision` (`deny`, `execute` or `escalate`)
+and a Boolean `dispatch_attempted`. No observed breaches means reconciliation detection
+rate is unmeasured (`null`), not 100%. Reports carry actual timestamps, run IDs and config
+hashes. The adapter implementation and its dependencies still require separate review.
+
+The runner observes once immediately before and after dispatch. Delayed or transient
+effects outside those points are unmeasured. A successful result is scoped to those points
+and the configured routes; it is not continuous or whole-environment assurance.
+
 ## 4. Put it in CI
 
 Copy [`examples/shadowpath/github-action.yml`](../../examples/shadowpath/github-action.yml).

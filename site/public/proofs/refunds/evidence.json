@@ -1,0 +1,525 @@
+{
+  "checkpoint": {
+    "closed": true,
+    "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+    "head_hash": "sha256:0316b3275fdce8c9bacc54358b56a36ddbed597b3e1aa5c07ea88147f0fcf442",
+    "observed_at": "2026-09-05T18:04:25.072816Z",
+    "record_count": 6,
+    "snapshot_hash": "sha256:82fd39b93cf948672568bf8149de93bb669d252e1d814d7a834af3436277b71b",
+    "version": "velvet.protected_refunds.v1"
+  },
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "reference-observer",
+    "key_version": "v1",
+    "metadata": {
+      "verification_tier": "durable"
+    },
+    "payload_hash": "sha256:3a2074c955952ae6d317bfd1d00967885136924ca932fd99b0b1a30cf18c55e1",
+    "provider_name": "velvet_ed25519",
+    "public_verification_material": {
+      "encoding": "pem+raw-base64",
+      "key_id": "reference-observer",
+      "public_key_base64": "fuSyk7PVOg2nLIocWPSY8vyzQjxIcGznsN1mHc5dELg=",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAfuSyk7PVOg2nLIocWPSY8vyzQjxIcGznsN1mHc5dELg=\n-----END PUBLIC KEY-----\n",
+      "verification_tier": "durable"
+    },
+    "purpose": "velvet.protected_refunds.observer_checkpoint.v1",
+    "schema_version": "velvet.signature.v2",
+    "signature": "X9HiSy2ydf757Vil7hmT7DVv0Rc72hGt32rE43ANTbFnnvHzRZPot8xAABkiOqA6a7r3R+mYuifE9wJG6ufsAw==",
+    "signed_at": "2026-09-05T18:04:25Z",
+    "tenant_id": "reference"
+  },
+  "snapshot": {
+    "config": {
+      "audience": "protected-refunds",
+      "authority_key_id": "reference-authority",
+      "authority_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=\n-----END PUBLIC KEY-----\n",
+      "budget_cents": 10000,
+      "currency": "USD",
+      "environment": "local-reference",
+      "ledger_id": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031",
+      "orders": {
+        "order-1": 10000,
+        "order-2": 10000,
+        "order-3": 10000,
+        "order-4": 10000,
+        "order-5": 10000
+      },
+      "tenant_id": "reference",
+      "version": "velvet.protected_refunds.v1"
+    },
+    "head_hash": "sha256:0316b3275fdce8c9bacc54358b56a36ddbed597b3e1aa5c07ea88147f0fcf442",
+    "observation": {
+      "observed_at": "2026-09-05T18:04:25.072816Z",
+      "observer": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031_observer",
+      "postgres": "17.9 (Homebrew)",
+      "snapshot_started_at": "2026-09-05T18:04:25.071895Z"
+    },
+    "operations": [
+      {
+        "command_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+        "event_hash": "sha256:290c953959ff5683b841af3a20bf9e9fc248def59c4dc281e129dd3ce9d4e3aa",
+        "event_sequence": 1,
+        "operation_id": "refund-1",
+        "permit_id": "1ecb1a23-2160-4b83-ac85-f4038e6598cf"
+      },
+      {
+        "command_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+        "event_hash": "sha256:fdb8c9ec2dfff6691dc24fe195f4c51d01782d2c722df3d6677e13dc84bba91a",
+        "event_sequence": 2,
+        "operation_id": "refund-2",
+        "permit_id": "0ccced1f-62a9-41c5-9a05-7d0ece433c1e"
+      },
+      {
+        "command_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+        "event_hash": "sha256:5ecadb4fbb4b512cd1017670eb1184be134397f19dcb87f530183a0bd57255ea",
+        "event_sequence": 3,
+        "operation_id": "refund-3",
+        "permit_id": "f8abfa59-b77e-4460-86d7-48fba01bb618"
+      },
+      {
+        "command_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+        "event_hash": "sha256:8f1f3436538341f3f771334f442cbfaf3b3d733e34b8663daf0cf712fc76133c",
+        "event_sequence": 4,
+        "operation_id": "refund-5",
+        "permit_id": "8f00bd39-0c93-45d5-94df-fa3e68f1e6f9"
+      }
+    ],
+    "records": [
+      {
+        "event": {
+          "command": null,
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.047384Z",
+          "kind": "open",
+          "permit": null,
+          "previous_hash": null,
+          "sequence": 0,
+          "state_hash": "sha256:5bb7b613af16006dbee5bf5b60450046812ee2fd87d9bc8bbb5642b2350c49c8"
+        },
+        "event_hash": "sha256:651630c11f8af77df576d1248b788c56a5bb0d9f627aed172dcfff8d59779dd5",
+        "sequence": 0
+      },
+      {
+        "event": {
+          "command": {
+            "amount_cents": 1000,
+            "epoch": 0,
+            "ledger_id": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031",
+            "operation_id": "refund-1",
+            "order_id": "order-1",
+            "revision": 0
+          },
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.051583Z",
+          "kind": "refund",
+          "permit": {
+            "audience": "protected-refunds",
+            "canonicalization": "velvet.canonical_json.v1.sha256.unsigned_payload",
+            "constraints": {
+              "claim_before_dispatch": true,
+              "deny_on_scope_drift": true,
+              "idempotency_key": "refund-1",
+              "receipt_required": true,
+              "single_use": true
+            },
+            "environment": "local-reference",
+            "issuer": "reference-authority",
+            "lineage": {
+              "decision_artifact": {
+                "artifact_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+                "artifact_id": "refund-1",
+                "artifact_type": "operator_approved_refund"
+              },
+              "pre_execution_record": {
+                "artifact_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+                "artifact_id": "refund-1",
+                "artifact_type": "operator_approved_refund"
+              },
+              "supporting_artifacts": []
+            },
+            "obligations": [],
+            "permit_hash": "sha256:08102684202f4ca52bd3bf2e7d706eb6b6d14162ec69e3435bfce14d5002ffb8",
+            "permit_id": "1ecb1a23-2160-4b83-ac85-f4038e6598cf",
+            "policy": {
+              "policy_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+              "policy_version": "velvet.protected_refunds.v1"
+            },
+            "schema_version": "velvet.execution_permit.v1",
+            "scope": {
+              "arguments_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+              "canonical_action_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+              "method": "refund",
+              "operation": "refund",
+              "request_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+              "surface": "function",
+              "tool_key": "velvet.protected_refunds.refund",
+              "tool_schema_hash": "sha256:6a6372bf148dbcce991db13c71160c1621ab4f8f798729cdfafcbb6e76df2828"
+            },
+            "signature": {
+              "algorithm": "Ed25519",
+              "key_id": "reference-authority",
+              "key_version": "v1",
+              "metadata": {
+                "verification_tier": "durable"
+              },
+              "payload_hash": "sha256:08102684202f4ca52bd3bf2e7d706eb6b6d14162ec69e3435bfce14d5002ffb8",
+              "provider_name": "velvet_ed25519",
+              "public_verification_material": {
+                "encoding": "pem+raw-base64",
+                "key_id": "reference-authority",
+                "public_key_base64": "cfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=",
+                "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=\n-----END PUBLIC KEY-----\n",
+                "verification_tier": "durable"
+              },
+              "purpose": "velvet.execution_permit.v1",
+              "schema_version": "velvet.signature.v2",
+              "signature": "xocsCG7oM9xoSerXSG+rkt3OdYgN4If7OQ8w9z80dlPeP7wb9RVWCrKPHtVHlayMKHoUpdIaz9A7vIhXPeyjDA==",
+              "signed_at": "2026-09-05T18:04:25Z",
+              "tenant_id": "reference"
+            },
+            "subject": {},
+            "tenant_id": "reference",
+            "validity": {
+              "expires_at": "2026-09-05T18:05:25.048917Z",
+              "issued_at": "2026-09-05T18:04:25.048917Z",
+              "not_before": "2026-09-05T18:04:25.048917Z"
+            }
+          },
+          "previous_hash": "sha256:651630c11f8af77df576d1248b788c56a5bb0d9f627aed172dcfff8d59779dd5",
+          "sequence": 1,
+          "state_hash": "sha256:6e791cea34f104c95d00f64cfa18825d582047b790a70546dd7c097398c0ae29"
+        },
+        "event_hash": "sha256:290c953959ff5683b841af3a20bf9e9fc248def59c4dc281e129dd3ce9d4e3aa",
+        "sequence": 1
+      },
+      {
+        "event": {
+          "command": {
+            "amount_cents": 4000,
+            "epoch": 0,
+            "ledger_id": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031",
+            "operation_id": "refund-2",
+            "order_id": "order-2",
+            "revision": 0
+          },
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.058400Z",
+          "kind": "refund",
+          "permit": {
+            "audience": "protected-refunds",
+            "canonicalization": "velvet.canonical_json.v1.sha256.unsigned_payload",
+            "constraints": {
+              "claim_before_dispatch": true,
+              "deny_on_scope_drift": true,
+              "idempotency_key": "refund-2",
+              "receipt_required": true,
+              "single_use": true
+            },
+            "environment": "local-reference",
+            "issuer": "reference-authority",
+            "lineage": {
+              "decision_artifact": {
+                "artifact_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+                "artifact_id": "refund-2",
+                "artifact_type": "operator_approved_refund"
+              },
+              "pre_execution_record": {
+                "artifact_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+                "artifact_id": "refund-2",
+                "artifact_type": "operator_approved_refund"
+              },
+              "supporting_artifacts": []
+            },
+            "obligations": [],
+            "permit_hash": "sha256:bb21e23a01770bba4eb339b93fcb00903a003365b469fa5e8b1b1a45cf55b72b",
+            "permit_id": "0ccced1f-62a9-41c5-9a05-7d0ece433c1e",
+            "policy": {
+              "policy_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+              "policy_version": "velvet.protected_refunds.v1"
+            },
+            "schema_version": "velvet.execution_permit.v1",
+            "scope": {
+              "arguments_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+              "canonical_action_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+              "method": "refund",
+              "operation": "refund",
+              "request_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+              "surface": "function",
+              "tool_key": "velvet.protected_refunds.refund",
+              "tool_schema_hash": "sha256:6a6372bf148dbcce991db13c71160c1621ab4f8f798729cdfafcbb6e76df2828"
+            },
+            "signature": {
+              "algorithm": "Ed25519",
+              "key_id": "reference-authority",
+              "key_version": "v1",
+              "metadata": {
+                "verification_tier": "durable"
+              },
+              "payload_hash": "sha256:bb21e23a01770bba4eb339b93fcb00903a003365b469fa5e8b1b1a45cf55b72b",
+              "provider_name": "velvet_ed25519",
+              "public_verification_material": {
+                "encoding": "pem+raw-base64",
+                "key_id": "reference-authority",
+                "public_key_base64": "cfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=",
+                "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=\n-----END PUBLIC KEY-----\n",
+                "verification_tier": "durable"
+              },
+              "purpose": "velvet.execution_permit.v1",
+              "schema_version": "velvet.signature.v2",
+              "signature": "RuzQkDZL4BEDcD43fWTn5AqeGrYtAO9YCBKVBpfHHbQVS29LldEwfhPDJwEAcojnbnHNyh/ZkUuYYUJ29/8FAA==",
+              "signed_at": "2026-09-05T18:04:25Z",
+              "tenant_id": "reference"
+            },
+            "subject": {},
+            "tenant_id": "reference",
+            "validity": {
+              "expires_at": "2026-09-05T18:05:25.055422Z",
+              "issued_at": "2026-09-05T18:04:25.055422Z",
+              "not_before": "2026-09-05T18:04:25.055422Z"
+            }
+          },
+          "previous_hash": "sha256:290c953959ff5683b841af3a20bf9e9fc248def59c4dc281e129dd3ce9d4e3aa",
+          "sequence": 2,
+          "state_hash": "sha256:f7777997b4b3ed00a0b60caed2b122505ecf78240fabc5d426507875f3ee5257"
+        },
+        "event_hash": "sha256:fdb8c9ec2dfff6691dc24fe195f4c51d01782d2c722df3d6677e13dc84bba91a",
+        "sequence": 2
+      },
+      {
+        "event": {
+          "command": {
+            "amount_cents": 4000,
+            "epoch": 0,
+            "ledger_id": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031",
+            "operation_id": "refund-3",
+            "order_id": "order-3",
+            "revision": 0
+          },
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.060034Z",
+          "kind": "refund",
+          "permit": {
+            "audience": "protected-refunds",
+            "canonicalization": "velvet.canonical_json.v1.sha256.unsigned_payload",
+            "constraints": {
+              "claim_before_dispatch": true,
+              "deny_on_scope_drift": true,
+              "idempotency_key": "refund-3",
+              "receipt_required": true,
+              "single_use": true
+            },
+            "environment": "local-reference",
+            "issuer": "reference-authority",
+            "lineage": {
+              "decision_artifact": {
+                "artifact_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+                "artifact_id": "refund-3",
+                "artifact_type": "operator_approved_refund"
+              },
+              "pre_execution_record": {
+                "artifact_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+                "artifact_id": "refund-3",
+                "artifact_type": "operator_approved_refund"
+              },
+              "supporting_artifacts": []
+            },
+            "obligations": [],
+            "permit_hash": "sha256:bde09d4ade5964054ad9651edc6ee013e068c12c3879f92e9a91a8854ce3a2e9",
+            "permit_id": "f8abfa59-b77e-4460-86d7-48fba01bb618",
+            "policy": {
+              "policy_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+              "policy_version": "velvet.protected_refunds.v1"
+            },
+            "schema_version": "velvet.execution_permit.v1",
+            "scope": {
+              "arguments_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+              "canonical_action_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+              "method": "refund",
+              "operation": "refund",
+              "request_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+              "surface": "function",
+              "tool_key": "velvet.protected_refunds.refund",
+              "tool_schema_hash": "sha256:6a6372bf148dbcce991db13c71160c1621ab4f8f798729cdfafcbb6e76df2828"
+            },
+            "signature": {
+              "algorithm": "Ed25519",
+              "key_id": "reference-authority",
+              "key_version": "v1",
+              "metadata": {
+                "verification_tier": "durable"
+              },
+              "payload_hash": "sha256:bde09d4ade5964054ad9651edc6ee013e068c12c3879f92e9a91a8854ce3a2e9",
+              "provider_name": "velvet_ed25519",
+              "public_verification_material": {
+                "encoding": "pem+raw-base64",
+                "key_id": "reference-authority",
+                "public_key_base64": "cfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=",
+                "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=\n-----END PUBLIC KEY-----\n",
+                "verification_tier": "durable"
+              },
+              "purpose": "velvet.execution_permit.v1",
+              "schema_version": "velvet.signature.v2",
+              "signature": "j2nOGk4wpQktugeIB4jaFKqvTRsIpxPRz+iE8BY6vFSTJvSyc5JUYKG+5ctSoEufffswnhwZlIsWfaByNeFVAA==",
+              "signed_at": "2026-09-05T18:04:25Z",
+              "tenant_id": "reference"
+            },
+            "subject": {},
+            "tenant_id": "reference",
+            "validity": {
+              "expires_at": "2026-09-05T18:05:25.056096Z",
+              "issued_at": "2026-09-05T18:04:25.056096Z",
+              "not_before": "2026-09-05T18:04:25.056096Z"
+            }
+          },
+          "previous_hash": "sha256:fdb8c9ec2dfff6691dc24fe195f4c51d01782d2c722df3d6677e13dc84bba91a",
+          "sequence": 3,
+          "state_hash": "sha256:a9fc727199467784fbed98fbc7f0a9aeaa4bf2c11d3b5c4d448cb4b6b6e2ff45"
+        },
+        "event_hash": "sha256:5ecadb4fbb4b512cd1017670eb1184be134397f19dcb87f530183a0bd57255ea",
+        "sequence": 3
+      },
+      {
+        "event": {
+          "command": {
+            "amount_cents": 1000,
+            "epoch": 0,
+            "ledger_id": "vr_5ff4ab5855cd4c6195d9ad7fcf6c1031",
+            "operation_id": "refund-5",
+            "order_id": "order-5",
+            "revision": 0
+          },
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.064324Z",
+          "kind": "refund",
+          "permit": {
+            "audience": "protected-refunds",
+            "canonicalization": "velvet.canonical_json.v1.sha256.unsigned_payload",
+            "constraints": {
+              "claim_before_dispatch": true,
+              "deny_on_scope_drift": true,
+              "idempotency_key": "refund-5",
+              "receipt_required": true,
+              "single_use": true
+            },
+            "environment": "local-reference",
+            "issuer": "reference-authority",
+            "lineage": {
+              "decision_artifact": {
+                "artifact_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+                "artifact_id": "refund-5",
+                "artifact_type": "operator_approved_refund"
+              },
+              "pre_execution_record": {
+                "artifact_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+                "artifact_id": "refund-5",
+                "artifact_type": "operator_approved_refund"
+              },
+              "supporting_artifacts": []
+            },
+            "obligations": [],
+            "permit_hash": "sha256:4e45c6bedcf78739cf833bea77c6d8159a134033107ffe485fa031e952838c4d",
+            "permit_id": "8f00bd39-0c93-45d5-94df-fa3e68f1e6f9",
+            "policy": {
+              "policy_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+              "policy_version": "velvet.protected_refunds.v1"
+            },
+            "schema_version": "velvet.execution_permit.v1",
+            "scope": {
+              "arguments_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+              "canonical_action_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+              "method": "refund",
+              "operation": "refund",
+              "request_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+              "surface": "function",
+              "tool_key": "velvet.protected_refunds.refund",
+              "tool_schema_hash": "sha256:6a6372bf148dbcce991db13c71160c1621ab4f8f798729cdfafcbb6e76df2828"
+            },
+            "signature": {
+              "algorithm": "Ed25519",
+              "key_id": "reference-authority",
+              "key_version": "v1",
+              "metadata": {
+                "verification_tier": "durable"
+              },
+              "payload_hash": "sha256:4e45c6bedcf78739cf833bea77c6d8159a134033107ffe485fa031e952838c4d",
+              "provider_name": "velvet_ed25519",
+              "public_verification_material": {
+                "encoding": "pem+raw-base64",
+                "key_id": "reference-authority",
+                "public_key_base64": "cfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=",
+                "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcfhvKjobbGZibmTvIjm0qjAnTnpxYQ2XGhF1Asu54yA=\n-----END PUBLIC KEY-----\n",
+                "verification_tier": "durable"
+              },
+              "purpose": "velvet.execution_permit.v1",
+              "schema_version": "velvet.signature.v2",
+              "signature": "Qq2acZqCVTL0EBjqxSoV+ypD+/Z+jKdkofd5Nz1AppTAHO1q+5HuorIV6kyZgcnmacIUjxR9Sd18ebB08NRPCw==",
+              "signed_at": "2026-09-05T18:04:25Z",
+              "tenant_id": "reference"
+            },
+            "subject": {},
+            "tenant_id": "reference",
+            "validity": {
+              "expires_at": "2026-09-05T18:05:25.061326Z",
+              "issued_at": "2026-09-05T18:04:25.061326Z",
+              "not_before": "2026-09-05T18:04:25.061326Z"
+            }
+          },
+          "previous_hash": "sha256:5ecadb4fbb4b512cd1017670eb1184be134397f19dcb87f530183a0bd57255ea",
+          "sequence": 4,
+          "state_hash": "sha256:a475074eb94f077a12ec03ca6f9647a876396b3cdbd94f982bebb36412865c95"
+        },
+        "event_hash": "sha256:8f1f3436538341f3f771334f442cbfaf3b3d733e34b8663daf0cf712fc76133c",
+        "sequence": 4
+      },
+      {
+        "event": {
+          "command": null,
+          "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+          "evaluated_at": "2026-09-05T18:04:25.068671Z",
+          "kind": "close",
+          "permit": null,
+          "previous_hash": "sha256:8f1f3436538341f3f771334f442cbfaf3b3d733e34b8663daf0cf712fc76133c",
+          "sequence": 5,
+          "state_hash": "sha256:a92da2cdbde11f78c313759b835f1ec027ac8b6b89dd57b563fb22837ea92186"
+        },
+        "event_hash": "sha256:0316b3275fdce8c9bacc54358b56a36ddbed597b3e1aa5c07ea88147f0fcf442",
+        "sequence": 5
+      }
+    ],
+    "sequence": 5,
+    "state": {
+      "closed": true,
+      "epoch": 1,
+      "orders": {
+        "order-1": {
+          "refunded_cents": 1000,
+          "revision": 1,
+          "total_cents": 10000
+        },
+        "order-2": {
+          "refunded_cents": 4000,
+          "revision": 1,
+          "total_cents": 10000
+        },
+        "order-3": {
+          "refunded_cents": 4000,
+          "revision": 1,
+          "total_cents": 10000
+        },
+        "order-4": {
+          "refunded_cents": 0,
+          "revision": 0,
+          "total_cents": 10000
+        },
+        "order-5": {
+          "refunded_cents": 1000,
+          "revision": 1,
+          "total_cents": 10000
+        }
+      },
+      "spent_cents": 10000
+    }
+  }
+}

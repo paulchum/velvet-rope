@@ -1,0 +1,55 @@
+name: Protected refund contract
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.9-alpine
+        env:
+          POSTGRES_PASSWORD: disposable-reference-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      VELVET_REFUNDS_TEST_DSN: host=127.0.0.1 port=5432 dbname=postgres user=postgres password=disposable-reference-only
+      VELVET_REFUNDS_DEMO_DSN: host=127.0.0.1 port=5432 dbname=postgres user=postgres password=disposable-reference-only
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+      - name: Install locked dependencies
+        run: uv sync --locked --dev
+      - name: Contract and PostgreSQL conformance
+        run: uv run pytest tests/test_protected_refunds.py tests/test_shadowpath_measurement.py -q --no-cov
+      - name: Generate a fresh reference checkpoint
+        run: uv run python -m velvet.refunds demo --output-dir reports/protected-refunds
+      - name: Verify independently pinned committed evidence
+        run: |
+          uv run python -m velvet.refunds verify site/public/proofs/refunds/evidence.json \
+            --observer-key site/public/proofs/refunds/observer-public-key.pem \
+            --observer-key-id reference-observer \
+            --contract-hash "$(cat site/public/proofs/refunds/contract.sha256)"
+      - name: Retain fresh evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: protected-refund-evidence
+          path: reports/protected-refunds/

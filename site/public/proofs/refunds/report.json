@@ -1,0 +1,100 @@
+{
+  "attempts": [
+    {
+      "amount_cents": 1000,
+      "command_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+      "event_hash": "sha256:290c953959ff5683b841af3a20bf9e9fc248def59c4dc281e129dd3ce9d4e3aa",
+      "event_sequence": 1,
+      "operation_id": "refund-1",
+      "permit_id": "1ecb1a23-2160-4b83-ac85-f4038e6598cf",
+      "replayed": false,
+      "status": "committed"
+    },
+    {
+      "amount_cents": 1000,
+      "command_hash": "sha256:1dc24b4f35f3d47abe56a7de517566a9f5f487f4e84fb530f9c25a60667149b7",
+      "event_hash": "sha256:290c953959ff5683b841af3a20bf9e9fc248def59c4dc281e129dd3ce9d4e3aa",
+      "event_sequence": 1,
+      "operation_id": "refund-1",
+      "permit_id": "1ecb1a23-2160-4b83-ac85-f4038e6598cf",
+      "replayed": true,
+      "status": "committed"
+    },
+    {
+      "amount_cents": 4000,
+      "command_hash": "sha256:c3e9dcf03ba5a1721a0b75eb0669e91ff309eab81f7852b8dc6a028360a38862",
+      "elapsed_ms": 3.061,
+      "event_hash": "sha256:fdb8c9ec2dfff6691dc24fe195f4c51d01782d2c722df3d6677e13dc84bba91a",
+      "event_sequence": 2,
+      "operation_id": "refund-2",
+      "permit_id": "0ccced1f-62a9-41c5-9a05-7d0ece433c1e",
+      "replayed": false,
+      "status": "committed"
+    },
+    {
+      "amount_cents": 4000,
+      "command_hash": "sha256:233a0e97e16294d4c2785bf76c0a954dde1edfa573c8ca61602624df6d74ad41",
+      "elapsed_ms": 4.433,
+      "event_hash": "sha256:5ecadb4fbb4b512cd1017670eb1184be134397f19dcb87f530183a0bd57255ea",
+      "event_sequence": 3,
+      "operation_id": "refund-3",
+      "permit_id": "f8abfa59-b77e-4460-86d7-48fba01bb618",
+      "replayed": false,
+      "status": "committed"
+    },
+    {
+      "amount_cents": 1000,
+      "elapsed_ms": 4.104,
+      "operation_id": "refund-4",
+      "reason": "refund exceeds the shared budget",
+      "status": "rejected"
+    },
+    {
+      "amount_cents": 1000,
+      "command_hash": "sha256:d818108b2f7e3b6f176ca76bb27210f2bac447f5b5aa485b2c03968cdfcbaa5f",
+      "elapsed_ms": 3.153,
+      "event_hash": "sha256:8f1f3436538341f3f771334f442cbfaf3b3d733e34b8663daf0cf712fc76133c",
+      "event_sequence": 4,
+      "operation_id": "refund-5",
+      "permit_id": "8f00bd39-0c93-45d5-94df-fa3e68f1e6f9",
+      "replayed": false,
+      "status": "committed"
+    },
+    {
+      "operation_id": "after-close",
+      "reason": "workflow is closed or its epoch differs",
+      "status": "rejected"
+    }
+  ],
+  "claim_boundary": "Closed reference ledger only. Trusted database, executor, authority and observer. No payment provider or vendor comparison.",
+  "observed_at": "2026-09-05T18:04:25.072816Z",
+  "provenance": {
+    "platform": "Darwin arm64",
+    "postgres": "17.9 (Homebrew)",
+    "python": "3.12.12",
+    "source_hashes": {
+      "__init__.py": "sha256:61121954d47295a9b103dcd5df25094141e033baa4718e8c33eec54236de2456",
+      "__main__.py": "sha256:acf379300e21ea36031529357ec8fb60f1e34d76148433e7fbabe5d4e7680299",
+      "contract.py": "sha256:0dbe2bc7e20e6846c25fd930d0672020637314771fc614c9c8fb0ecde28c8a3d",
+      "demo.py": "sha256:aad07fc166cb16f8f36f8bc9bf44cf8dfdd01ab50ffc07ecea16bdbb1947f25a",
+      "evidence.py": "sha256:f10e4cc32af48d1a5028ea2f60a508320fb6d19ef849f29f45ada7694829c61c",
+      "postgres.py": "sha256:cb64e2b6e77170789f711d07da3f42f04659500c9b12c23fb1f81c0abb868cb4"
+    }
+  },
+  "timing": {
+    "max_ms": 4.433,
+    "mean_ms": 3.654,
+    "min_ms": 3.061,
+    "sample_count": 5,
+    "scope": "5 local calls incl. one budget rejection; connection + lock + authorization + transaction; not a benchmark"
+  },
+  "verification": {
+    "budget_cents": 10000,
+    "closed": true,
+    "committed_refunds": 4,
+    "contract_hash": "sha256:28773dd16ce51b32b597aa2d4cac7e4a5133f48b240d684a4119b03f90a3deb8",
+    "records_checked": 6,
+    "spent_cents": 10000,
+    "status": "COMPLETE"
+  }
+}

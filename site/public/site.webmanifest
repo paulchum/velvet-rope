@@ -1,0 +1,9 @@
+{
+  "name": "Velvet Outcome Assurance",
+  "short_name": "Velvet",
+  "description": "Outcome assurance for autonomous agents.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#f4f0e8"
+}
