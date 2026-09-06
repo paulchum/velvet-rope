@@ -166,7 +166,7 @@ class StripeTests(unittest.TestCase):
             with patch.object(sp.time, "monotonic", clock.monotonic), \
                     patch.object(sp.time, "sleep", clock.sleep):
                 probe = sp.Probe(settings, ENV, transport or FakeTransport())
-                result = probe.run()
+                result: dict[str, Any] = probe.run()
             self.assertEqual(result, json.loads((settings.output / "result.json").read_text()))
             serialized = json.dumps(result)
             for value in ENV.values():

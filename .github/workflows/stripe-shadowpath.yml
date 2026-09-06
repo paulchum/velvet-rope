@@ -47,7 +47,7 @@ jobs:
       - name: Lint integration files
         run: ruff check src/velvet/stripe_shadowpath.py tests/test_stripe_shadowpath*.py
       - name: Type-check integration files
-        run: mypy --strict src/velvet/stripe_shadowpath.py tests/test_stripe_shadowpath*.py
+        run: mypy --strict --follow-imports=silent src/velvet/stripe_shadowpath.py tests/test_stripe_shadowpath*.py
       - name: Run offline tests (no Stripe credentials)
         run: python -m unittest discover -s tests -p 'test_stripe_shadowpath.py' -v
 

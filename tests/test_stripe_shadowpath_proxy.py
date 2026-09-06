@@ -38,6 +38,7 @@ class Upstream(BaseHTTPRequestHandler):
             self.send_response(202)
             self.end_headers()
             return
+        result: dict[str, Any]
         if method == "initialize":
             result = {"protocolVersion": "2025-11-25", "capabilities": {"tools": {}},
                       "serverInfo": {"name": "offline-protocol-stub", "version": "1"}}
