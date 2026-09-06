@@ -577,7 +577,8 @@ class Probe:
                                                    "reason": "no explicit agent REST credential"}
             else:
                 def direct() -> Json:
-                    assert self.agent is not None
+                    if self.agent is None:
+                        raise ProbeError("agent REST route is unavailable")
                     refund = self.agent.request("POST", "/v1/refunds",
                         {"charge": protected_id, "amount": self.settings.amount},
                         idempotency=f"shadowpath:{self.report['run_id']}:direct-refund")
