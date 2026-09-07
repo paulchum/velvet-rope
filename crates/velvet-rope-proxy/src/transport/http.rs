@@ -571,6 +571,83 @@ pub(crate) fn tls_check_policy_summary() -> Value {
     })
 }
 
+// Inventory is its own MCP session: negotiate before listing, and never infer an
+// inventory from an HTTP error, an unrelated RPC response, or a partial page.
+async fn inventory_rpc(
+    client: &reqwest::Client,
+    config: &ProxyConfig,
+    endpoint: &str,
+    auth: &ResolvedUpstreamBoundaryAuth,
+    protocol: &str,
+    session: Option<&str>,
+    request: &Value,
+) -> Result<(Value, Option<String>)> {
+    tokio::time::timeout(
+        StdDuration::from_millis(config.limits.upstream_timeout_ms),
+        async {
+            let mut builder = apply_upstream_boundary_auth(
+                client
+                    .post(endpoint)
+                    .header(header::ACCEPT, "application/json, text/event-stream")
+                    .header("MCP-Protocol-Version", protocol),
+                auth,
+            );
+            if let Some(session) = session {
+                builder = builder.header("MCP-Session-Id", session);
+            }
+            let response = builder
+                .json(request)
+                .send()
+                .await
+                .context("send upstream inventory RPC")?;
+            if !response.status().is_success() {
+                bail!("upstream inventory returned HTTP {}", response.status());
+            }
+            let session = response_session_header(response.headers())?;
+            let id = &request["id"];
+            let is_sse = response
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok())
+                .is_some_and(|value| value.to_ascii_lowercase().contains("text/event-stream"));
+            let value = if is_sse {
+                let (events, _) = read_upstream_sse_response(
+                    response,
+                    config.limits.max_response_bytes,
+                    Some(id),
+                )
+                .await?;
+                events
+                    .iter()
+                    .filter_map(|event| serde_json::from_str::<Value>(&event.data).ok())
+                    .find(|value| value.get("id") == Some(id) && value.get("method").is_none())
+                    .ok_or_else(|| anyhow!("upstream inventory SSE has no matching response"))?
+            } else {
+                let mut bytes = Vec::new();
+                let mut stream = response.bytes_stream();
+                while let Some(chunk) = stream.next().await {
+                    bytes.extend_from_slice(&chunk.context("read upstream inventory response")?);
+                    if bytes.len() > config.limits.max_response_bytes {
+                        bail!("upstream inventory exceeds configured size limit");
+                    }
+                }
+                serde_json::from_slice::<Value>(&bytes).context("parse upstream inventory JSON")?
+            };
+            if value.get("jsonrpc").and_then(Value::as_str) != Some("2.0")
+                || value.get("id") != Some(id)
+                || value.get("method").is_some()
+                || value.get("error").is_some()
+                || !value.get("result").is_some_and(Value::is_object)
+            {
+                bail!("upstream inventory RPC failed or returned a mismatched response");
+            }
+            Ok((value, session))
+        },
+    )
+    .await
+    .map_err(|_| anyhow!("upstream inventory RPC timed out"))?
+}
+
 pub(crate) async fn fetch_http_inventory(
     client: &reqwest::Client,
     config: &ProxyConfig,
@@ -579,102 +656,127 @@ pub(crate) async fn fetch_http_inventory(
 ) -> Result<Value> {
     let upstream_timeout = StdDuration::from_millis(config.limits.upstream_timeout_ms);
     let initialize = json!({
-        "jsonrpc": "2.0",
-        "id": "velvet-inventory-init",
-        "method": "initialize",
-        "params": {
-            "protocolVersion": MCP_SPEC_TARGET,
-            "capabilities": {},
-            "clientInfo": {"name": PROXY_NAME, "version": PROXY_VERSION}
+        "jsonrpc": "2.0", "id": "velvet-inventory-init", "method": "initialize",
+        "params": {"protocolVersion": MCP_SPEC_TARGET, "capabilities": {},
+            "clientInfo": {"name": PROXY_NAME, "version": PROXY_VERSION}}
+    });
+    let (init, session) = inventory_rpc(
+        client,
+        config,
+        endpoint,
+        upstream_boundary_auth,
+        MCP_SPEC_TARGET,
+        None,
+        &initialize,
+    )
+    .await?;
+    let protocol = init
+        .pointer("/result/protocolVersion")
+        .and_then(Value::as_str)
+        .ok_or_else(|| anyhow!("upstream initialize is missing protocolVersion"))?;
+    if !config
+        .http
+        .supported_protocol_versions
+        .iter()
+        .any(|version| version == protocol)
+    {
+        bail!("upstream negotiated an unsupported MCP protocol");
+    }
+    let inventory = async {
+        let mut builder = apply_upstream_boundary_auth(
+            client
+                .post(endpoint)
+                .header(header::ACCEPT, "application/json, text/event-stream")
+                .header("MCP-Protocol-Version", protocol),
+            upstream_boundary_auth,
+        );
+        if let Some(session) = &session {
+            builder = builder.header("MCP-Session-Id", session);
         }
-    });
-    let init_builder = apply_upstream_boundary_auth(
-        client
-            .post(endpoint)
-            .header(header::ACCEPT, "application/json, text/event-stream")
-            .header("MCP-Protocol-Version", MCP_SPEC_TARGET),
-        upstream_boundary_auth,
-    );
-    let init_response =
-        tokio::time::timeout(upstream_timeout, init_builder.json(&initialize).send())
-            .await
-            .map_err(|_| anyhow!("initialize HTTP MCP upstream timed out before inventory fetch"))?
-            .context("initialize HTTP MCP upstream before inventory fetch")?;
-    let upstream_session = response_session_header(init_response.headers())?;
-    let _init_body = tokio::time::timeout(upstream_timeout, init_response.json::<Value>())
+        let response = tokio::time::timeout(
+            upstream_timeout,
+            builder
+                .json(&json!({
+                    "jsonrpc": "2.0", "method": "notifications/initialized", "params": {}
+                }))
+                .send(),
+        )
         .await
-        .map_err(|_| anyhow!("parse upstream initialize response timed out"))?
-        .context("parse upstream initialize response")?;
-
-    let initialized = json!({
-        "jsonrpc": "2.0",
-        "method": "notifications/initialized",
-        "params": {}
-    });
-    let mut initialized_builder = apply_upstream_boundary_auth(
-        client
-            .post(endpoint)
-            .header(header::ACCEPT, "application/json, text/event-stream")
-            .header("MCP-Protocol-Version", MCP_SPEC_TARGET),
-        upstream_boundary_auth,
-    );
-    if let Some(session) = &upstream_session {
-        initialized_builder = initialized_builder.header("MCP-Session-Id", session);
+        .map_err(|_| anyhow!("upstream initialized notification timed out"))??;
+        if !response.status().is_success() {
+            bail!(
+                "upstream rejected initialized notification: HTTP {}",
+                response.status()
+            );
+        }
+        let mut tools = Vec::new();
+        let mut cursors = BTreeSet::new();
+        let mut names = BTreeSet::new();
+        let mut params = json!({});
+        for page in 0..100 {
+            let (response, _) = inventory_rpc(
+                client,
+                config,
+                endpoint,
+                upstream_boundary_auth,
+                protocol,
+                session.as_deref(),
+                &json!({
+                    "jsonrpc": "2.0", "id": format!("velvet-inventory-{page}"),
+                    "method": "tools/list", "params": params
+                }),
+            )
+            .await?;
+            let page_tools = response
+                .pointer("/result/tools")
+                .and_then(Value::as_array)
+                .ok_or_else(|| anyhow!("upstream inventory is missing tools"))?;
+            for tool in page_tools {
+                let name = tool
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .filter(|name| !name.is_empty())
+                    .ok_or_else(|| anyhow!("upstream inventory tool is missing its name"))?;
+                if !names.insert(name.to_string()) {
+                    bail!("upstream inventory contains duplicate tool names");
+                }
+                tools.push(tool.clone());
+            }
+            if serde_json::to_vec(&tools)?.len() > config.limits.max_response_bytes {
+                bail!("combined upstream inventory exceeds configured size limit");
+            }
+            match response.pointer("/result/nextCursor") {
+                None | Some(Value::Null) => {
+                    return Ok(json!({
+                        "jsonrpc": "2.0", "id": "velvet-inventory", "result": {"tools": tools}
+                    }));
+                }
+                Some(Value::String(cursor))
+                    if !cursor.is_empty() && cursors.insert(cursor.clone()) =>
+                {
+                    params = json!({"cursor": cursor});
+                }
+                _ => bail!("upstream inventory has an invalid or repeated cursor"),
+            }
+        }
+        bail!("upstream inventory pagination limit exceeded")
     }
-    let _ = tokio::time::timeout(
-        upstream_timeout,
-        initialized_builder.json(&initialized).send(),
-    )
     .await;
-
-    let mut list_builder = apply_upstream_boundary_auth(
-        client
-            .post(endpoint)
-            .header(header::ACCEPT, "application/json, text/event-stream")
-            .header("MCP-Protocol-Version", MCP_SPEC_TARGET),
-        upstream_boundary_auth,
-    )
-    .json(&json!({
-            "jsonrpc": "2.0",
-            "id": "velvet-inventory",
-            "method": "tools/list",
-            "params": {}
-    }));
-    if let Some(session) = &upstream_session {
-        list_builder = list_builder.header("MCP-Session-Id", session);
-    }
-    let list_response = tokio::time::timeout(upstream_timeout, list_builder.send())
-        .await
-        .map_err(|_| anyhow!("fetch HTTP MCP upstream tools/list inventory timed out"))?
-        .context("fetch HTTP MCP upstream tools/list inventory")?;
-    let inventory_response = tokio::time::timeout(upstream_timeout, list_response.json::<Value>())
-        .await
-        .map_err(|_| anyhow!("parse upstream tools/list response timed out"))?
-        .context("parse upstream tools/list response")?;
-
-    if let Some(session) = upstream_session {
+    if let Some(session) = session {
         let _ = tokio::time::timeout(
             upstream_timeout,
             apply_upstream_boundary_auth(
                 client
                     .delete(endpoint)
                     .header("MCP-Session-Id", session)
-                    .header("MCP-Protocol-Version", MCP_SPEC_TARGET),
+                    .header("MCP-Protocol-Version", protocol),
                 upstream_boundary_auth,
             )
             .send(),
         )
         .await;
     }
-    if !config
-        .http
-        .supported_protocol_versions
-        .iter()
-        .any(|version| version == MCP_SPEC_TARGET)
-    {
-        bail!("unsupported MCP protocol version {MCP_SPEC_TARGET}");
-    }
-    Ok(inventory_response)
+    inventory
 }
 
 pub async fn run_http_proxy(config: ProxyConfig) -> Result<()> {
@@ -1287,7 +1389,11 @@ pub(crate) async fn forward_http_json(
     if is_sse {
         let sse_read = tokio::time::timeout(
             StdDuration::from_millis(state.config.limits.upstream_timeout_ms),
-            read_upstream_sse_response(upstream_response, state.config.limits.max_response_bytes),
+            read_upstream_sse_response(
+                upstream_response,
+                state.config.limits.max_response_bytes,
+                request.get("id"),
+            ),
         )
         .await;
         let (mut events, response_hash) = match sse_read {
@@ -1640,6 +1746,7 @@ pub(crate) fn insert_session_headers(
 pub(crate) async fn read_upstream_sse_response(
     response: reqwest::Response,
     max_response_bytes: usize,
+    expected_id: Option<&Value>,
 ) -> Result<(Vec<SseWireEvent>, String)> {
     let mut parser = SseEventParser::default();
     let mut raw = Vec::new();
@@ -1652,6 +1759,14 @@ pub(crate) async fn read_upstream_sse_response(
             bail!("upstream response exceeds configured size limit");
         }
         events.extend(parser.push_chunk(&chunk)?);
+        if expected_id.is_some_and(|id| events.iter().any(|event| {
+            serde_json::from_str::<Value>(&event.data).is_ok_and(|value| {
+                matches!(classify_json_rpc(&value), JsonRpcMessageKind::Response { id: response_id } if &response_id == id)
+            })
+        })) {
+            // A POST response stream may remain open after its terminal message.
+            return Ok((events, format!("sha256:{}", sha256_hex(&raw))));
+        }
     }
     events.extend(parser.finish()?);
     Ok((events, format!("sha256:{}", sha256_hex(&raw))))

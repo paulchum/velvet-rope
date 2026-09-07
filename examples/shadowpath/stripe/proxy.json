@@ -1,0 +1,49 @@
+{
+  "mode": "strict",
+  "transport": "streamable_http",
+  "identity": {"tenant_id": "stripe-shadowpath", "environment": "sandbox"},
+  "oap": {
+    "enabled": true,
+    "require_max_de_certificate": false,
+    "require_max_de_for_all_tool_calls": false
+  },
+  "upstream": {
+    "server": "stripe",
+    "endpoint": "https://mcp.stripe.com",
+    "boundary": {
+      "required": true,
+      "require_bearer": true,
+      "bearer": {"token_env": "VELVET_STRIPE_MCP_KEY"}
+    }
+  },
+  "policy": {
+    "dir": "examples/mcp_proxy/policies",
+    "chain": "mcp_demo",
+    "bundle_manifest": "examples/mcp_proxy/policy-bundle.yaml",
+    "require_signature": false
+  },
+  "tools": [{
+    "server": "stripe",
+    "name": "stripe_api_write",
+    "disposition": "blocked",
+    "approval_tier": "blocked",
+    "risk_class": "high"
+  }],
+  "method_dispositions": {
+    "resources": "block", "prompts": "block", "tasks": "block",
+    "notifications": "block", "unknown": "block"
+  },
+  "auth": {
+    "require_bearer": true,
+    "bearer_token_env": "VELVET_STRIPE_GATEWAY_TOKEN",
+    "forward_authorization": false
+  },
+  "http": {"bind": "127.0.0.1:8791", "endpoint_path": "/mcp"},
+  "limits": {"upstream_timeout_ms": 30000},
+  "ledger_path": "reports/stripe-proxy/ledger.jsonl",
+  "ledger": {"strict": true, "fsync": true, "sink": "local_file"},
+  "thread_path": "reports/stripe-proxy/thread.jsonl",
+  "inventory_path": "reports/stripe-proxy/inventory.json",
+  "approval_requests_path": "reports/stripe-proxy/approval-requests.jsonl",
+  "evidence_pack_path": "reports/stripe-proxy/evidence-pack.json"
+}
