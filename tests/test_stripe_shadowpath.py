@@ -372,8 +372,12 @@ class StripeTests(unittest.TestCase):
             sp.test_key("sk_test_s", "observer", restricted=True)
 
     def test_gateway_url_restrictions(self) -> None:
-        for value in ("http://example.com/mcp", "https://user:pass@example.com",
-                      "https://example.com/?token=secret", "file:///etc/passwd"):
+        # Explicit synthetic user-info components, never a credential-bearing URL literal.
+        userinfo_urls = [urllib.parse.urlunsplit(("https", info + "@example.invalid", "", "", ""))
+                        for info in ("fixture-user", ":fixture-password",
+                                     "fixture-user:fixture-password")]
+        for value in ("http://example.com/mcp", "https://example.com/?token=secret",
+                      "file:///etc/passwd", *userinfo_urls):
             with self.subTest(value=value), self.assertRaises(sp.ProbeError):
                 sp.gateway_url(value)
         self.assertEqual(sp.gateway_url("http://127.0.0.1:8791/mcp"),
