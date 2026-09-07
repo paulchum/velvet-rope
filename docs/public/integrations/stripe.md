@@ -57,8 +57,12 @@ route option, the result is `ROUTE_UNAVAILABLE`, not successful effect preventio
 
 ## Build and run from a checkout
 
-Run from the repository root. The source runner only adds the repository's existing
+Run from the repository root in a virtual environment. The source runner only adds the existing
 `jsonschema` dependency; it does not require a browser or the Rust Python extension.
+Use Python's isolated mode (`-I`) so sibling modules such as `src/velvet/types.py` cannot
+shadow the standard library. Stripe environment variables remain available in this mode.
+Install dependencies with the same `python` interpreter; `-I` excludes user-site packages
+and `PYTHONPATH`.
 
 ```bash
 python -m pip install 'jsonschema>=4,<5'
@@ -70,7 +74,7 @@ export VELVET_OAP_ED25519_PRIVATE_KEY="$(python -c 'import secrets; print(secret
 export VELVET_MAXDE_ED25519_PRIVATE_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
 
 # Set the Stripe sandbox credentials separately, without printing them.
-python src/velvet/stripe_shadowpath.py discover --output reports/stripe-tools.json
+python -I src/velvet/stripe_shadowpath.py discover --output reports/stripe-tools.json
 
 env -u VELVET_STRIPE_OBSERVER_KEY -u VELVET_STRIPE_SETUP_KEY \
   -u VELVET_STRIPE_AGENT_KEY \
@@ -80,7 +84,7 @@ env -u VELVET_STRIPE_OBSERVER_KEY -u VELVET_STRIPE_SETUP_KEY \
 Leave the gateway running. In a second terminal with the same environment:
 
 ```bash
-python src/velvet/stripe_shadowpath.py run \
+python -I src/velvet/stripe_shadowpath.py run \
   --gateway http://127.0.0.1:8791/mcp \
   --provision --allow-test-writes --with-direct-route \
   --output-dir reports/stripe-run-001

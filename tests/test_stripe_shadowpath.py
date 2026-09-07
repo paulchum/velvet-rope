@@ -4,6 +4,8 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -35,6 +37,35 @@ ENV = {"VELVET_STRIPE_MCP_KEY": "rk_test_m",
        "VELVET_STRIPE_OBSERVER_KEY": "rk_test_o",
        "VELVET_STRIPE_AGENT_KEY": "rk_test_a",
        "VELVET_STRIPE_SETUP_KEY": "sk_test_s"}
+
+
+class SourceCliTests(unittest.TestCase):
+    def test_source_cli_help_in_fresh_interpreter(self) -> None:
+        # Interpreter and source path are fixed by this test, not external input.
+        result = subprocess.run([sys.executable, "-I", str(SOURCE), "--help"],  # noqa: S603
+                                capture_output=True, text=True, timeout=15, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("publish-evidence", result.stdout)
+
+    def test_source_cli_preserves_early_failure_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "missing-reports"
+            output = Path(directory) / "publish"
+            env = {key: value for key, value in os.environ.items()
+                   if not key.startswith("VELVET_")}
+            env["GITHUB_SHA"] = "cli-regression"
+            # Only the interpreter, checked-in runner, and temporary paths are executed.
+            result = subprocess.run(  # noqa: S603
+                [sys.executable, "-I", str(SOURCE), "publish-evidence",
+                 "--source", str(source), "--output", str(output)],
+                env=env, capture_output=True, text=True, timeout=15, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout), {"staged_evidence_files": 1})
+            report = json.loads((output / "stripe-workflow-fallback/result.json").read_text())
+            self.assertEqual(report["source_commit"], "cli-regression")
+            self.assertEqual(report["summary"]["overall_verdict"], "INDETERMINATE")
+            self.assertFalse(report["summary"]["measurement_complete"])
+            self.assertEqual(report["phases"], [])
 
 
 def denial(identifier: str = "x") -> dict[str, Any]:
