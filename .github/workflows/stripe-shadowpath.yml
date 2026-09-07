@@ -103,7 +103,7 @@ jobs:
           export VELVET_OAP_ED25519_PRIVATE_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
           export VELVET_MAXDE_ED25519_PRIVATE_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
           mkdir -p reports/stripe-proxy
-          python src/velvet/stripe_shadowpath.py discover --output reports/stripe-tools.json
+          python -I src/velvet/stripe_shadowpath.py discover --output reports/stripe-tools.json
           env -u VELVET_STRIPE_OBSERVER_KEY -u VELVET_STRIPE_SETUP_KEY \
             -u VELVET_STRIPE_AGENT_KEY \
             target/debug/velvet-rope-proxy --config examples/shadowpath/stripe/proxy.json \
@@ -128,7 +128,7 @@ jobs:
           fi
           args=()
           if [ "$DIRECT_ROUTE" = true ]; then args+=(--with-direct-route); fi
-          python src/velvet/stripe_shadowpath.py run \
+          python -I src/velvet/stripe_shadowpath.py run \
             --gateway http://127.0.0.1:8791/mcp \
             --provision --allow-test-writes "${args[@]}" \
             --output-dir "reports/stripe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
@@ -139,7 +139,7 @@ jobs:
           VELVET_STRIPE_OBSERVER_KEY: ${{ secrets.VELVET_STRIPE_OBSERVER_KEY }}
           VELVET_STRIPE_SETUP_KEY: ${{ secrets.VELVET_STRIPE_SETUP_KEY }}
           VELVET_STRIPE_AGENT_KEY: ${{ inputs.with_direct_route && secrets.VELVET_STRIPE_AGENT_KEY || '' }}
-        run: python src/velvet/stripe_shadowpath.py publish-evidence --source reports --output publish
+        run: python -I src/velvet/stripe_shadowpath.py publish-evidence --source reports --output publish
       - name: Scan public evidence
         id: evidence-scan
         if: always()

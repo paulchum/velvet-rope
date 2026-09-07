@@ -1,7 +1,7 @@
 """Provider-backed ShadowPath: Velvet -> Stripe MCP -> Stripe refund records.
 
 This is an opt-in, test-key-only integration, not the synthetic ShadowPath demo.
-Run this file directly for a source-only installation, or use
+Use ``python -I src/velvet/stripe_shadowpath.py --help`` for a source-only installation, or
 ``python -m velvet.stripe_shadowpath --help`` with Velvet installed.
 """
 from __future__ import annotations
