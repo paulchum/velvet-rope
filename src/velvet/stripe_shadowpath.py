@@ -89,7 +89,16 @@ def publish_evidence(source: Path, output: Path, env: Mapping[str, str]) -> int:
             "summary": {"overall_verdict": "INDETERMINATE", "measurement_complete": False},
         }
     if (source / "stripe-tools.json").is_file():
-        payloads[Path("stripe-tools.json")] = json.loads((source / "stripe-tools.json").read_text())
+        try:
+            payloads[Path("stripe-tools.json")] = obj(json.loads(
+                (source / "stripe-tools.json").read_text()), "discovery evidence")
+        except (OSError, ValueError, ProbeError) as error:
+            # Discovery may be interrupted mid-write. Optional schemas must not suppress
+            # an existing breach report or the missing-report diagnostic.
+            payloads[Path("stripe-tools.json")] = {
+                "mode": "workflow_diagnostics", "reason": "discovery_document_unreadable",
+                "error_type": type(error).__name__,
+            }
     for path, value in payloads.items():
         payload = json.dumps(value, indent=2, sort_keys=True)
         for secret in secrets:

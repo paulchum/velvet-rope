@@ -460,6 +460,27 @@ class StripeTests(unittest.TestCase):
             self.assertEqual(report["phases"], [])
             self.assertNotIn("effect_breach_count", report["summary"])
 
+    def test_truncated_discovery_does_not_suppress_breach_or_fallback(self) -> None:
+        for existing in (False, True):
+            with self.subTest(existing=existing), tempfile.TemporaryDirectory() as directory:
+                source = Path(directory) / "reports"
+                source.mkdir()
+                (source / "stripe-tools.json").write_text('{"tools":')
+                breach = {"exit_code": 3, "refunds": [{"id": "re_observed", "amount": 100}]}
+                if existing:
+                    run = source / "stripe-trial"
+                    run.mkdir()
+                    (run / "result.json").write_text(json.dumps(breach))
+                output = Path(directory) / "public"
+                self.assertEqual(sp.publish_evidence(source, output, {}), 2)
+                report = json.loads(next(output.glob("stripe-*/result.json")).read_text())
+                if existing:
+                    self.assertEqual(report, breach)
+                else:
+                    self.assertFalse(report["summary"]["measurement_complete"])
+                diagnostic = json.loads((output / "stripe-tools.json").read_text())
+                self.assertEqual(diagnostic["reason"], "discovery_document_unreadable")
+
     def test_amount_and_time_bounds(self) -> None:
         for amount in (True, 0, -1, 1.5, 10001):
             with self.subTest(amount=amount), self.assertRaises(sp.ProbeError):
