@@ -97,8 +97,21 @@ input schema, and uses `stripe_api_operation_id=PostRefunds` with the exact char
 It adds `livemode=false` and sandbox account context when those fields are advertised.
 Unknown schemas or required approval fields stop the run **before provisioning**. A changed
 operation ID or provider behavior fails the positive control; there is no synthetic fallback.
-`discover` preserves the actual schema for diagnosis. An explicit `--account acct_...` can be
+`discover` preserves schema constraints and hashes the complete tool definition, omitting
+free-form descriptions and examples from public evidence. An explicit `--account acct_...` can be
 used where the schema requires `stripe_context`; otherwise `/v1/account` supplies it.
+
+Authenticated read-only discovery on 2026-09-07 confirmed `PostRefunds` and `POST /v1/refunds`
+through Stripe's `stripe_api_search` and `stripe_api_details`. The key-bound hosted session
+negotiated `2025-03-26`; its write schema required `stripe_api_operation_id` and `parameters`,
+with optional provider confirmation. It did not advertise `livemode` or `stripe_context`.
+The compiled Rust proxy initialized against that hosted server and inventoried the blocked
+write tool. These read-only checks created no payments/refunds and are **not a hosted refund
+measurement**. Each measured run must still pass the provider-observed positive control.
+
+The native proxy negotiates its separate inventory session, accepts JSON or bounded SSE
+responses, checks matching RPC identities, and follows every tools page. It stops reading a
+POST SSE stream once the matching response arrives, without waiting for the connection to close.
 
 ## Evidence and exit codes
 
@@ -118,7 +131,12 @@ These are local diagnostic artifacts, not a new independent signature-verificati
 
 Pending or `requires_action` refunds remain unresolved. The observer polls for 15 seconds per
 phase by default (`--observe-seconds`, up to 300), including after dispatch errors. A breach
-already observed stays a breach even if a later observation fails. No automatic write retry
+already observed stays a breach even if a later observation or pagination request fails.
+Each validated refund is saved before fetching another page. Unknown statuses are retained as
+unresolved; observation errors remain recorded even if later polls recover. MCP request IDs,
+exact arguments, and setup/REST idempotency identities are saved **before** dispatch. Available
+dispatcher refund IDs are unverified reconciliation hints, separate from observer evidence.
+No automatic write retry
 occurs. REST writes use a stable, per-run idempotency key; MCP mutations are issued once.
 
 A timeout can leave a real provider operation unresolved. Inspect the saved charge IDs and
@@ -137,8 +155,22 @@ After merging the workflow, create a protected GitHub environment named `stripe-
 add the four Stripe secrets above, and use **Run workflow** with `run_sandbox=true`. Only enable
 `with_direct_route` when that credential represents actual agent authority. Require reviewer
 approval on the environment. Pull requests cannot trigger the credentialed sandbox job.
-The manual job retains its evidence even on breach or error and keeps the runner's nonzero
-exit code; there is no `--expect-breach` override hiding it.
+Restrict the environment to `main`; the workflow also requires a manual dispatch on `main`.
+Dependencies and the compiled proxy are built before keys enter the execution step.
+
+```bash
+gh workflow run stripe-shadowpath.yml --repo paulchum/velvet-rope --ref main \
+  -f run_sandbox=true -f with_direct_route=false
+```
+
+Use `with_direct_route=true` only with an explicit agent credential representing the access
+being measured. Approve the environment deployment, wait for the run to finish, and inspect
+the `stripe-shadowpath-RUN_ID-ATTEMPT` artifact. A dispatch response alone is not evidence.
+The manual job stages sanitized JSON and runs pinned gitleaks before uploading, including
+after a measured breach or error. Raw gateway logs and free-form provider responses are not
+uploaded. The runner's nonzero exit code is retained; there is no `--expect-breach` override.
+Actions **Re-run jobs** is refused for mutations: reconcile the prior saved charge and operation
+identities in Stripe before deciding whether another manually dispatched trial is appropriate.
 
 ## Primary API references
 

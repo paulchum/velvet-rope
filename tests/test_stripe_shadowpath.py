@@ -31,10 +31,10 @@ TOOL = {
     },
 }
 # Intentionally invalid provider credentials, used only by the injected transport.
-ENV = {"VELVET_STRIPE_MCP_KEY": "rk_test_notARealMcpKey",
-       "VELVET_STRIPE_OBSERVER_KEY": "rk_test_notARealObserverKey",
-       "VELVET_STRIPE_AGENT_KEY": "rk_test_notARealAgentKey",
-       "VELVET_STRIPE_SETUP_KEY": "sk_test_notARealSetupKey"}
+ENV = {"VELVET_STRIPE_MCP_KEY": "rk_test_m",
+       "VELVET_STRIPE_OBSERVER_KEY": "rk_test_o",
+       "VELVET_STRIPE_AGENT_KEY": "rk_test_a",
+       "VELVET_STRIPE_SETUP_KEY": "sk_test_s"}
 
 
 def denial(identifier: str = "x") -> dict[str, Any]:
@@ -63,6 +63,10 @@ class FakeTransport:
         self.no_tool = False
         self.use_unknown_refund_status = False
         self.setup_roles: list[str] = []
+        self.output: Path | None = None
+        self.partial_page_error = False
+        self.immediate_observer_error = False
+        self.saved_rpc_ids: list[str] = []
 
     def refund(self, charge: str, status: str) -> dict[str, Any]:
         value = {"id": "re_" + charge.removeprefix("ch_"), "object": "refund",
@@ -90,12 +94,17 @@ class FakeTransport:
                 charge = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)["charge"][0]
                 if self.direct_sent:
                     self.observer_reads_after_direct += 1
+                    if self.immediate_observer_error:
+                        raise sp.ProbeError("observer disconnected before any confirmation")
+                    if self.partial_page_error and "starting_after=" in url:
+                        raise sp.ProbeError("second refund page unavailable")
                     if self.later_observer_error and self.observer_reads_after_direct > 1:
                         raise sp.ProbeError("observer disconnected after a recorded breach")
                 rows = self.rows.get(charge, [])
                 if self.use_unknown_refund_status and rows:
                     rows[0]["status"] = "new_unrecognized_status"
-                return {"object": "list", "data": rows, "has_more": False}, {}
+                return {"object": "list", "data": rows,
+                        "has_more": bool(self.direct_sent and self.partial_page_error)}, {}
             params = urllib.parse.parse_qs((body or b"").decode())
             if method == "POST" and path == "/v1/payment_intents":
                 role = params["metadata[shadowpath_role]"][0]
@@ -123,6 +132,12 @@ class FakeTransport:
             return {"jsonrpc": "2.0", "id": identifier,
                     "result": {"tools": [] if self.no_tool else [self.tool]}}, {}
         if payload["method"] == "tools/call":
+            if self.output:
+                saved = json.loads((self.output / "result.json").read_text())
+                saved_id = saved["phases"][-1]["request"]["id"]
+                if saved_id != identifier:
+                    raise AssertionError("MCP request identity was not persisted before dispatch")
+                self.saved_rpc_ids.append(saved_id)
             if url.startswith("http://127.0.0.1"):
                 if self.gateway_response == "deny":
                     return denial(str(identifier)), {}
@@ -163,9 +178,11 @@ class StripeTests(unittest.TestCase):
                                    protected_charge=None if provision else "ch_protected",
                                    provision=provision, direct_route=direct)
             clock = Clock()
+            transport = transport or FakeTransport()
+            transport.output = settings.output
             with patch.object(sp.time, "monotonic", clock.monotonic), \
                     patch.object(sp.time, "sleep", clock.sleep):
-                probe = sp.Probe(settings, ENV, transport or FakeTransport())
+                probe = sp.Probe(settings, ENV, transport)
                 result: dict[str, Any] = probe.run()
             self.assertEqual(result, json.loads((settings.output / "result.json").read_text()))
             serialized = json.dumps(result)
@@ -256,6 +273,38 @@ class StripeTests(unittest.TestCase):
         self.assertEqual(result["summary"]["effect_breach_count"], 1)
         self.assertFalse(result["summary"]["measurement_complete"])
 
+    def test_partial_refund_page_keeps_breach_and_observes_full_interval(self) -> None:
+        transport = FakeTransport()
+        transport.partial_page_error = True
+        result = self.run_probe(transport)
+        phase = result["phases"][-1]
+        self.assertEqual(result["exit_code"], 3)
+        self.assertFalse(result["summary"]["measurement_complete"])
+        self.assertEqual(phase["refunds"][0]["id"], "re_protected")
+        self.assertEqual(phase["refunds"][0]["amount"], 100)
+        self.assertEqual(len(phase["observations"]), 3)
+        self.assertTrue(all(not o["complete"] for o in phase["observations"]))
+
+    def test_dispatcher_refund_id_is_retained_but_not_observer_proof(self) -> None:
+        transport = FakeTransport()
+        transport.immediate_observer_error = True
+        result = self.run_probe(transport)
+        phase = result["phases"][-1]
+        self.assertEqual(phase["response"]["dispatcher_refund"]["id"], "re_protected")
+        self.assertFalse(phase["effect_observed"])
+        self.assertEqual(result["exit_code"], 4)
+        self.assertEqual(len(phase["observations"]), 3)
+
+    def test_mcp_request_identity_survives_lost_response(self) -> None:
+        transport = FakeTransport()
+        transport.gateway_response = "timeout"
+        result = self.run_probe(transport)
+        phase = result["phases"][-1]
+        self.assertEqual(phase["request"]["id"], transport.saved_rpc_ids[-1])
+        self.assertEqual(phase["request"]["params"]["arguments"]["parameters"],
+                         {"charge": "ch_protected", "amount": 100})
+        self.assertIn("dispatch_error", phase)
+
     def test_lost_post_response_does_not_erase_provider_effect(self) -> None:
         transport = FakeTransport()
         transport.error_after_direct = True
@@ -282,6 +331,11 @@ class StripeTests(unittest.TestCase):
         result = self.run_probe(transport, provision=True)
         self.assertEqual(transport.setup_roles, ["control", "protected"])
         self.assertEqual(result["exit_code"], 3)
+        self.assertEqual(len(result["setup_operations"]), 2)
+        self.assertEqual(result["setup_operations"][0]["idempotency_key"],
+                         f"shadowpath:{result['run_id']}:setup:control")
+        self.assertEqual(result["phases"][-1]["request"]["idempotency_key"],
+                         f"shadowpath:{result['run_id']}:direct-refund")
 
     def test_missing_real_tool_is_not_a_fake_fallback(self) -> None:
         transport = FakeTransport()
@@ -315,7 +369,7 @@ class StripeTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(sp.ProbeError):
                 sp.test_key(value, "key")
         with self.assertRaises(sp.ProbeError):
-            sp.test_key("sk_test_notRestricted", "observer", restricted=True)
+            sp.test_key("sk_test_s", "observer", restricted=True)
 
     def test_gateway_url_restrictions(self) -> None:
         for value in ("http://example.com/mcp", "https://user:pass@example.com",
@@ -362,6 +416,30 @@ class StripeTests(unittest.TestCase):
     def test_remote_schema_ref_refused(self) -> None:
         with self.assertRaises(sp.ProbeError):
             sp.validate_schema({"$ref": "https://untrusted.example/schema"}, {})
+
+    def test_schema_evidence_keeps_named_properties_without_documentation(self) -> None:
+        schema = {"type": "object", "description": "provider prose",
+                  "properties": {"description": {"type": "string", "description": "help"}},
+                  "required": ["description"]}
+        self.assertEqual(sp.schema_evidence(schema),
+                         {"type": "object", "properties": {"description": {"type": "string"}},
+                          "required": ["description"]})
+
+    def test_publication_stages_only_json_and_redacts_credentials(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "reports"
+            run = source / "stripe-trial"
+            run.mkdir(parents=True)
+            (run / "result.json").write_text(json.dumps(
+                {"error": ENV["VELVET_STRIPE_MCP_KEY"], "refunds": [{"id": "re_test"}]}))
+            (run / "process.log").write_text("unfiltered private diagnostics")
+            output = Path(directory) / "public"
+            self.assertEqual(sp.publish_evidence(source, output, ENV), 1)
+            files = list(output.rglob("*.json"))
+            self.assertEqual(len(files), 1)
+            self.assertEqual(json.loads(files[0].read_text()),
+                             {"error": "[REDACTED]", "refunds": [{"id": "re_test"}]})
+            self.assertFalse((output / "stripe-trial" / "process.log").exists())
 
     def test_amount_and_time_bounds(self) -> None:
         for amount in (True, 0, -1, 1.5, 10001):

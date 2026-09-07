@@ -50,6 +50,46 @@ def digest(value: object) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+def schema_evidence(schema: Json) -> Json:
+    """Keep schema constraints, omitting free-form documentation from public evidence."""
+    result: Json = {}
+    for key, value in schema.items():
+        if key in {"description", "examples", "$comment", "title", "default"}:
+            continue
+        if key in {"properties", "$defs", "definitions", "patternProperties", "dependentSchemas"}:
+            result[key] = {name: schema_evidence(obj(child))
+                           for name, child in obj(value).items()}
+        elif key in {"items", "additionalProperties", "contains", "propertyNames",
+                     "unevaluatedProperties", "unevaluatedItems", "if", "then", "else", "not"} \
+                and isinstance(value, dict):
+            result[key] = schema_evidence(value)
+        elif key in {"allOf", "anyOf", "oneOf", "prefixItems"} and isinstance(value, list):
+            result[key] = [schema_evidence(child) if isinstance(child, dict) else child
+                           for child in value]
+        else:
+            result[key] = value
+    return result
+
+
+def publish_evidence(source: Path, output: Path, env: Mapping[str, str]) -> int:
+    """Stage only JSON evidence; redact known credentials before the workflow's secret scan."""
+    output.mkdir(parents=True, exist_ok=False, mode=0o700)
+    secrets = [value for name, value in env.items() if value and name.startswith("VELVET_")
+               and (name.endswith("_KEY") or name.endswith("_TOKEN"))]
+    files = sorted(source.glob("stripe-*/result.json"))
+    if (source / "stripe-tools.json").is_file():
+        files.append(source / "stripe-tools.json")
+    for file in files:
+        payload = json.dumps(json.loads(file.read_text()), indent=2, sort_keys=True)
+        for secret in secrets:
+            payload = payload.replace(secret, "[REDACTED]")
+        payload = re.sub(r"\b[sr]k_(?:test|live)_[A-Za-z0-9_]+", "[REDACTED]", payload)
+        target = output / file.relative_to(source)
+        target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        target.write_text(payload + "\n")
+    return len(files)
+
+
 def obj(value: object, label: str = "response") -> Json:
     if not isinstance(value, dict):
         raise ProbeError(f"{label} must be a JSON object")
@@ -63,8 +103,13 @@ class ProbeError(RuntimeError):
 class HttpFailure(ProbeError):
     def __init__(self, status: int, request_id: str | None = None) -> None:
         self.status = status
-        self.request_id = request_id
-        super().__init__(f"HTTP {status}; request_id={request_id or 'unavailable'}")
+        self.request_id = provider_id(request_id, "req")
+        super().__init__(f"HTTP {status}; request_id={self.request_id or 'unavailable'}")
+
+
+def provider_id(value: object, prefix: str) -> str | None:
+    return value if isinstance(value, str) and re.fullmatch(
+        prefix + r"_[A-Za-z0-9]{1,128}", value) else None
 
 
 def test_key(value: str, role: str, *, restricted: bool = False) -> str:
@@ -143,13 +188,14 @@ class Transport:
                 notification: bool = False) -> tuple[Json, Mapping[str, str]]:
         request = urllib.request.Request(  # noqa: S310 - client URLs are validated/allowlisted.
             url, data=body, headers=dict(headers), method=method)
+        evidence = {"method": method, "path": urllib.parse.urlsplit(url).path,
+                    "rpc_id": rpc_id, "started_at": now()}
+        self.requests.append(evidence)
         try:
             with self.opener.open(request, timeout=self.timeout) as response:  # noqa: S310
                 meta = {key.lower(): value for key, value in response.headers.items()}
-                self.requests.append({"method": method,
-                                      "path": urllib.parse.urlsplit(url).path,
-                                      "status": response.status,
-                                      "request_id": meta.get("request-id")})
+                evidence.update({"status": response.status, "responded_at": now(),
+                                 "request_id": provider_id(meta.get("request-id"), "req")})
                 if notification:
                     if response.status not in (200, 202, 204):
                         raise ProbeError("MCP notification was not accepted")
@@ -161,7 +207,11 @@ class Transport:
                     raise ProbeError("response exceeds size limit")
                 return obj(json.loads(raw)), meta
         except urllib.error.HTTPError as error:
-            raise HttpFailure(error.code, error.headers.get("Request-Id")) from None
+            failure = HttpFailure(error.code, error.headers.get("Request-Id"))
+            evidence.update({"status": error.code, "responded_at": now(),
+                             "request_id": failure.request_id})
+            error.close()
+            raise failure from None
         except (urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
             # Never persist response bodies, authorization headers, or exception URLs.
             raise ProbeError(f"transport/protocol failure: {type(error).__name__}") from None
@@ -203,7 +253,8 @@ class Stripe:
             raise ProbeError("charge must be a paid, captured, test-mode charge")
         return charge
 
-    def refunds(self, charge_id: str) -> list[Json]:
+    def refunds(self, charge_id: str, *,
+                on_refund: Callable[[Json], None] | None = None) -> list[Json]:
         result: list[Json] = []
         seen: set[str] = set()
         cursor: str | None = None
@@ -217,17 +268,25 @@ class Stripe:
                 raise ProbeError("malformed refund pagination")
             for raw in data:
                 refund = obj(raw, "refund")
-                identifier = refund.get("id")
-                if (not isinstance(identifier, str) or not identifier.startswith("re_")
+                identifier = provider_id(refund.get("id"), "re")
+                if (not identifier
                         or identifier in seen or refund.get("charge") != charge_id
                         or refund.get("object") != "refund"
                         or type(refund.get("amount")) is not int or refund["amount"] <= 0
-                        or refund.get("status") not in TERMINAL | PENDING):
-                    raise ProbeError("invalid, duplicate, or unknown-status refund record")
+                        or not isinstance(refund.get("currency"), str)
+                        or not re.fullmatch(r"[a-z]{3}", refund["currency"])
+                        or type(refund.get("created")) is not int):
+                    raise ProbeError("invalid or duplicate refund record")
                 seen.add(identifier)
                 # Deliberately omit customer/card details and arbitrary metadata.
-                result.append({key: refund.get(key) for key in
-                               ("id", "charge", "amount", "currency", "status", "created")})
+                row = {key: refund.get(key) for key in
+                       ("id", "charge", "amount", "currency", "status", "created")}
+                status = row["status"]
+                if not isinstance(status, str) or not re.fullmatch(r"[a-z_]{1,48}", status):
+                    row["status"] = "unrecognized"
+                result.append(row)
+                if on_refund:
+                    on_refund(row)  # Persist each validated row before the next page can fail.
             if not page["has_more"]:
                 return result
             if not data:
@@ -256,8 +315,9 @@ class Mcp:
         self.session: str | None = None
         self.protocol = "2025-11-25"
 
-    def rpc(self, method: str, params: Json, *, notification: bool = False) -> Json:
-        identifier = str(uuid4())
+    def rpc(self, method: str, params: Json, *, notification: bool = False,
+            identifier: str | None = None) -> Json:
+        identifier = identifier or str(uuid4())
         payload: Json = {"jsonrpc": "2.0", "method": method, "params": params}
         if not notification:
             payload["id"] = identifier
@@ -311,8 +371,8 @@ class Mcp:
             params = {"cursor": cursor}
         raise ProbeError("tools/list pagination limit exceeded")
 
-    def call(self, name: str, arguments: Json) -> Json:
-        return self.rpc("tools/call", {"name": name, "arguments": arguments})
+    def call(self, name: str, arguments: Json, *, request_id: str | None = None) -> Json:
+        return self.rpc("tools/call", {"name": name, "arguments": arguments}, identifier=request_id)
 
 
 def validate_schema(schema: Json, arguments: Json) -> None:
@@ -374,6 +434,18 @@ def response_evidence(response: Json) -> Json:
     else:
         result = response.get("result")
         evidence["tool_error"] = result.get("isError", False) if isinstance(result, dict) else True
+        if isinstance(result, dict):
+            refund = result.get("structuredContent", result)
+            if isinstance(refund, dict):
+                identifier = provider_id(refund.get("id", refund.get("refund_id")), "re")
+                if identifier:
+                    status = refund.get("status", refund.get("provider_status"))
+                    evidence["dispatcher_refund"] = {
+                        "id": identifier, "source": "dispatcher_unverified",
+                        "status": status
+                        if isinstance(status, str) and status in TERMINAL | PENDING
+                        else "unrecognized",
+                    }
     return evidence
 
 
@@ -381,6 +453,7 @@ def denied_by_velvet(response: Json) -> bool:
     evidence = response_evidence(response)
     return (evidence.get("error_code") == -32071
             and evidence.get("boundary") == "pre_execution_authorization"
+            and isinstance(evidence.get("inventory_status"), str)
             and evidence.get("inventory_status") in {"blocked", "approved"}
             and evidence.get("allow") is False)
 
@@ -446,7 +519,7 @@ class Probe:
             "observation_scope": {"seconds_per_phase": settings.observe_seconds,
                                   "poll_seconds": settings.poll_seconds},
             "control_path": "control_gateway" if settings.control_gateway else "stripe_mcp_direct",
-            "gateway_url": settings.gateway, "charges": {}, "phases": [],
+            "gateway_url": settings.gateway, "charges": {}, "phases": [], "setup_operations": [],
             "observer": {"separate_restricted_key": True,
                          "read_only_permissions": "operator_configured_not_introspected"},
             "summary": {"overall_verdict": "INDETERMINATE", "effect_breach_count": 0},
@@ -467,30 +540,44 @@ class Probe:
         observed: dict[str, Json] = {}
         phase["observations"] = []
         while True:
-            current = self.observer.refunds(charge)
-            current_ids = {item["id"] for item in current}
-            if not set(observed) <= current_ids:
-                raise ProbeError("previously observed refund disappeared")
-            phase["observations"].append({"observed_at": now(), "refunds": current})
-            for refund in current:
+            observation: Json = {"observed_at": now(), "refunds": [], "complete": False}
+            phase["observations"].append(observation)
+            previous_ids = set(observed)
+
+            def record(refund: Json, observation: Json = observation) -> None:
+                observation["refunds"].append(refund)
+                # Evidence of a successful effect is monotone, including within a partial page.
+                if refund["status"] == "succeeded":
+                    phase["effect_observed"] = True
                 previous = observed.get(refund["id"])
                 if previous and previous["status"] in TERMINAL and previous != refund:
                     raise ProbeError("terminal refund changed between observations")
                 observed[refund["id"]] = refund
-                if refund["status"] == "succeeded":
-                    phase["effect_observed"] = True
-            phase["refunds"] = list(observed.values())
-            phase["pending"] = any(item["status"] in PENDING for item in observed.values())
+                phase["refunds"] = list(observed.values())
+                phase["pending"] = any(item["status"] not in TERMINAL
+                                       for item in observed.values())
+                self.save()
+
+            try:
+                current = self.observer.refunds(charge, on_refund=record)
+                if not previous_ids <= {item["id"] for item in current}:
+                    raise ProbeError("previously observed refund disappeared")
+                observation["complete"] = True
+            except ProbeError as error:
+                observation["error"] = str(error)
+                phase["observation_error"] = str(error)
             self.save()
             remaining = stop - time.monotonic()
             if remaining <= 0:
-                phase["observation_complete"] = True
+                phase["observation_complete"] = not phase.get("observation_error")
+                phase["observation_ended_at"] = now()
                 self.save()
                 return
             time.sleep(min(self.settings.poll_seconds, remaining))
 
-    def phase(self, name: str, charge: str, call: Callable[[], Json]) -> Json:
+    def phase(self, name: str, charge: str, call: Callable[[], Json], *, request: Json) -> Json:
         phase: Json = {"name": name, "charge": charge, "started_at": now(),
+                       "amount": self.settings.amount, "request": request,
                        "effect_observed": False, "pending": False,
                        "observation_complete": False}
         self.report["phases"].append(phase)
@@ -499,8 +586,9 @@ class Probe:
             response = call()
             phase["response"] = response_evidence(response)
             phase["denied_by_velvet"] = denied_by_velvet(response)
-        except ProbeError as error:
-            phase["dispatch_error"] = str(error)
+        except (ProbeError, ValueError, TypeError) as error:
+            phase["dispatch_error"] = str(error) if isinstance(error, ProbeError) \
+                else type(error).__name__
         self.save()
         try:
             self.observe(charge, phase)
@@ -519,7 +607,8 @@ class Probe:
             if tool is None:
                 raise ProbeError("Stripe did not advertise stripe_api_write for this credential")
             self.report["stripe_tool"] = {"name": tool["name"], "definition_hash": digest(tool),
-                                          "input_schema": tool.get("inputSchema")}
+                                          "input_schema": schema_evidence(obj(tool["inputSchema"]))}
+            self.report["stripe_protocol"] = self.upstream.protocol
             self.gateway.initialize()
             inventory = self.gateway.tools()
             self.report["gateway_advertised_tools"] = sorted(inventory)
@@ -535,8 +624,14 @@ class Probe:
                        "protected": self.settings.protected_charge}
             for role, value in charges.items():
                 if self.setup:
+                    operation: Json = {"role": role, "started_at": now(),
+                                       "idempotency_key":
+                                       f"shadowpath:{self.report['run_id']}:setup:{role}"}
+                    self.report["setup_operations"].append(operation)
+                    self.save()
                     value = self.setup.create_charge(self.report["run_id"], role,
                                                      self.settings.amount)
+                    operation["charge"] = value
                 if not value:
                     raise ProbeError("missing test charge")
                 self.report["charges"][role] = value
@@ -552,8 +647,13 @@ class Probe:
             control_id = str(self.report["charges"]["control"])
             protected_id = str(self.report["charges"]["protected"])
             args = refund_arguments(tool, control_id, self.settings.amount, account)
+            rpc_id = str(uuid4())
             control = self.phase("authorized_control", control_id,
-                                 lambda: self.control.call("stripe_api_write", args))
+                                 lambda: self.control.call("stripe_api_write", args,
+                                                           request_id=rpc_id),
+                                 request={"jsonrpc": "2.0", "id": rpc_id, "method": "tools/call",
+                                          "params": {"name": "stripe_api_write",
+                                                     "arguments": args}})
             successful = [item for item in control.get("refunds", [])
                           if item["status"] == "succeeded"]
             if (not control["observation_complete"] or control.get("dispatch_error")
@@ -565,8 +665,12 @@ class Probe:
             self.report["calibration_passed"] = True
             args = refund_arguments(tool, protected_id, self.settings.amount, account)
             self.report["protected_request"] = {"name": "stripe_api_write", "arguments": args}
+            rpc_id = str(uuid4())
             protected = self.phase("protected_mcp", protected_id,
-                                   lambda: self.gateway.call("stripe_api_write", args))
+                                   lambda: self.gateway.call("stripe_api_write", args,
+                                                             request_id=rpc_id),
+                                   request={"jsonrpc": "2.0", "id": rpc_id, "method": "tools/call",
+                                            "params": self.report["protected_request"]})
             # Do not conflate a delayed protected-path mutation with the later REST attempt.
             if (not protected.get("denied_by_velvet") or protected["effect_observed"]
                     or protected["pending"] or not protected["observation_complete"]
@@ -576,15 +680,20 @@ class Probe:
                 self.report["alternate_route"] = {"status": "UNAVAILABLE",
                                                    "reason": "no explicit agent REST credential"}
             else:
+                idempotency = f"shadowpath:{self.report['run_id']}:direct-refund"
                 def direct() -> Json:
                     if self.agent is None:
                         raise ProbeError("agent REST route is unavailable")
                     refund = self.agent.request("POST", "/v1/refunds",
                         {"charge": protected_id, "amount": self.settings.amount},
-                        idempotency=f"shadowpath:{self.report['run_id']}:direct-refund")
+                        idempotency=idempotency)
                     return {"jsonrpc": "2.0", "id": "direct-rest", "result": {
                         "refund_id": refund.get("id"), "provider_status": refund.get("status")}}
-                self.phase("alternate_rest", protected_id, direct)
+                self.phase("alternate_rest", protected_id, direct,
+                           request={"method": "POST", "path": "/v1/refunds",
+                                    "parameters": {"charge": protected_id,
+                                                   "amount": self.settings.amount},
+                                    "idempotency_key": idempotency})
         except (ProbeError, ValueError, OSError) as error:
             # Do not lose an earlier breach because a later read or operation failed.
             self.report["error"] = (
@@ -627,6 +736,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     discover = sub.add_parser("discover", help="Read Stripe MCP's actual tool schemas; no writes")
     discover.add_argument("--output", type=Path, required=True)
+    publish = sub.add_parser("publish-evidence", help="Stage sanitized JSON for secret scanning")
+    publish.add_argument("--source", type=Path, required=True)
+    publish.add_argument("--output", type=Path, required=True)
     run = sub.add_parser("run", help="Execute the hosted sandbox integration (test writes only)")
     run.add_argument("--gateway", required=True)
     run.add_argument("--control-gateway")
@@ -642,11 +754,19 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--account")
     args = parser.parse_args(argv)
     try:
+        if args.command == "publish-evidence":
+            count = publish_evidence(args.source, args.output, os.environ)
+            print(json.dumps({"staged_evidence_files": count}))
+            return 0
         if args.command == "discover":
             key = test_key(os.environ.get("VELVET_STRIPE_MCP_KEY", ""), "MCP")
             client = Mcp(STRIPE_MCP, key, Transport())
             client.initialize()
-            payload = {"source": STRIPE_MCP, "observed_at": now(), "tools": client.tools()}
+            payload = {"source": STRIPE_MCP, "observed_at": now(),
+                       "protocol_version": client.protocol,
+                       "tools": {name: {"name": name, "definition_hash": digest(tool),
+                                        "inputSchema": schema_evidence(obj(tool["inputSchema"]))}
+                                 for name, tool in client.tools().items()}}
             args.output.parent.mkdir(parents=True, exist_ok=True)
             with args.output.open("x", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)

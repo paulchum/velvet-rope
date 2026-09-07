@@ -5,8 +5,7 @@
   "oap": {
     "enabled": true,
     "require_max_de_certificate": false,
-    "require_max_de_for_all_tool_calls": false,
-    "oap_private_key_env": "VELVET_OAP_ED25519_PRIVATE_KEY"
+    "require_max_de_for_all_tool_calls": false
   },
   "upstream": {
     "server": "stripe",
