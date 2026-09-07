@@ -169,6 +169,9 @@ the `stripe-shadowpath-RUN_ID-ATTEMPT` artifact. A dispatch response alone is no
 The manual job stages sanitized JSON and runs pinned gitleaks before uploading, including
 after a measured breach or error. Raw gateway logs and free-form provider responses are not
 uploaded. The runner's nonzero exit code is retained; there is no `--expect-breach` override.
+If no runner report exists, the artifact contains an explicitly marked workflow diagnostic
+with `INDETERMINATE` and unobserved provider state. It does not assert that writes did or did
+not occur, and it never replaces an existing runner report or establishes a provider measurement.
 Actions **Re-run jobs** is refused for mutations: reconcile the prior saved charge and operation
 identities in Stripe before deciding whether another manually dispatched trial is appropriate.
 

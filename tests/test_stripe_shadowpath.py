@@ -435,15 +435,30 @@ class StripeTests(unittest.TestCase):
             run = source / "stripe-trial"
             run.mkdir(parents=True)
             (run / "result.json").write_text(json.dumps(
-                {"error": ENV["VELVET_STRIPE_MCP_KEY"], "refunds": [{"id": "re_test"}]}))
+                {"error": ENV["VELVET_STRIPE_MCP_KEY"], "refunds": [{"id": "re_test"}],
+                 "exit_code": 3, "summary": {"overall_verdict": "EFFECT_BREACH"}}))
             (run / "process.log").write_text("unfiltered private diagnostics")
             output = Path(directory) / "public"
             self.assertEqual(sp.publish_evidence(source, output, ENV), 1)
             files = list(output.rglob("*.json"))
             self.assertEqual(len(files), 1)
             self.assertEqual(json.loads(files[0].read_text()),
-                             {"error": "[REDACTED]", "refunds": [{"id": "re_test"}]})
+                             {"error": "[REDACTED]", "refunds": [{"id": "re_test"}],
+                              "exit_code": 3, "summary": {"overall_verdict": "EFFECT_BREACH"}})
             self.assertFalse((output / "stripe-trial" / "process.log").exists())
+
+    def test_missing_runner_report_retains_unresolved_workflow_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "reports"
+            output = Path(directory) / "public"
+            self.assertEqual(sp.publish_evidence(source, output, {"GITHUB_SHA": "candidate"}), 1)
+            report = json.loads((output / "stripe-workflow-fallback/result.json").read_text())
+            self.assertEqual(report["mode"], "workflow_diagnostics")
+            self.assertEqual(report["source_commit"], "candidate")
+            self.assertEqual(report["summary"]["overall_verdict"], "INDETERMINATE")
+            self.assertFalse(report["summary"]["measurement_complete"])
+            self.assertEqual(report["phases"], [])
+            self.assertNotIn("effect_breach_count", report["summary"])
 
     def test_amount_and_time_bounds(self) -> None:
         for amount in (True, 0, -1, 1.5, 10001):

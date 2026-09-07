@@ -77,17 +77,28 @@ def publish_evidence(source: Path, output: Path, env: Mapping[str, str]) -> int:
     secrets = [value for name, value in env.items() if value and name.startswith("VELVET_")
                and (name.endswith("_KEY") or name.endswith("_TOKEN"))]
     files = sorted(source.glob("stripe-*/result.json"))
+    payloads = {file.relative_to(source): json.loads(file.read_text()) for file in files}
+    if not files:
+        payloads[Path("stripe-workflow-fallback/result.json")] = {
+            "schema_version": SCHEMA, "mode": "workflow_diagnostics",
+            "evidence_origin": "workflow_fallback", "generated_at": now(),
+            "source_commit": env.get("GITHUB_SHA", "unrecorded"),
+            "workflow_run_id": env.get("GITHUB_RUN_ID"),
+            "workflow_run_attempt": env.get("GITHUB_RUN_ATTEMPT"), "phases": [],
+            "reason": "runner_report_missing; provider_state_unobserved",
+            "summary": {"overall_verdict": "INDETERMINATE", "measurement_complete": False},
+        }
     if (source / "stripe-tools.json").is_file():
-        files.append(source / "stripe-tools.json")
-    for file in files:
-        payload = json.dumps(json.loads(file.read_text()), indent=2, sort_keys=True)
+        payloads[Path("stripe-tools.json")] = json.loads((source / "stripe-tools.json").read_text())
+    for path, value in payloads.items():
+        payload = json.dumps(value, indent=2, sort_keys=True)
         for secret in secrets:
             payload = payload.replace(secret, "[REDACTED]")
         payload = re.sub(r"\b[sr]k_(?:test|live)_[A-Za-z0-9_]+", "[REDACTED]", payload)
-        target = output / file.relative_to(source)
+        target = output / path
         target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         target.write_text(payload + "\n")
-    return len(files)
+    return len(payloads)
 
 
 def obj(value: object, label: str = "response") -> Json:
