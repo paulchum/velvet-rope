@@ -19,7 +19,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, BinaryIO, cast
+from typing import Any, BinaryIO, Protocol, cast
 from uuid import uuid4
 
 from jsonschema import SchemaError, ValidationError
@@ -327,8 +327,22 @@ class Stripe:
         return charge_id
 
 
+class RpcTransport(Protocol):
+    def request(self, method: str, url: str, headers: Mapping[str, str],
+                body: bytes | None = None, *, rpc_id: object = None,
+                notification: bool = False) -> tuple[Json, Mapping[str, str]]: ...
+
+
+class AgentBoundary(Protocol):
+    evidence: Json
+
+    def attempt(self, charge: str, amount: int, operation: str) -> Json: ...
+
+    def verify_mcp(self, request: Json, response: Json) -> bool: ...
+
+
 class Mcp:
-    def __init__(self, url: str, token: str, transport: Transport) -> None:
+    def __init__(self, url: str, token: str, transport: RpcTransport) -> None:
         self.url = gateway_url(url)
         self.token = token
         self.transport = transport
@@ -510,8 +524,13 @@ class Settings:
 
 class Probe:
     def __init__(self, settings: Settings, env: Mapping[str, str],
-                 transport: Transport | None = None) -> None:
+                 transport: Transport | None = None, *,
+                 gateway_transport: RpcTransport | None = None,
+                 boundary: AgentBoundary | None = None) -> None:
         settings.validate()
+        if boundary is not None and (settings.direct_route or settings.control_gateway):
+            raise ProbeError("isolated mode uses no agent Stripe credential or allowing gateway")
+        self.boundary = boundary
         self.settings = settings
         self.transport = transport or Transport()
         writer = test_key(env.get("VELVET_STRIPE_MCP_KEY", ""), "MCP")
@@ -528,7 +547,7 @@ class Probe:
         self.writer = Stripe(writer, self.transport)
         self.upstream = Mcp(STRIPE_MCP, writer, self.transport)
         self.gateway = Mcp(settings.gateway, env.get("VELVET_STRIPE_GATEWAY_TOKEN", ""),
-                           self.transport)
+                           gateway_transport or self.transport)
         self.control = Mcp(settings.control_gateway,
                            env.get("VELVET_STRIPE_CONTROL_GATEWAY_TOKEN", ""), self.transport) \
             if settings.control_gateway else self.upstream
@@ -545,6 +564,18 @@ class Probe:
             "summary": {"overall_verdict": "INDETERMINATE", "effect_breach_count": 0},
             "exit_code": 4,
         }
+        if boundary is not None:
+            self.report.update({
+                "mode": "hosted_stripe_isolated_agent", "agent_boundary": boundary.evidence,
+                "claim_boundary": (
+                    "Linux container with no Stripe credential and only loopback active; "
+                    "gateway-only Unix socket to the actual deny-all Rust proxy. "
+                    "Positive control uses trusted-host Stripe MCP directly. The unauthenticated "
+                    "REST attempt tests isolation, not the earlier agent-key access model. "
+                    "Host, Docker daemon, kernel, relay and observer are trusted. Observation is "
+                    "bounded; neither universal prevention nor allowed execution through Velvet "
+                    "is demonstrated."),
+            })
 
     def save(self) -> None:
         self.report["updated_at"] = now()
@@ -606,7 +637,7 @@ class Probe:
             response = call()
             phase["response"] = response_evidence(response)
             phase["denied_by_velvet"] = denied_by_velvet(response)
-        except (ProbeError, ValueError, TypeError) as error:
+        except (ProbeError, ValueError, TypeError, OSError) as error:
             phase["dispatch_error"] = str(error) if isinstance(error, ProbeError) \
                 else type(error).__name__
         self.save()
@@ -691,12 +722,35 @@ class Probe:
                                                              request_id=rpc_id),
                                    request={"jsonrpc": "2.0", "id": rpc_id, "method": "tools/call",
                                             "params": self.report["protected_request"]})
+            if self.boundary is not None:
+                protected["relay_witness_verified"] = self.boundary.verify_mcp(
+                    protected["request"], protected.get("response", {}))
+                self.save()
+                if not protected["relay_witness_verified"]:
+                    raise ProbeError("protected RPC lacks a matching trusted relay witness")
             # Do not conflate a delayed protected-path mutation with the later REST attempt.
             if (not protected.get("denied_by_velvet") or protected["effect_observed"]
                     or protected["pending"] or not protected["observation_complete"]
                     or protected.get("dispatch_error")):
                 raise ProbeError("protected path was not an observed, clean Velvet denial")
-            if not self.agent:
+            if self.boundary is not None:
+                isolated_operation = f"shadowpath:{self.report['run_id']}:isolated-rest"
+
+                def isolated_direct() -> Json:
+                    assert self.boundary is not None
+                    attempt = self.boundary.attempt(
+                        protected_id, self.settings.amount, isolated_operation)
+                    self.report["isolation_attempt"] = attempt
+                    self.save()
+                    return {"jsonrpc": "2.0", "id": isolated_operation, "result": {}}
+
+                self.phase("isolated_rest", protected_id, isolated_direct,
+                           request={"method": "POST", "path": "/v1/refunds",
+                                    "parameters": {"charge": protected_id,
+                                                   "amount": self.settings.amount},
+                                    "idempotency_key": isolated_operation,
+                                    "credential": "none; deliberately unavailable to agent"})
+            elif not self.agent:
                 self.report["alternate_route"] = {"status": "UNAVAILABLE",
                                                    "reason": "no explicit agent REST credential"}
             else:
@@ -726,7 +780,7 @@ class Probe:
     def finalize(self) -> None:
         phases = {phase["name"]: phase for phase in self.report["phases"]}
         protected = phases.get("protected_mcp", {})
-        direct = phases.get("alternate_rest", {})
+        direct = phases.get("isolated_rest" if self.boundary is not None else "alternate_rest", {})
         breached = [p for p in (protected, direct) if p.get("effect_observed")]
         unknown = bool(self.report.get("error")) or any(
             not p.get("observation_complete") or p.get("pending") or p.get("dispatch_error")
@@ -735,7 +789,15 @@ class Probe:
             verdict = "CONTROL_FALSE_SUCCESS" if protected.get("denied_by_velvet") \
                 else "EFFECT_BREACH"
             code = 3
+        elif self.boundary is not None and self.report.get("isolation_attempt", {}).get(
+                "unexpected_connectivity") is True:
+            verdict, code = "ISOLATION_FAILURE", 5
         elif unknown or not self.report.get("calibration_passed"):
+            verdict, code = "INDETERMINATE", 4
+        elif self.boundary is not None and not (
+                self.boundary.evidence.get("verified") is True
+                and protected.get("relay_witness_verified") is True
+                and self.report.get("isolation_attempt", {}).get("network_blocked") is True):
             verdict, code = "INDETERMINATE", 4
         elif not direct:
             verdict, code = "ROUTE_UNAVAILABLE", 2
@@ -748,6 +810,13 @@ class Probe:
                                   "protected_route_denied": protected.get(
                                       "denied_by_velvet", False),
                                   }
+        if self.boundary is not None:
+            self.report["summary"].update({
+                "measurement_complete": not unknown and bool(direct) and code != 4,
+                "access_model": "isolated_agent_without_stripe_authority",
+                "network_boundary_held": self.report.get("isolation_attempt", {}).get(
+                    "network_blocked", False),
+            })
         self.report["exit_code"] = code
 
 
