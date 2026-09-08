@@ -55,6 +55,62 @@ make a benchmark succeed: use an accurate sandbox analogue and state its scope.
 No agent credential is inferred from the setup or MCP credential. Without the explicit direct
 route option, the result is `ROUTE_UNAVAILABLE`, not successful effect prevention.
 
+## Close the credential and network bypass in an isolated agent
+
+The separate `isolated_agent` workflow mode places the protected client in a Linux Docker
+container. Only the trusted host executor and Rust proxy receive Stripe write authority.
+The agent receives a temporary gateway token over private stdin and connects through a single
+Unix socket to the compiled proxy. The relay has a fixed loopback destination and accepts only
+the MCP endpoint; it rejects tunnels, alternate paths, upgrades and ambiguous HTTP framing.
+
+The launcher enforces and inspects `--network none`, a nonroot user, no capabilities, no new
+privileges, private process/IPC namespaces, a read-only root, bounded resources and one read-only
+socket mount. No host credential, source directory, Docker socket or host network is mounted.
+The worker image contains only the reviewed worker file over a pinned Python base. Its output
+does not go into Docker logs. The host, daemon, kernel, relay and observer remain trusted.
+Inactive kernel tunnel interfaces may exist; only loopback may be active.
+
+The positive control still runs directly through Stripe MCP from the trusted executor using a
+separate fresh charge. It calibrates Stripe and the observer; it does **not** demonstrate an
+allowed financial write through the deny-all proxy. This mode preserves the supplied policy
+and does not synthesize approvals, budget certificates or verdict certificates to enable writes.
+
+The protected call originates inside the container. A host-side relay witness binds its exact
+RPC identity and request hash to the actual Rust response. The worker then attempts an
+**unauthenticated** REST refund on the same charge, plus connections to the numeric Stripe
+addresses resolved by the host. This tests the new access model: the agent has no Stripe
+authority and cannot reach Stripe's network. It does not substitute a different credential for
+the earlier agent-key REST scenario. DNS errors alone do not establish isolation; numeric
+attempts must encounter OS network denials, and trusted Docker inspection must agree.
+Unexpected connectivity fails the isolation test even when the observer finds no refunds.
+
+Dispatch the protected mode after merging its reviewed commit to `main`:
+
+```bash
+gh workflow run stripe-shadowpath.yml --repo paulchum/velvet-rope --ref main \
+  -f run_sandbox=true -f isolated_agent=true -f with_direct_route=false
+```
+
+The protected `stripe-sandbox` environment approval remains required. The observer still runs
+for 15 seconds after each phase, including dispatch failures, and preserves pending states,
+unknown outcomes and earlier successful refunds. Reports include Docker inspection, the relay
+witness, numeric connection results, provider observations and the source commit. Exit `3`
+still means an observed prohibited refund; exit `5` means unexpected network access; exit `4`
+means unresolved measurement. A clean bounded observation exits `0` and makes no universal
+prevention claim. Both dispatch inputs cannot be enabled together.
+
+The earlier credentialed REST experiment remains reproducible with `isolated_agent=false` and
+`with_direct_route=true`. Its [recorded breach on commit f03aebd](
+https://github.com/paulchum/velvet-rope/pull/3#issuecomment-5577706295) is retained: Velvet denied
+the MCP request, while the explicitly authorized direct REST credential created a successful
+100-cent test refund. Isolating a new agent does not revoke that credential or protect other
+processes that still possess it. Use the isolated launcher for the restricted access model;
+the host-side adversarial runner is deliberately still capable of measuring bypasses.
+
+Rollback is to stop using the isolated workflow mode; no policy or Stripe credential migration
+is performed. Do not move the old agent key into the isolated container. A machine without a
+working Linux Docker boundary fails explicitly and has no unrestricted fallback.
+
 ## Build and run from a checkout
 
 Run from the repository root in a virtual environment. The source runner only adds the existing

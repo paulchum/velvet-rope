@@ -3,15 +3,15 @@ name: Stripe ShadowPath
 on:
   push:
     paths:
-      - src/velvet/stripe_shadowpath.py
-      - tests/test_stripe_shadowpath*.py
+      - src/velvet/stripe_*.py
+      - tests/test_stripe_*.py
       - examples/shadowpath/stripe/**
       - .github/workflows/stripe-shadowpath.yml
       - crates/velvet-rope-proxy/**
   pull_request:
     paths:
-      - src/velvet/stripe_shadowpath.py
-      - tests/test_stripe_shadowpath*.py
+      - src/velvet/stripe_*.py
+      - tests/test_stripe_*.py
       - examples/shadowpath/stripe/**
       - .github/workflows/stripe-shadowpath.yml
       - crates/velvet-rope-proxy/**
@@ -24,6 +24,11 @@ on:
         default: false
       with_direct_route:
         description: Test a REST credential genuinely available to the agent
+        required: true
+        type: boolean
+        default: false
+      isolated_agent:
+        description: Gateway-only Linux agent with no Stripe keys or network (separate access model)
         required: true
         type: boolean
         default: false
@@ -46,12 +51,19 @@ jobs:
           python-version: '3.12'
       - name: Install source-only test tools
         run: python -m pip install 'jsonschema>=4,<5' 'ruff>=0.14,<0.15' 'mypy>=1.19,<2' types-jsonschema
+      - name: Reject incompatible access models before credentials are available
+        if: github.event_name == 'workflow_dispatch' && inputs.isolated_agent && inputs.with_direct_route
+        run: |
+          echo 'Choose isolated_agent or with_direct_route; they measure different agent authority.'
+          exit 2
       - name: Lint integration files
-        run: ruff check src/velvet/stripe_shadowpath.py tests/test_stripe_shadowpath*.py
+        run: ruff check src/velvet/stripe_*.py tests/test_stripe_*.py
       - name: Type-check integration files
-        run: mypy --strict --follow-imports=silent src/velvet/stripe_shadowpath.py tests/test_stripe_shadowpath*.py
+        run: mypy --strict --follow-imports=silent src/velvet/stripe_*.py tests/test_stripe_*.py
       - name: Run offline tests (no Stripe credentials)
-        run: python -m unittest discover -s tests -p 'test_stripe_shadowpath.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_stripe_shadowpath.py' -v
+          python -m unittest discover -s tests -p 'test_stripe_isolated.py' -v
 
   native-proxy:
     name: Actual Rust proxy contract (local protocol stub, not Stripe)
@@ -62,6 +74,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install 'jsonschema>=4,<5'
+      - name: Build credential-free agent from the pinned, minimal image context
+        run: |
+          image="$(python -I src/velvet/stripe_isolated.py build-image)"
+          echo "VELVET_STRIPE_AGENT_IMAGE=$image" >> "$GITHUB_ENV"
       - name: Build the pinned repository proxy
         run: cargo build --locked -p velvet-rope-proxy
       - name: Prove the real proxy denies without invoking the upstream tool
@@ -82,6 +98,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install 'jsonschema>=4,<5'
+      - name: Build isolated agent before provider credentials are available
+        if: inputs.isolated_agent
+        run: |
+          image="$(python -I src/velvet/stripe_isolated.py build-image)"
+          echo "VELVET_STRIPE_AGENT_IMAGE=$image" >> "$GITHUB_ENV"
       - run: cargo build --locked -p velvet-rope-proxy
       - name: Install pinned evidence scanner before credentials are available
         run: go install github.com/zricethezav/gitleaks/v8@v8.28.0
@@ -90,8 +111,9 @@ jobs:
           VELVET_STRIPE_MCP_KEY: ${{ secrets.VELVET_STRIPE_MCP_KEY }}
           VELVET_STRIPE_OBSERVER_KEY: ${{ secrets.VELVET_STRIPE_OBSERVER_KEY }}
           VELVET_STRIPE_SETUP_KEY: ${{ secrets.VELVET_STRIPE_SETUP_KEY }}
-          VELVET_STRIPE_AGENT_KEY: ${{ inputs.with_direct_route && secrets.VELVET_STRIPE_AGENT_KEY || '' }}
+          VELVET_STRIPE_AGENT_KEY: ${{ inputs.with_direct_route && !inputs.isolated_agent && secrets.VELVET_STRIPE_AGENT_KEY || '' }}
           DIRECT_ROUTE: ${{ inputs.with_direct_route }}
+          ISOLATED_AGENT: ${{ inputs.isolated_agent }}
         shell: bash
         run: |
           set -euo pipefail
@@ -128,17 +150,24 @@ jobs:
           fi
           args=()
           if [ "$DIRECT_ROUTE" = true ]; then args+=(--with-direct-route); fi
-          python -I src/velvet/stripe_shadowpath.py run \
-            --gateway http://127.0.0.1:8791/mcp \
-            --provision --allow-test-writes "${args[@]}" \
-            --output-dir "reports/stripe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [ "$ISOLATED_AGENT" = true ]; then
+            env -u VELVET_STRIPE_AGENT_KEY python -I src/velvet/stripe_isolated.py run \
+              --gateway http://127.0.0.1:8791/mcp --allow-test-writes \
+              --image "$VELVET_STRIPE_AGENT_IMAGE" \
+              --output-dir "reports/stripe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          else
+            python -I src/velvet/stripe_shadowpath.py run \
+              --gateway http://127.0.0.1:8791/mcp \
+              --provision --allow-test-writes "${args[@]}" \
+              --output-dir "reports/stripe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          fi
       - name: Stage sanitized evidence even after dispatch or observation failure
         if: always()
         env:
           VELVET_STRIPE_MCP_KEY: ${{ secrets.VELVET_STRIPE_MCP_KEY }}
           VELVET_STRIPE_OBSERVER_KEY: ${{ secrets.VELVET_STRIPE_OBSERVER_KEY }}
           VELVET_STRIPE_SETUP_KEY: ${{ secrets.VELVET_STRIPE_SETUP_KEY }}
-          VELVET_STRIPE_AGENT_KEY: ${{ inputs.with_direct_route && secrets.VELVET_STRIPE_AGENT_KEY || '' }}
+          VELVET_STRIPE_AGENT_KEY: ${{ inputs.with_direct_route && !inputs.isolated_agent && secrets.VELVET_STRIPE_AGENT_KEY || '' }}
         run: python -I src/velvet/stripe_shadowpath.py publish-evidence --source reports --output publish
       - name: Scan public evidence
         id: evidence-scan

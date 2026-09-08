@@ -94,7 +94,14 @@ class NativeProxyTest(unittest.TestCase):
     def test_sse_initialize_inventory_without_waiting_for_eof(self) -> None:
         self.run_contract(strict=True, sse=True)
 
-    def run_contract(self, *, strict: bool = False, sse: bool = False) -> None:
+    @unittest.skipUnless(os.environ.get("VELVET_STRIPE_AGENT_IMAGE"),
+                         "set the built isolated agent image ID for the Linux contract")
+    def test_isolated_agent_reaches_real_proxy_but_cannot_reach_stripe_rest(self) -> None:
+        self.assertEqual(sys.platform, "linux", "isolation contract requires real Linux isolation")
+        self.run_contract(strict=True, sse=True, isolated=True)
+
+    def run_contract(self, *, strict: bool = False, sse: bool = False,
+                     isolated: bool = False) -> None:
         binary = Path(os.environ["VELVET_STRIPE_PROXY_BIN"]).resolve()
         self.assertTrue(binary.is_file(), "configured binary must exist; never silently skip")
         Upstream.tool_calls = 0
@@ -128,6 +135,7 @@ class NativeProxyTest(unittest.TestCase):
                 process = subprocess.Popen(  # noqa: S603  # nosec B603
                     [str(binary), "--config", str(path)], cwd=ROOT, env=env,
                     stdout=handle, stderr=handle)
+            agent = None
             try:
                 deadline = time.monotonic() + 30
                 client = sp.Mcp(f"http://127.0.0.1:{port}/mcp", token, sp.Transport(timeout=1))
@@ -141,10 +149,27 @@ class NativeProxyTest(unittest.TestCase):
                         if time.monotonic() > deadline:
                             self.fail("proxy did not initialize: " + log.read_text())
                         time.sleep(0.1)
-                response = client.call("stripe_api_write", {
+                if isolated:
+                    isolation_spec = importlib.util.spec_from_file_location(
+                        "stripe_isolation_contract", ROOT / "src/velvet/stripe_isolated.py")
+                    assert isolation_spec is not None and isolation_spec.loader is not None
+                    isolation = importlib.util.module_from_spec(isolation_spec)
+                    sys.modules[isolation_spec.name] = isolation
+                    isolation_spec.loader.exec_module(isolation)
+                    mount = output / "socket"
+                    mount.mkdir(mode=0o755)
+                    agent = isolation.IsolatedAgent(
+                        mount, client.url, os.environ["VELVET_STRIPE_AGENT_IMAGE"])
+                    agent.start()
+                    client = sp.Mcp(client.url, token, agent)
+                    client.initialize()
+                    client.tools()
+                arguments = {
                     "stripe_api_operation_id": "PostRefunds",
                     "parameters": {"charge": "ch_offline", "amount": 100},
-                })
+                }
+                response = client.call("stripe_api_write", arguments,
+                                       request_id="compiled-contract-request")
                 self.assertTrue(sp.denied_by_velvet(response), json.dumps(response))
                 self.assertEqual(Upstream.tool_calls, 0)
                 self.assertTrue(Path(config["ledger_path"]).exists())
@@ -153,7 +178,20 @@ class NativeProxyTest(unittest.TestCase):
                              if e["name"] == "stripe_api_write")
                 self.assertIsNotNone(entry["schema_hash"],
                                      "target must be discovered from upstream")
+                if agent is not None:
+                    request = {"jsonrpc": "2.0", "method": "tools/call",
+                               "id": "compiled-contract-request",
+                               "params": {"name": "stripe_api_write", "arguments": arguments}}
+                    self.assertTrue(agent.verify_mcp(request, sp.response_evidence(response)))
+                    altered = {**request, "id": "unwitnessed-request"}
+                    self.assertFalse(agent.verify_mcp(altered, sp.response_evidence(response)))
+                    result = agent.attempt("ch_offline", 100, "offline-isolation-contract")
+                    self.assertTrue(result["network_blocked"], result)
+                    self.assertFalse(result["unexpected_connectivity"], result)
+                    self.assertTrue(agent.evidence["verified"])
             finally:
+                if agent is not None:
+                    agent.close()
                 Upstream.release_streams.set()
                 process.terminate()
                 try:
