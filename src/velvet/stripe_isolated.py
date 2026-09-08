@@ -16,7 +16,7 @@ import selectors
 import shutil
 import socket
 import socketserver
-import subprocess  # nosec B404 - fixed executables, argument lists, no shell.
+import subprocess  # nosec B404
 import sys
 import tempfile
 import threading
@@ -30,7 +30,8 @@ ROOT = Path(__file__).resolve().parents[2]
 AGENT = Path(__file__).with_name("stripe_isolated_agent.py")
 spec = importlib.util.spec_from_file_location(
     "velvet_stripe_provider", Path(__file__).with_name("stripe_shadowpath.py"))
-assert spec is not None and spec.loader is not None
+if spec is None or spec.loader is None:
+    raise RuntimeError("reviewed Stripe provider module is unavailable")
 sp = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = sp
 spec.loader.exec_module(sp)
@@ -314,7 +315,7 @@ class IsolatedAgent:
                             "amount": amount, "operation": operation})
         facts = sp.obj(raw.get("runtime"))
         rows = raw.get("attempts")
-        if (not runtime_verified(facts) or not isinstance(rows, list)
+        if (not isinstance(rows, list)
                 or not all(isinstance(row, dict) for row in rows)
                 or [row.get("address") for row in rows] != ["api.stripe.com", *addresses]):
             raise sp.ProbeError("isolated network evidence malformed")
@@ -325,9 +326,11 @@ class IsolatedAgent:
                   "http_status": row.get("http_status")
                   if type(row.get("http_status")) is int else None} for row in rows]
         unexpected = any(row["connected"] or row["http_status"] is not None for row in clean)
-        blocked = not unexpected and all(row["os_network_denial"] for row in clean[1:])
+        runtime_ok = runtime_verified(facts)
+        blocked = (runtime_ok and not unexpected
+                   and all(row["os_network_denial"] for row in clean[1:]))
         return {"observed_at": sp.now(), "credential": "none", "dns_source": "trusted_host",
-                "runtime_verified": True, "attempts": clean,
+                "runtime_verified": runtime_ok, "attempts": clean,
                 "unexpected_connectivity": unexpected,
                 "network_blocked": blocked, "docker_inspection_verified": True}
 

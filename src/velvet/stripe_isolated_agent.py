@@ -100,15 +100,19 @@ def probe(command: dict[str, Any]) -> dict[str, Any]:
             })
             row["connected"] = True
             row["http_status"] = connection.getresponse().status
-        except OSError as error:
-            row["errno"] = error.errno
-            row["os_network_denial"] = error.errno in BLOCKED
+        except (OSError, http.client.HTTPException) as error:
+            row["errno"] = error.errno if isinstance(error, OSError) else None
+            row["os_network_denial"] = row["errno"] in BLOCKED
             row["error_type"] = type(error).__name__
         finally:
             row["connected"] = connection.tcp_connected
             connection.close()
         rows.append(row)
-    return {"runtime": runtime_facts(), "attempts": rows}
+    try:
+        facts = runtime_facts()
+    except OSError:
+        facts = {}  # Earlier connectivity evidence must survive a later runtime read failure.
+    return {"runtime": facts, "attempts": rows}
 
 
 def main() -> None:

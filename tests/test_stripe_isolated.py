@@ -145,13 +145,35 @@ class InspectionTests(unittest.TestCase):
             self.assertFalse(any("STRIPE" in key for key in iso.docker_env()))
 
     def test_worker_attempts_real_network_without_authorization_header(self) -> None:
+        headers: list[str] = []
+        original = worker.StripeHttp.putheader
+
+        def capture(connection: Any, name: str, *values: Any) -> None:
+            headers.append(name.lower())
+            original(connection, name, *values)
+
         with patch.object(worker, "runtime_facts", return_value={}), \
+                patch.object(worker.StripeHttp, "putheader", capture), \
                 patch.object(worker.socket, "create_connection",
                              side_effect=OSError(errno.ENETUNREACH, "offline")) as connect:
             result = worker.probe({"addresses": ["1.1.1.1"], "charge": "ch_offline",
                                    "amount": 100, "operation": "offline-operation"})
         self.assertEqual(connect.call_count, 2)
+        self.assertNotIn("authorization", headers)
         self.assertTrue(all(row["os_network_denial"] for row in result["attempts"]))
+
+    def test_connection_evidence_survives_http_and_runtime_errors(self) -> None:
+        def connected_then_error(connection: Any, *args: Any, **kwargs: Any) -> None:
+            connection.tcp_connected = True
+            raise worker.http.client.BadStatusLine("untrusted provider text")
+
+        with patch.object(worker.StripeHttp, "request", connected_then_error), \
+                patch.object(worker, "runtime_facts", side_effect=OSError("runtime unavailable")):
+            result = worker.probe({"addresses": ["1.1.1.1"], "charge": "ch_offline",
+                                   "amount": 100, "operation": "offline-operation"})
+        self.assertTrue(all(row["connected"] for row in result["attempts"]))
+        self.assertEqual(result["runtime"], {})
+        self.assertNotIn("untrusted provider text", json.dumps(result))
 
 
 class RelayTests(unittest.TestCase):

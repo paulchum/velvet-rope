@@ -737,7 +737,8 @@ class Probe:
                 isolated_operation = f"shadowpath:{self.report['run_id']}:isolated-rest"
 
                 def isolated_direct() -> Json:
-                    assert self.boundary is not None
+                    if self.boundary is None:
+                        raise ProbeError("isolated agent boundary disappeared")
                     attempt = self.boundary.attempt(
                         protected_id, self.settings.amount, isolated_operation)
                     self.report["isolation_attempt"] = attempt
