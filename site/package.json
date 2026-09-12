@@ -18,8 +18,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@cloudflare/workers-types": "^5.20260823.1",
-    "astro": "^7.2.4",
+    "astro": "^7.2.8",
     "typescript": "^6.0.3",
-    "wrangler": "^4.125.0"
+    "wrangler": "^4.131.0"
   }
 }

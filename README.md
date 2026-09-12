@@ -13,6 +13,14 @@ be verified offline.
 
 **Authorize the route. Assure the outcome.**
 
+[Explore Velvet](https://shadowpath.coriolislabs.ca/) ·
+[Discuss a design-partner pilot](https://shadowpath.coriolislabs.ca/pilot/)
+
+Building an agent that can issue refunds? Start with one isolated workflow: define the approved
+amounts and shared budget, test the reachable paths, and leave with evidence your team can rerun.
+[Email Paul](mailto:paul@coriolislabs.ca?subject=Velvet%20pilot%20inquiry) to discuss fit.
+We agree on scope, timeline, and any fee before work begins.
+
 **New: protected refund contract.** Commit exact-command authorization, order limits,
 a shared budget, operation identity and journal evidence in one PostgreSQL transaction.
 Closure and refunds share the same lock. A separate database identity exports a signed
@@ -28,7 +36,7 @@ This is a single-database reference ledger; external payment rails are outside i
 | **Velvet Vault** | Preserve tamper-evident evidence and portable verification artifacts. |
 | **Protected refunds** | Enforce business constraints and operation identity at the PostgreSQL commit boundary. |
 
-[Explore the product site](site/) · [Review the design-partner pilot](docs/public/pilot.md) ·
+[Review the pilot scope](docs/public/pilot.md) ·
 [Read the outcome portfolio guide](docs/public/outcome-portfolios.md)
 
 ## Your agent blocked the tool. Did it block the outcome?

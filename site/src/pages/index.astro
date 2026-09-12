@@ -55,10 +55,9 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
           <a href="/protected-refunds/">Refund contract</a>
           <a
             class="button button-small button-dark"
-            href="https://github.com/paulchum/velvet-rope"
-            data-track-event="github_opened"
+            href="/pilot/"
           >
-            View GitHub
+            Discuss a pilot
           </a>
         </nav>
       </div>
@@ -81,10 +80,9 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
             <a class="button button-primary" href="/protected-refunds/">Inspect protected refunds</a>
             <a
               class="button button-quiet"
-              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/shadowpath-quickstart.md"
-              data-track-event="custom_effect_opened"
+              href="/pilot/"
             >
-              Test your own effect
+              Test your agent’s refund limits
             </a>
           </div>
           <p class="hero-proof-note">
@@ -381,25 +379,25 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
         <div class="section-shell pilot-layout">
           <div class="pilot-copy">
             <p class="section-number section-number-light">06 / DESIGN-PARTNER PILOT</p>
-            <h2>Start with the outcome your team cannot afford to get wrong.</h2>
+            <h2>Planning to let your agent issue refunds?</h2>
             <p>
-              In a focused pilot, your team defines one consequential state change, inventories the
-              reachable authority surface, runs isolated trials, and leaves with a verifiable
-              baseline and remediation plan.
+              Start with one workflow and the limits it must respect. Together, we scope isolated
+              trials, map the routes that can reach a refund, and produce an observed baseline
+              and a control plan your team can rerun.
             </p>
             <div class="pilot-actions">
               <a
               class="button button-light"
-              href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/pilot.md"
-              data-track-event="custom_effect_opened"
+              href="/pilot/"
               >
-                Review the pilot
+                Discuss your workflow
               </a>
               <a
                 class="button button-outline-light"
-                href="https://github.com/paulchum/velvet-rope/issues/new?template=effect_path.yml"
+                href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/shadowpath-quickstart.md"
+                data-track-event="custom_effect_opened"
               >
-                Propose an effect path
+                Try it yourself
               </a>
             </div>
           </div>
@@ -439,6 +437,7 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
           inventory, adapters, observers, signing assumptions, and deployment architecture.
         </p>
         <div class="footer-links">
+          <a href="/pilot/">Discuss a pilot</a>
           <a href="https://github.com/paulchum/velvet-rope" data-track-event="github_opened">GitHub</a>
           <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/CLAIMS.md">Claim boundaries</a>
           <a href="https://github.com/paulchum/velvet-rope/blob/main/LICENSE">Apache-2.0</a>

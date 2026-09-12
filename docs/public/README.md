@@ -1,6 +1,6 @@
 # Velvet Public Launch Pages
 
-Updated: 2026-08-23
+Updated: 2026-09-12
 
 This folder contains page-ready copy for the first public Velvet launch surface.
 It is written so the pages can be deployed as Markdown-backed routes or copied
@@ -23,7 +23,7 @@ Lead with public proof, not gated sales copy:
 | `/shadowpath` | [`shadowpath-quickstart.md`](shadowpath-quickstart.md) | Replay, then test one effect |
 | `/shadowpath/launch-kit` | [`SHADOWPATH_LAUNCH_KIT.md`](SHADOWPATH_LAUNCH_KIT.md) | Share an exact result artifact |
 | `/outcome-portfolios` | [`outcome-portfolios.md`](outcome-portfolios.md) | Roll declared effects into one assurance result |
-| `/pilot` | [`pilot.md`](pilot.md) | Scope one consequential outcome |
+| [`/pilot/`](https://shadowpath.coriolislabs.ca/pilot/) | [`pilot.md`](pilot.md) | Discuss one workflow and contact Paul privately |
 | `/agent-authorization-benchmark` | [`agent-authorization-benchmark.md`](agent-authorization-benchmark.md) | Run or submit to the benchmark |
 | `/verify` | [`verify.md`](verify.md) | Verify a warrant with public key material |
 | `/mcp-firewall` | [`mcp-firewall.md`](mcp-firewall.md) | Book a 14-day MCP tool-call assessment |
