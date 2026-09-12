@@ -66,6 +66,31 @@ admission decision and a new permit.
 If the process crashes after claim but before a conclusive receipt, the result
 is incomplete or indeterminate rather than unused.
 
+### Python executor retries and concurrency
+
+`VelvetExecutor.authorize()` verifies the permit and creates its dispatch claim.
+`execute()` atomically reserves that claim before checking the final request scope
+and entering the handler. Passing the same `AuthorizedExecution` again, including
+from concurrent executors sharing a claim store, returns a signed `rejected`
+receipt with reason `permit_replay` and `dispatch_attempted: false`. It does not
+call the handler or replace the original execution's terminal state or receipt.
+A mismatched or missing claim is rejected at the same boundary.
+
+For execution across processes or restarts, configure every executor with
+`PermitClaimStore(path)` pointing to the same SQLite database. Reservations are
+persisted before handler entry and survive a crash before receipt persistence;
+such a run remains `claimed` and incomplete, and cannot be dispatched again using
+that claim. The default in-memory store coordinates threads only within the
+same store instance. Separate databases and separate in-memory stores do not
+provide shared replay protection.
+
+The SQLite dispatch-reservation table is added without replacing existing permit
+rows. Preserve the claim database, run the same executor version across workers,
+and reconcile incomplete operations before issuing new authority. A fresh permit
+does not establish that an earlier external action failed; use the substrate's
+own idempotency and reconciliation when a business operation may already have
+completed.
+
 ## Trust Boundary
 
 Permits and receipts use distinct signing purposes:
@@ -101,6 +126,12 @@ Outcome semantics are conservative:
 - `indeterminate`: dispatch may have occurred but the outcome cannot be
   conclusively established, including timeouts or connection loss after dispatch
   began.
+
+In the Python executor, any exception raised after handler entry, including an
+`ExecutionPermitError`, produces `indeterminate` with `dispatch_attempted: true`.
+A request-scope mismatch detected before handler entry remains
+`failed_before_dispatch`. Both consume the execution claim, so a retry cannot
+silently rerun the handler.
 
 `gateway_observed` proves only gateway observation. `substrate_attested` may
 carry a substrate acknowledgment hash, but the substrate defines what that

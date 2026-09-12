@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import importlib
 import json
+import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from multiprocessing import get_context
 from pathlib import Path
+from threading import Event, Lock
 from typing import Any
 
 import pytest
@@ -16,6 +18,7 @@ from velvet.contracts import AdmissionContract
 from velvet.execution import (
     ExecutionPermitError,
     ExecutionPermitScope,
+    ExecutionReceipt,
     PermitClaimStore,
     PermitValidationContext,
     ResourceScope,
@@ -25,6 +28,7 @@ from velvet.execution import (
     strip_model_controlled_execution_metadata,
     verification_status,
     verify_execution_permit,
+    verify_execution_receipt,
 )
 from velvet.executor import VelvetAdmissionLayer
 from velvet.serialization import canonical_hash_sha256
@@ -295,6 +299,189 @@ def test_second_use_fails_after_claim() -> None:
         executor.authorize(prepared, context=_context(prepared, signer))
 
 
+def _assert_replay_rejected(receipt: ExecutionReceipt, prepared: Any, signer: Any) -> None:
+    assert receipt.outcome == "rejected"
+    assert not receipt.dispatch_attempted
+    assert receipt.reason == "permit_replay"
+    assert receipt.error is not None
+    assert receipt.error.code == "permit_replay"
+    assert (
+        verification_status(
+            verify_execution_receipt(
+                receipt,
+                trusted_signer=signer,
+                tenant_id=prepared.permit.tenant_id,
+                permit=prepared.permit,
+            )
+        )
+        == "pass"
+    )
+
+
+@pytest.mark.parametrize("persistent", [False, True], ids=["memory", "sqlite"])
+def test_reusing_authorized_execution_does_not_dispatch_twice(
+    tmp_path: Path, persistent: bool
+) -> None:
+    path = tmp_path / "permits.sqlite" if persistent else None
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    dispatches: list[str] = []
+
+    def handler(_action: Any) -> dict[str, Any]:
+        dispatches.append("refund sent")
+        return {"refunded": True}
+
+    first = executor.execute(authorized, handler=handler)
+    assert first.outcome == "succeeded"
+    retry_store = PermitClaimStore(path) if persistent else store
+    retry_executor = VelvetExecutor(claim_store=retry_store, signer=signer)
+    retry = retry_executor.execute(authorized, handler=handler)
+
+    assert dispatches == ["refund sent"]
+    _assert_replay_rejected(retry, prepared, signer)
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "succeeded"
+    assert retry_store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "succeeded"
+    if path is not None:
+        with sqlite3.connect(path) as connection:
+            stored_receipt = connection.execute(
+                "SELECT receipt_hash FROM execution_permit_state "
+                "WHERE permit_id = ? AND permit_hash = ?",
+                (prepared.permit.permit_id, prepared.permit.permit_hash),
+            ).fetchone()
+        assert stored_receipt == (first.receipt_hash,)
+
+
+@pytest.mark.parametrize("persistent", [False, True], ids=["memory", "sqlite"])
+def test_concurrent_authorized_execution_rejects_replay_while_handler_is_running(
+    tmp_path: Path, persistent: bool
+) -> None:
+    path = tmp_path / "permits.sqlite" if persistent else None
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    competing_store = PermitClaimStore(path) if persistent else store
+    competing_executor = VelvetExecutor(claim_store=competing_store, signer=signer)
+    entered = Event()
+    release = Event()
+    dispatch_lock = Lock()
+    dispatches: list[str] = []
+
+    def handler(_action: Any) -> dict[str, Any]:
+        with dispatch_lock:
+            dispatches.append("refund sent")
+            first_dispatch = len(dispatches) == 1
+        if first_dispatch:
+            entered.set()
+            assert release.wait(timeout=10), "test did not release the active dispatch"
+        return {"refunded": True}
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(executor.execute, authorized, handler=handler)
+        try:
+            assert entered.wait(timeout=10), "authorized handler did not start"
+            active_state = store.state(prepared.permit.permit_id, prepared.permit.permit_hash)
+            retry = pool.submit(competing_executor.execute, authorized, handler=handler)
+            _assert_replay_rejected(retry.result(timeout=10), prepared, signer)
+            assert dispatches == ["refund sent"]
+            assert (
+                store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == active_state
+            )
+        finally:
+            release.set()
+        assert first.result(timeout=10).outcome == "succeeded"
+
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "succeeded"
+
+
+@pytest.mark.parametrize("persistent", [False, True], ids=["memory", "sqlite"])
+def test_handler_permit_error_records_indeterminate_dispatch_and_cannot_be_retried(
+    tmp_path: Path, persistent: bool
+) -> None:
+    path = tmp_path / "permits.sqlite" if persistent else None
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    dispatches: list[str] = []
+
+    def handler(_action: Any) -> dict[str, Any]:
+        dispatches.append("refund sent")
+        raise ExecutionPermitError("downstream_failure", "follow-up failed after the refund")
+
+    receipt = executor.execute(authorized, handler=handler)
+
+    assert dispatches == ["refund sent"]
+    assert receipt.dispatch_attempted
+    assert receipt.outcome == "indeterminate"
+    assert receipt.error is not None
+    assert receipt.error.code == "downstream_failure"
+    assert (
+        verification_status(
+            verify_execution_receipt(
+                receipt,
+                trusted_signer=signer,
+                tenant_id=prepared.permit.tenant_id,
+                permit=prepared.permit,
+            )
+        )
+        == "pass"
+    )
+    retry_store = PermitClaimStore(path) if persistent else store
+    retry_executor = VelvetExecutor(claim_store=retry_store, signer=signer)
+    _assert_replay_rejected(retry_executor.execute(authorized, handler=handler), prepared, signer)
+    assert dispatches == ["refund sent"]
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "indeterminate"
+
+
+@pytest.mark.parametrize("persistent", [False, True], ids=["memory", "sqlite"])
+def test_started_execution_without_receipt_cannot_dispatch_again(
+    tmp_path: Path, persistent: bool
+) -> None:
+    path = tmp_path / "permits.sqlite" if persistent else None
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    assert store.begin_execution(prepared.permit, claim=authorized.claim)
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "claimed"
+
+    # Simulate a process dying after reserving dispatch, before it can record a receipt.
+    recovered_store = PermitClaimStore(path) if persistent else store
+    recovered_executor = VelvetExecutor(claim_store=recovered_store, signer=signer)
+    dispatches: list[str] = []
+
+    def handler(_action: Any) -> dict[str, Any]:
+        dispatches.append("refund sent")
+        return {"refunded": True}
+
+    receipt = recovered_executor.execute(authorized, handler=handler)
+
+    _assert_replay_rejected(receipt, prepared, signer)
+    assert dispatches == []
+    assert (
+        recovered_store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "claimed"
+    )
+
+
+@pytest.mark.parametrize("persistent", [False, True], ids=["memory", "sqlite"])
+@pytest.mark.parametrize("field", ["claim_id", "claim_hash"])
+def test_mismatched_dispatch_claim_does_not_consume_the_valid_authorization(
+    tmp_path: Path, persistent: bool, field: str
+) -> None:
+    path = tmp_path / "permits.sqlite" if persistent else None
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    invalid_claim = replace(authorized.claim, **{field: "unrecognized-claim"})
+
+    assert not store.begin_execution(prepared.permit, claim=invalid_claim)
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "claimed"
+    receipt = executor.execute(authorized)
+
+    assert receipt.dispatch_attempted
+    assert receipt.outcome == "succeeded"
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "succeeded"
+
+
 def test_many_threads_claim_permit_once() -> None:
     prepared, store, signer = _prepare()
 
@@ -333,6 +520,35 @@ def test_two_python_processes_sharing_sqlite_claim_once(tmp_path: Path) -> None:
     with ctx.Pool(2) as pool:
         results = pool.starmap(_sqlite_claim, [(str(path), payload), (str(path), payload)])
     assert results.count(True) == 1
+
+
+def _sqlite_begin_execution(
+    path: str, permit_payload: dict[str, Any], claim_payload: dict[str, Any], barrier: Any
+) -> bool:
+    from velvet.execution import DispatchClaim, ExecutionPermit, PermitClaimStore
+
+    permit = ExecutionPermit.from_dict(permit_payload)
+    claim = DispatchClaim(**claim_payload)
+    store = PermitClaimStore(path)
+    barrier.wait(timeout=10)
+    return store.begin_execution(permit, claim=claim)
+
+
+def test_two_python_processes_sharing_sqlite_begin_execution_once(tmp_path: Path) -> None:
+    path = tmp_path / "permits.sqlite"
+    prepared, store, signer = _prepare(PermitClaimStore(path))
+    executor = VelvetExecutor(claim_store=store, signer=signer)
+    authorized = executor.authorize(prepared, context=_context(prepared, signer))
+    ctx = get_context("spawn")
+    with ctx.Manager() as manager:
+        barrier = manager.Barrier(2)
+        task = (str(path), prepared.permit.to_dict(), authorized.claim.to_dict(), barrier)
+        with ctx.Pool(2) as pool:
+            results = pool.starmap(_sqlite_begin_execution, [task, task])
+
+    assert results.count(True) == 1
+    assert results.count(False) == 1
+    assert store.state(prepared.permit.permit_id, prepared.permit.permit_hash) == "claimed"
 
 
 def test_clean_break_no_admission_token_api() -> None:

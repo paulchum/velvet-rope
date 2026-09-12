@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import RLock
 from typing import Any, Literal, cast
 
 from velvet.actions import CanonicalAction, ProofDecision
@@ -702,22 +703,24 @@ class PermitClaimStore:
     def __init__(self, path: str | Path | None = None) -> None:
         self.path = Path(path) if path is not None else None
         self._states: dict[tuple[str, str], JsonObject] = {}
+        self._lock = RLock()
         if self.path is not None:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             self._initialize()
 
     def issue(self, permit: ExecutionPermit) -> None:
         if self.path is None:
-            key = (permit.permit_id, "")
-            if key in self._states:
-                return
-            self._states[key] = {
-                "state": "issued",
-                "permit_hash": permit.permit_hash,
-                "tenant_id": permit.tenant_id,
-                "environment": permit.environment,
-                "receipt_hash": None,
-            }
+            with self._lock:
+                key = (permit.permit_id, "")
+                if key in self._states:
+                    return
+                self._states[key] = {
+                    "state": "issued",
+                    "permit_hash": permit.permit_hash,
+                    "tenant_id": permit.tenant_id,
+                    "environment": permit.environment,
+                    "receipt_hash": None,
+                }
             return
         with sqlite3.connect(self.path, timeout=30.0, isolation_level=None) as connection:
             connection.execute("BEGIN IMMEDIATE")
@@ -756,26 +759,27 @@ class PermitClaimStore:
         )
         claim = replace(claim, claim_hash=canonical_hash_sha256(claim.to_dict()))
         if self.path is None:
-            key = (permit.permit_id, "")
-            state = self._states.get(key)
-            if state is None:
-                self.issue(permit)
+            with self._lock:
+                key = (permit.permit_id, "")
                 state = self._states.get(key)
-            if (
-                state is None
-                or state.get("state") != "issued"
-                or state.get("permit_hash") != permit.permit_hash
-            ):
-                return None
-            state.update(
-                {
-                    "state": "claimed",
-                    "claim_id": claim.claim_id,
-                    "claim_hash": claim.claim_hash,
-                    "claimed_at": timestamp,
-                }
-            )
-            return claim
+                if state is None:
+                    self.issue(permit)
+                    state = self._states.get(key)
+                if (
+                    state is None
+                    or state.get("state") != "issued"
+                    or state.get("permit_hash") != permit.permit_hash
+                ):
+                    return None
+                state.update(
+                    {
+                        "state": "claimed",
+                        "claim_id": claim.claim_id,
+                        "claim_hash": claim.claim_hash,
+                        "claimed_at": timestamp,
+                    }
+                )
+                return claim
         with sqlite3.connect(self.path, timeout=30.0, isolation_level=None) as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute(
@@ -809,6 +813,55 @@ class PermitClaimStore:
             connection.execute("COMMIT")
             return claim if cursor.rowcount == 1 else None
 
+    def begin_execution(
+        self,
+        permit: ExecutionPermit,
+        *,
+        claim: DispatchClaim,
+        started_at: str | None = None,
+    ) -> bool:
+        """Consume a matching claim once, before validation or handler entry.
+
+        The reservation is never released, including after a crash or a
+        pre-dispatch failure. The permit remains claimed until its receipt is
+        recorded; a reservation without a receipt is an incomplete execution.
+        """
+        if (
+            claim.permit_id != permit.permit_id
+            or claim.permit_hash != permit.permit_hash
+            or claim.pre_execution_record_hash
+            != permit.lineage.pre_execution_record.artifact_hash
+        ):
+            return False
+        timestamp = started_at or _now_iso()
+        if self.path is None:
+            with self._lock:
+                state = self._states.get((permit.permit_id, ""))
+                if (
+                    state is None
+                    or state.get("state") != "claimed"
+                    or state.get("permit_hash") != permit.permit_hash
+                    or state.get("claim_id") != claim.claim_id
+                    or state.get("claim_hash") != claim.claim_hash
+                    or "execution_started_at" in state
+                ):
+                    return False
+                state["execution_started_at"] = timestamp
+                return True
+        with sqlite3.connect(self.path, timeout=30.0, isolation_level=None) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            cursor = connection.execute(
+                """
+                INSERT OR IGNORE INTO execution_permit_dispatch(permit_id, claim_hash, started_at)
+                SELECT permit_id, claim_hash, ? FROM execution_permit_state
+                WHERE permit_id = ? AND permit_hash = ? AND state = 'claimed'
+                  AND claim_id = ? AND claim_hash = ?
+                """,
+                (timestamp, permit.permit_id, permit.permit_hash, claim.claim_id, claim.claim_hash),
+            )
+            connection.execute("COMMIT")
+            return cursor.rowcount == 1
+
     def complete(
         self,
         permit: ExecutionPermit,
@@ -819,21 +872,22 @@ class PermitClaimStore:
     ) -> bool:
         timestamp = completed_at or _now_iso()
         if self.path is None:
-            state = self._states.get((permit.permit_id, ""))
-            if (
-                state is None
-                or state.get("state") != "claimed"
-                or state.get("permit_hash") != permit.permit_hash
-            ):
-                return False
-            state.update(
-                {
-                    "state": outcome,
-                    "receipt_hash": receipt_hash,
-                    "completed_at": timestamp,
-                }
-            )
-            return True
+            with self._lock:
+                state = self._states.get((permit.permit_id, ""))
+                if (
+                    state is None
+                    or state.get("state") != "claimed"
+                    or state.get("permit_hash") != permit.permit_hash
+                ):
+                    return False
+                state.update(
+                    {
+                        "state": outcome,
+                        "receipt_hash": receipt_hash,
+                        "completed_at": timestamp,
+                    }
+                )
+                return True
         with sqlite3.connect(self.path, timeout=30.0, isolation_level=None) as connection:
             connection.execute("BEGIN IMMEDIATE")
             cursor = connection.execute(
@@ -851,10 +905,11 @@ class PermitClaimStore:
 
     def state(self, permit_id: str, permit_hash: str) -> str | None:
         if self.path is None:
-            row = self._states.get((permit_id, ""))
-            if row is not None and row.get("permit_hash") != permit_hash:
-                return None
-            return str(row["state"]) if row is not None else None
+            with self._lock:
+                row = self._states.get((permit_id, ""))
+                if row is not None and row.get("permit_hash") != permit_hash:
+                    return None
+                return str(row["state"]) if row is not None else None
         with sqlite3.connect(self.path) as connection:
             row = connection.execute(
                 """
@@ -869,6 +924,16 @@ class PermitClaimStore:
         if self.path is None:
             return
         with sqlite3.connect(self.path) as connection:
+            # Additive table keeps existing claim stores and terminal states intact.
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS execution_permit_dispatch (
+                    permit_id TEXT PRIMARY KEY NOT NULL,
+                    claim_hash TEXT NOT NULL,
+                    started_at TEXT NOT NULL
+                )
+                """
+            )
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS execution_permit_state (
@@ -1266,13 +1331,18 @@ class VelvetExecutor:
         action = authorized.prepared.action
         started_at = _now_iso()
         dispatch_attempted = False
-        outcome: Literal["succeeded", "failed_before_dispatch", "indeterminate"] = (
-            "failed_before_dispatch"
-        )
+        outcome: ReceiptOutcome = "failed_before_dispatch"
         output: JsonObject = {"canonical_action_hash": _prefixed_hash(action.canonical_action_hash)}
         error: ReceiptError | None = None
         response_hash: str | None = None
+        execution_started = self.claim_store.begin_execution(
+            permit, claim=authorized.claim, started_at=started_at
+        )
         try:
+            if not execution_started:
+                raise ExecutionPermitError(
+                    "permit_replay", "execution claim is missing, mismatched, or already consumed"
+                )
             actual_scope = ExecutionPermitScope.from_action(
                 action,
                 actual_request=authorized.prepared.actual_request,
@@ -1298,7 +1368,10 @@ class VelvetExecutor:
                 error_value.code,
                 canonical_hash_sha256({"detail": str(error_value)}),
             )
-            outcome = "failed_before_dispatch"
+            if not execution_started:
+                outcome = "rejected"
+            else:
+                outcome = "indeterminate" if dispatch_attempted else "failed_before_dispatch"
         except Exception as error_value:  # noqa: BLE001 - executor boundary records conservative evidence.
             error = ReceiptError(
                 "handler_exception",
@@ -1328,12 +1401,13 @@ class VelvetExecutor:
             tenant_id=permit.tenant_id,
             key_id=self.signing_key_id,
         )
-        self.claim_store.complete(
-            permit,
-            outcome=outcome,
-            receipt_hash=receipt.receipt_hash,
-            completed_at=completed_at,
-        )
+        if outcome != "rejected":
+            self.claim_store.complete(
+                permit,
+                outcome=outcome,
+                receipt_hash=receipt.receipt_hash,
+                completed_at=completed_at,
+            )
         return receipt
 
 
