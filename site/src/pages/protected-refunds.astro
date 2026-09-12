@@ -139,6 +139,15 @@ const verifyCommand = `uv run python -m velvet.refunds verify evidence.json \\
           implied by this run.</p>
         <a class="text-link" href={source}>Read assumptions, tests and remaining work ↗</a>
       </section>
+      <section class="refund-pilot" aria-labelledby="pilot-title">
+        <div>
+          <p class="eyebrow">Test your own workflow</p>
+          <h2 id="pilot-title">Where could your agent exceed a refund limit?</h2>
+          <p>Scope a pilot around one workflow in an isolated environment. Leave with a route
+            inventory, observed baseline and a control plan your team can rerun.</p>
+        </div>
+        <a class="button button-primary" href="/pilot/">Discuss your workflow</a>
+      </section>
     </main>
     <footer class="refund-footer section-shell"><a href="/">← Velvet outcome assurance</a><span>Open source · Apache-2.0</span></footer>
   </body>
@@ -184,6 +193,11 @@ const verifyCommand = `uv run python -m velvet.refunds verify evidence.json \\
   pre { margin: 0; background: var(--night); color: var(--purple-soft); border-radius: var(--radius); padding: 24px; font-size: .8rem; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
   .refund-boundary { max-width: 800px; border: none; }
   .refund-boundary p { margin-bottom: 20px; }
+  .refund-pilot { display: flex; align-items: center; gap: 40px; margin: 0 0 64px; padding: 32px; border: 1px solid #b797ef; border-radius: var(--radius); background: var(--surface); }
+  .refund-pilot h2 { margin: 16px 0; }
+  .refund-pilot p { max-width: 740px; color: var(--ink-soft); }
+  .refund-pilot .eyebrow { color: var(--purple); }
+  .refund-pilot .button { flex-shrink: 0; }
   .refund-footer { display: flex; justify-content: space-between; padding-top: 28px; padding-bottom: 40px; border-top: 1px solid var(--line); font-size: .8rem; gap: 24px; }
   @media (max-width: 760px) {
     .refund-page { padding-top: 40px; }
@@ -193,5 +207,6 @@ const verifyCommand = `uv run python -m velvet.refunds verify evidence.json \\
     .refund-verify { grid-template-columns: 1fr; }
     .refund-section { padding: 48px 0; }
     .refund-record { padding-left: 0; }
+    .refund-pilot { flex-direction: column; align-items: start; padding: 24px; }
   }
 </style>

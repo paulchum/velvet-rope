@@ -1,14 +1,38 @@
 # Velvet Outcome Assurance Pilot
 
-The design-partner pilot starts with one consequential business outcome—not a broad platform rollout.
+The design-partner pilot starts with one consequential business outcome.
 The goal is to leave with an executable effect inventory, an independently observed baseline, and a
 prioritized control plan that the customer's team can rerun.
+
+## Start with a scoping conversation
+
+[Discuss your workflow](https://shadowpath.coriolislabs.ca/pilot/) or email
+[paul@coriolislabs.ca](mailto:paul@coriolislabs.ca?subject=Velvet%20pilot%20inquiry).
+Tell us what your agent can do, which business constraint must hold, and whether you have a test
+environment and an engineering owner. A short description is enough to start; keep credentials,
+customer records, and sensitive system details out of the inquiry.
+
+We first discuss fit, then agree on one isolated workflow, the deliverables, timeline, and any fee
+before work begins. Sending an inquiry does not book or purchase a pilot.
+
+## First focus: agents that issue refunds
+
+The initial offer is for agent and platform teams adding refund authority to support or payments
+workflows. A useful first scope is an approved refund amount, an order limit, and a shared refund
+budget. Test altered amounts, repeated deliveries, and concurrent requests against those constraints,
+then reconcile the resulting state with an independent observer.
+
+Velvet's [protected refund contract](protected-refunds.md) is a reproducible starting point. It
+enforces the declared constraints in a single PostgreSQL reference ledger; it does not establish that
+an external payment provider or your deployment is protected. The scoping conversation identifies
+the actual system, routes, observers, and integration work needed for your workflow.
 
 ## A good first outcome
 
 Choose a state change that is both valuable to automate and expensive to get wrong, for example:
 
 - releasing a payment above a defined threshold;
+- issuing a refund beyond its approved amount or shared budget;
 - disabling a customer or employee account;
 - approving a production deployment;
 - changing a regulated record;

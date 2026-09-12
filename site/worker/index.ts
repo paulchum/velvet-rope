@@ -4,6 +4,9 @@ const ALLOWED_EVENTS = new Set([
   "install_copied",
   "github_opened",
   "custom_effect_opened",
+  "pilot_viewed",
+  "pilot_email_opened",
+  "pilot_inquiry_copied",
 ]);
 
 interface Env {

@@ -1,0 +1,182 @@
+---
+import "../styles/global.css";
+import { buildPilotInquiry, PILOT_EMAIL, PILOT_WORKFLOWS } from "../lib/pilot";
+
+const canonicalUrl = new URL("/pilot/", Astro.site ?? Astro.url);
+const inquiry = buildPilotInquiry();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Planning to let an agent issue refunds? Scope a Velvet pilot for one workflow: test the limits, inspect the evidence, and leave with a control plan your team can rerun." />
+    <meta name="theme-color" content="#f4f0e8" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Velvet" />
+    <meta property="og:title" content="Put your agent’s refund limits to the test — Velvet" />
+    <meta property="og:description" content="One workflow. An observed baseline. A control plan your team can rerun. Talk through a Velvet design-partner pilot." />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content="https://shadowpath.coriolislabs.ca/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Agent refund pilot — Velvet</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="nav-shell">
+        <a class="brand" href="/" aria-label="Velvet home"><span class="brand-mark" aria-hidden="true">V/R</span><span>Velvet</span></a>
+        <a class="text-link" href="/protected-refunds/">Inspect the refund evidence ↗</a>
+      </div>
+    </header>
+
+    <main id="main" class="section-shell pilot-page">
+      <section class="pilot-intro" aria-labelledby="pilot-title">
+        <p class="eyebrow">For teams building agents that can issue refunds</p>
+        <h1 id="pilot-title">Put your agent’s<br /><span>refund limits to the test.</span></h1>
+        <p class="pilot-lede">Before widening your agent’s authority, find out which paths can exceed
+          an approval or shared budget. Start with one workflow in an isolated environment and
+          leave with evidence your engineering team can act on.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#contact">Discuss your workflow</a>
+          <a class="button button-quiet" href="/protected-refunds/">See the reference evidence</a>
+        </div>
+        <p class="intro-note">Design-partner pilot · Local and self-hosted · One agreed outcome</p>
+      </section>
+
+      <section class="deliverables" aria-labelledby="deliverables-title">
+        <div class="section-heading">
+          <p class="eyebrow">What your team takes away</p>
+          <h2 id="deliverables-title">A decision you can support with evidence.</h2>
+        </div>
+        <div class="deliverable-grid">
+          <article><span>01 / MAP</span><h3>Your refund authority, made explicit.</h3><p>Document the approved amounts, budget and reachable routes: tools, APIs, admin screens, queues and direct writes.</p></article>
+          <article><span>02 / TEST</span><h3>A baseline you can inspect.</h3><p>Run isolated trials and independently observe the resulting state. Keep the route inventory, report and evidence together.</p></article>
+          <article><span>03 / RETEST</span><h3>A control plan you can rerun.</h3><p>Prioritize the paths that escaped, identify where enforcement belongs, and retain a test command for the next change.</p></article>
+        </div>
+      </section>
+
+      <div class="contact-layout">
+        <section class="fit-copy" aria-labelledby="fit-title">
+          <p class="eyebrow">Start small</p>
+          <h2 id="fit-title">Bring one workflow.<br />We’ll scope the test together.</h2>
+          <p>This is a fit for support automation, AI platform and engineering teams that have a refund workflow and a system owner who can help test it.</p>
+          <ol class="scoping-steps">
+            <li><strong>First, a scoping conversation.</strong><p>Describe what your agent can do and the limit you need to hold. No integration is needed for this conversation.</p></li>
+            <li><strong>Then, an agreed pilot.</strong><p>Choose one outcome, an engineering owner and an isolated test environment or representative fixture. Agree scope, timeline and any fee before work begins.</p></li>
+            <li><strong>Finally, an evidence review.</strong><p>Review the observed baseline, unresolved paths and remediation priorities. Your team keeps the project and rerun instructions.</p></li>
+          </ol>
+          <div class="fit-note"><strong>Working on a different action?</strong><p>Payments, account changes and data exports can be scoped too. Describe your workflow so we can assess fit.</p></div>
+        </section>
+
+        <section id="contact" class="contact-card" aria-labelledby="contact-title">
+          <p class="eyebrow">Talk directly with Paul</p>
+          <h2 id="contact-title">What should your agent be allowed to do?</h2>
+          <p>Send a short note to <a href={`mailto:${PILOT_EMAIL}`}>{PILOT_EMAIL}</a>. These optional details help us start with your workflow.</p>
+
+          <div id="inquiry-fields" hidden>
+            <label for="pilot-company">Team or company <span>(optional)</span></label>
+            <input id="pilot-company" type="text" autocomplete="organization" maxlength="100" placeholder="Your team" />
+            <label for="pilot-workflow">Workflow</label>
+            <select id="pilot-workflow">{PILOT_WORKFLOWS.map(workflow => <option>{workflow}</option>)}</select>
+            <label for="pilot-details">What limit do you need to hold? <span>(optional)</span></label>
+            <textarea id="pilot-details" rows="4" maxlength="600" aria-describedby="inquiry-privacy" placeholder="For example: our support agent can refund orders, but retries and concurrent requests must stay within an approved daily budget."></textarea>
+          </div>
+
+          <p id="inquiry-privacy" class="contact-note">Keep this high level. Leave out credentials, customer records and sensitive payment details.</p>
+          <div class="contact-actions">
+            <a id="pilot-email" class="button button-primary" href={inquiry.mailto}>Open email draft</a>
+            <button id="copy-inquiry" class="button button-quiet" type="button" hidden>Copy inquiry</button>
+          </div>
+          <p class="contact-note">You send the email yourself. This page does not submit or store your inquiry.</p>
+          <p id="inquiry-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <details id="inquiry-preview" hidden>
+            <summary>Preview your inquiry</summary>
+            <label for="inquiry-draft" class="draft-label">Email draft</label>
+            <textarea id="inquiry-draft" rows="12" readonly>{inquiry.copyText}</textarea>
+          </details>
+          <noscript><p class="contact-note">The email link works without JavaScript. Add your workflow details in your email app, or write directly to {PILOT_EMAIL}.</p></noscript>
+        </section>
+      </div>
+
+      <section class="pilot-boundary" aria-labelledby="boundary-title">
+        <p class="eyebrow">What the evidence can establish</p>
+        <h2 id="boundary-title">A bounded assessment of your declared paths.</h2>
+        <p>Velvet is currently local and self-hosted. Results depend on the routes you inventory,
+          the controls deployed and the independent observer. The published refund reference uses a
+          single PostgreSQL ledger with synthetic orders; it does not establish guarantees for an
+          external payment provider or your deployment.</p>
+        <div class="boundary-links">
+          <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/pilot.md">Full pilot scope ↗</a>
+          <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/CLAIMS.md">Claim boundaries ↗</a>
+          <a href="https://github.com/paulchum/velvet-rope/blob/main/docs/public/shadowpath-quickstart.md">Try it yourself ↗</a>
+        </div>
+      </section>
+    </main>
+    <footer class="pilot-footer section-shell"><a href="/">← Back to Velvet</a><span>Open source · Apache-2.0</span></footer>
+    <script>import "../scripts/pilot";</script>
+  </body>
+</html>
+
+<style>
+  .pilot-page { padding-top: 72px; }
+  .pilot-intro { max-width: 940px; padding-bottom: 72px; }
+  h1 { margin: 24px 0; font-size: clamp(2.8rem, 6.2vw, 5.4rem); font-weight: 540; letter-spacing: -.06em; line-height: 1.04; }
+  h1 span { color: var(--purple); }
+  .pilot-lede { max-width: 730px; font-size: 1.15rem; color: var(--ink-soft); }
+  .intro-note { margin-top: 20px; font-size: .8rem; }
+  .deliverables { padding: 56px 0 72px; border-top: 1px solid var(--line); }
+  h2, .section-heading h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); letter-spacing: -.04em; line-height: 1.15; }
+  h2 { margin: 16px 0 22px; }
+  .deliverable-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+  article { border: 1px solid var(--line); padding: 28px; background: var(--surface); border-radius: var(--radius); }
+  article > span { font: 700 .7rem monospace; color: var(--purple); }
+  article h3 { margin: 28px 0 16px; font-size: 1.3rem; line-height: 1.25; letter-spacing: -.02em; }
+  article p, .fit-copy p { color: var(--ink-soft); font-size: .95rem; }
+  .contact-layout { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 72px; padding: 32px 0 72px; }
+  .scoping-steps { padding-left: 22px; margin: 32px 0; }
+  .scoping-steps li { padding-left: 10px; margin-bottom: 24px; }
+  .scoping-steps li::marker { color: var(--purple); font-weight: 750; }
+  .scoping-steps p { margin-top: 8px; }
+  .fit-note { border-top: 1px solid var(--line); padding-top: 24px; }
+  .fit-note p { margin-top: 8px; }
+  .contact-card { padding: 32px; border: 1px solid #b797ef; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-small); scroll-margin-top: 100px; min-width: 0; }
+  .contact-card h2 { font-size: 1.8rem; }
+  .contact-card > p:not(.eyebrow) { font-size: .9rem; color: var(--ink-soft); }
+  .contact-card a:not(.button), .boundary-links a { color: var(--purple-deep); overflow-wrap: anywhere; }
+  label { display: block; font-size: .85rem; font-weight: 700; margin: 22px 0 8px; }
+  label span { font-weight: 400; color: var(--muted); }
+  input, select, textarea { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: var(--white); font: inherit; font-size: .9rem; line-height: 1.5; }
+  textarea { resize: vertical; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+  .contact-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 14px; }
+  .contact-actions .button { flex: 1; cursor: pointer; }
+  .contact-card .contact-note { margin-top: 14px; font-size: .78rem !important; }
+  #inquiry-status:not(:empty) { margin-top: 16px; padding: 12px; border-radius: 4px; background: var(--purple-soft); font-size: .85rem; color: var(--purple-deep); }
+  #inquiry-preview { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 16px; }
+  summary { cursor: pointer; font-size: .85rem; font-weight: 700; }
+  .draft-label { margin-top: 16px; }
+  #inquiry-draft { font-size: .8rem; }
+  [hidden] { display: none !important; }
+  .pilot-boundary { border-top: 1px solid var(--line); padding: 48px 0 64px; }
+  .pilot-boundary p:not(.eyebrow) { max-width: 840px; font-size: .9rem; color: var(--ink-soft); }
+  .boundary-links { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 24px; font-size: .85rem; }
+  .pilot-footer { display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid var(--line); padding: 28px 0 40px; font-size: .8rem; }
+  .nav-shell > a:last-child { font-size: .85rem; }
+  @media (max-width: 900px) { .contact-layout { gap: 36px; } }
+  @media (max-width: 760px) {
+    .pilot-page { padding-top: 44px; }
+    .pilot-intro { padding-bottom: 48px; }
+    .deliverable-grid, .contact-layout { grid-template-columns: 1fr; }
+    .deliverables { padding: 40px 0; }
+    .contact-layout { padding-bottom: 48px; }
+    .contact-card { padding: 24px; }
+    .contact-actions { flex-direction: column; }
+    .nav-shell { gap: 18px; }
+    .nav-shell > a:last-child { max-width: 160px; text-align: right; }
+    .pilot-footer { flex-wrap: wrap; }
+  }
+</style>

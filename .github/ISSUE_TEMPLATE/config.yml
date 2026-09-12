@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Discuss a customer pilot
+    url: https://shadowpath.coriolislabs.ca/pilot/
+    about: Scope one agent workflow and contact Paul privately about a design-partner pilot.
   - name: Security vulnerability
     url: https://github.com/paulchum/velvet-rope/security/policy
     about: Please use the private security reporting process for vulnerabilities.

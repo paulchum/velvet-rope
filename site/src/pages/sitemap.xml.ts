@@ -14,6 +14,11 @@ export function GET() {
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://shadowpath.coriolislabs.ca/pilot/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
 `,
     { headers: { "content-type": "application/xml; charset=utf-8" } },
