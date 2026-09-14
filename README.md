@@ -50,10 +50,11 @@ It visualizes the committed synthetic fixture; it is not a fresh test or a vendo
 To replay from a reviewed source revision, with `uv` and the source-build prerequisites available:
 
 ```bash
-uvx --from git+https://github.com/paulchum/velvet-rope.git@85a6e0764a9c2303b0f5de14aae32378eb1708ee velvet-rope shadowpath demo
+uvx --from git+https://github.com/paulchum/velvet-rope.git@7e15bc954d70654d008385ca8684902c0ed72ce5 velvet-rope shadowpath demo
 ```
 
-This pins the reviewed reference implementation. Review changes before choosing a newer revision.
+This pins the reviewed evaluation code with the launch dependency repairs. Public evidence pages
+retain their original source provenance. Review changes before choosing a newer revision.
 The replay writes artifacts under `reports/shadowpath/`; it is not presented as fresh measurement.
 
 For a fresh **local synthetic fixture**, use the [source quickstart](docs/public/shadowpath-quickstart.md).
@@ -116,7 +117,8 @@ npm run deploy:dry-run
 
 Use a Node version satisfying `site/package.json`. Production deployment uses the existing
 Cloudflare configuration and requires separately authorized credentials; a source commit is
-not evidence that the domain has been deployed.
+not evidence that the domain has been deployed. Follow the [launch operations runbook](docs/public/launch-operations.md)
+for the main-branch deployment workflow, scoped authorization, and public-revision verification.
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) or the
 [effect-path contribution guide](docs/public/SHADOWPATH_CONTRIBUTING.md).
