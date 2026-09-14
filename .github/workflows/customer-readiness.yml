@@ -31,6 +31,8 @@ jobs:
           cache-dependency-path: site/package-lock.json
       - name: Install locked site dependencies
         run: npm ci
+      - name: Audit locked site dependencies
+        run: npm audit --audit-level=high
       - name: Build and verify site, links, and commercial boundaries
         run: npm test
       - name: Validate deployment bundle without publishing
@@ -44,6 +46,13 @@ jobs:
             site/dist
             site/src
             site/tests
+            site/worker
+            site/package.json
+            site/package-lock.json
+            site/wrangler.jsonc
+            site/astro.config.mjs
+            site/tsconfig.json
+            TECHNICAL_OVERVIEW.md
             docs/public/customer-onboarding.md
             docs/public/investor-brief.md
             docs/public/claims-evidence.md

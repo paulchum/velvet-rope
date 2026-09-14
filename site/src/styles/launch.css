@@ -5,3 +5,9 @@
 @media(max-width:760px){.l-wrap{width:calc(100% - 36px)}.l-header-inner{align-items:flex-start;flex-direction:column;gap:8px;padding-block:18px}.l-nav{width:100%;justify-content:space-between;gap:12px;font-size:.8rem;flex-wrap:wrap}.l-nav .l-button{font-size:.78rem;padding:8px 12px}.l-hero{grid-template-columns:1fr;padding-block:55px;gap:36px}.l-hero h1{font-size:clamp(2.9rem,10.5vw,4.5rem)}.l-grid,.l-split{grid-template-columns:1fr}.l-section{padding-block:55px}.l-page{padding-block:48px}.l-reference{padding:24px}.l-strip .l-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:.68rem}.l-footer-grid{grid-template-columns:1fr 1fr;gap:32px}.l-footer-grid>p{grid-column:1/-1}.l-footer{padding-block:40px}.l-brand{font-size:1.8rem}.l-bottom-cta{padding-block:50px}.l-page-head{margin-bottom:30px}.l-actions .l-button{flex-grow:1}}
 @media(prefers-reduced-motion:reduce){.launch *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 @media print{.launch{background:#fff;color:#111;color-scheme:light;--l-muted:#333;--l-text:#111;--l-accent:#333;--l-line:#ccc;--l-panel:#fff}.l-header,.l-footer,.l-actions{display:none}.l-wrap{width:100%}.l-page{padding:0}.l-card,.l-reference{break-inside:avoid;background:#fff;box-shadow:none}.l-section{padding-block:24px}.launch h1{font-size:36pt}.launch h2{font-size:24pt}}
+
+/* Preserve readable price type and wrap the legacy replay command on narrow screens. */
+.launch .l-price{font:400 3.8rem/1.15 Georgia,serif;color:var(--l-text);letter-spacing:-.05em}
+.launch .command-card>div{min-width:0;max-width:100%}
+.launch .command-card code{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.launch .route-summary strong>span{display:inline}
