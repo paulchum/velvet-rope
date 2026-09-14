@@ -1,0 +1,38 @@
+name: Launch Rust dependency repair
+on:
+  push:
+    branches: [launch/customer-investor-readiness]
+    paths: [.github/workflows/launch-rust-dependency-refresh.yml]
+permissions:
+  contents: read
+jobs:
+  repair:
+    if: github.repository == 'paulchum/velvet-rope' && github.ref == 'refs/heads/launch/customer-investor-readiness'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: launch/customer-investor-readiness
+      - name: Use repository-pinned compiler
+        run: rustup show
+      - name: Resolve targeted TLS advisory without changing manifests
+        run: |
+          cargo update -p rustls --precise 0.23.45
+          git diff --exit-code -- '**/Cargo.toml' Cargo.toml
+          cargo test --locked --workspace
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          cargo install cargo-deny --locked --version 0.19.4
+          cargo deny check advisories licenses
+      - name: Commit only the validated Rust lockfile
+        run: |
+          git diff --stat
+          git add -- Cargo.lock
+          if git diff --cached --quiet; then exit 0; fi
+          test "$(git diff --cached --name-only)" = 'Cargo.lock'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(deps): update rustls to patched 0.23.45'
+          git push origin HEAD:refs/heads/launch/customer-investor-readiness
