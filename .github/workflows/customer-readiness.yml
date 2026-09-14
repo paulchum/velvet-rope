@@ -1,0 +1,84 @@
+name: Customer-facing readiness
+on:
+  push:
+    branches: [main, launch/customer-investor-readiness]
+    paths: ["site/**", "README.md", "docs/public/**", ".github/workflows/customer-readiness.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["site/**", "README.md", "docs/public/**", ".github/workflows/customer-readiness.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: customer-readiness-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  customer-site:
+    name: Build and verify customer entry points
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install locked site dependencies
+        run: npm ci
+      - name: Audit locked site dependencies
+        run: npm audit --audit-level=high
+      - name: Build and verify site, links, and commercial boundaries
+        run: npm test
+      - name: Validate deployment bundle without publishing
+        run: npm run deploy:dry-run
+      - name: Retain inspectable build and changed-source context
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: customer-site-${{ github.sha }}
+          retention-days: 14
+          path: |
+            site/dist
+            site/src
+            site/tests
+            site/worker
+            site/package.json
+            site/package-lock.json
+            site/wrangler.jsonc
+            site/astro.config.mjs
+            site/tsconfig.json
+            TECHNICAL_OVERVIEW.md
+            docs/public/customer-onboarding.md
+            docs/public/investor-brief.md
+            docs/public/claims-evidence.md
+            docs/public/pilot.md
+            docs/public/launch-operations.md
+            .github/workflows/deploy-site.yml
+            README.md
+  customer-install:
+    name: Recorded demo from a fresh install
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+      - name: Replay recorded evidence from outside the source checkout
+        run: |
+          mkdir -p "$RUNNER_TEMP/velvet-first-customer"
+          cd "$RUNNER_TEMP/velvet-first-customer"
+          uvx --from "$GITHUB_WORKSPACE" velvet-rope shadowpath demo
+          test -d reports/shadowpath
+          test -n "$(find reports/shadowpath -type f -name '*.json' -print -quit)"

@@ -1,0 +1,51 @@
+---
+import "../styles/launch.css";
+import { REPOSITORY } from "../config/launch";
+interface Props { title?: string; description?: string; }
+const {
+  title = "Velvet — Outcome assurance for autonomous agents",
+  description = "Test whether agent controls prevent the business outcome. Add supported execution controls and keep independently reviewable evidence. Open source, self-hosted, paid pilots.",
+} = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#151315" />
+    <title>{title}</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Velvet" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={new URL('/og.png', canonicalUrl)} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body class="launch">
+    <a class="l-skip" href="#main">Skip to content</a>
+    <header class="l-header" data-header>
+      <div class="l-wrap l-header-inner">
+        <a class="l-brand" href="/" aria-label="Velvet home"><span class="l-mark" aria-hidden="true">V/</span>Velvet<span class="l-brand-note">OUTCOME ASSURANCE</span></a>
+        <button type="button" hidden data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+        <nav id="primary-nav" class="l-nav" aria-label="Main navigation" data-nav>
+          <a href="/#product">Product</a><a href="/evidence/">Evidence</a><a href={REPOSITORY}>GitHub</a><a class="l-button l-button-small" href="/pilot/">Scope a pilot <span aria-hidden="true">↗</span></a>
+        </nav>
+      </div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="l-footer">
+      <div class="l-wrap l-footer-grid">
+        <div><a class="l-brand" href="/">Velvet</a><p>Authorize the action.<br />Verify the outcome.</p><small>Coriolis Labs · Paul Chumbe</small></div>
+        <nav aria-label="Footer navigation"><a href="/pilot/">Paid pilots</a><a href="/investors/">For investors</a><a href="/trust/">Trust &amp; data</a><a href="/contact/">Contact</a><a href={`${REPOSITORY}/blob/main/LICENSE`}>Apache-2.0</a></nav>
+        <p class="l-fine">Local, self-hosted software and assisted evaluations. Evidence is bounded by the declared routes, observers, keys, and deployment. A recorded demonstration is not a customer deployment.</p>
+      </div>
+    </footer>
+  </body>
+</html>

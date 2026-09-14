@@ -1,0 +1,21 @@
+---
+import LaunchLayout from "../layouts/LaunchLayout.astro";
+import { CONTACT_EMAIL } from "../config/launch";
+---
+<LaunchLayout title="Talk with Paul | Velvet" description="Discuss a paid Velvet pilot, a technical evaluation, or a pre-seed investment conversation directly with Paul Chumbe.">
+  <div class="l-wrap l-page"><div class="l-page-head"><p class="l-eyebrow">Direct access</p><h1>Bring a workflow.<br />Or a good question.</h1><p class="l-lede">Talk directly with Paul Chumbe at Coriolis Labs about a pilot, a technical evaluation, or a pre-seed conversation.</p></div>
+    <div class="l-split"><section><h2>Prepare an introduction</h2><p class="l-fine">This is an email-draft helper, not a submission form. Do not include credentials, customer records, or private vulnerability details.</p>
+      <form id="contact-form" class="l-form" action={`mailto:${CONTACT_EMAIL}`} method="get" data-recipient={CONTACT_EMAIL}>
+        <div class="l-field"><label for="interest">Conversation</label><select id="interest" name="interest"><option value="pilot">Paid pilot</option><option value="investor">Pre-seed / investor</option><option value="technical">Technical evaluation</option></select></div>
+        <div class="l-field"><label for="organization">Company or fund <span class="l-fine">(optional)</span></label><input id="organization" name="organization" maxlength="100" autocomplete="organization" /></div>
+        <div class="l-field"><label for="context">What would you like to discuss?</label><textarea id="context" name="context" required minlength="20" maxlength="700" rows="5" aria-describedby="context-help"></textarea><small id="context-help" class="l-fine">For a pilot: name the workflow, the state change, and the limit that must hold. A few sentences are enough.</small></div>
+        <div class="l-field"><label for="timing">Timing <span class="l-fine">(optional)</span></label><select id="timing" name="timing"><option value="Not specified">Choose timing</option><option>Ready to scope</option><option>Within a month</option><option>Exploring for later</option></select></div>
+        <button class="l-button" type="submit" data-prepare disabled>Prepare email draft</button>
+        <noscript><p>JavaScript is disabled. Use the direct email link instead; nothing has been submitted.</p></noscript>
+      </form>
+      <p id="draft-status" class="l-status" role="status" aria-live="polite"></p>
+      <section id="draft-output" hidden aria-labelledby="draft-title"><h3 id="draft-title">Review your draft</h3><label class="l-fine" for="draft-text">Draft contents</label><textarea id="draft-text" class="l-draft" readonly></textarea><div class="l-actions"><a id="draft-mailto" class="l-button" href={`mailto:${CONTACT_EMAIL}`}>Open email app ↗</a><button id="copy-draft" type="button" class="l-button l-button-quiet">Copy draft</button><button id="reset-draft" type="button" class="l-button l-button-quiet">Clear</button></div><p class="l-fine">Opening an email application is not delivery. Review the message there and choose Send. When no email application is configured, copy the draft into your usual inbox.</p></section>
+    </section><aside class="l-card"><span class="l-tag">No account or booking portal</span><h3>Prefer a plain email?</h3><p><a class="l-contact-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></p><p>Useful first context: who you are, what the agent should do, and what it must not be allowed to change.</p><p>For investors, include your fund or investing focus and the questions you would like the evidence to answer.</p><p class="l-fine">No message is sent automatically. The draft helper does not use a lead-collection backend, persistent browser storage, or a third-party form service.</p><a href="/trust/">Read data-handling boundaries ↗</a></aside></div>
+  </div>
+  <script>import "../scripts/contact";</script>
+</LaunchLayout>

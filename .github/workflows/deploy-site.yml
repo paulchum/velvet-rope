@@ -1,0 +1,97 @@
+name: Deploy customer website
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/deploy-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: velvet-customer-website-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'paulchum/velvet-rope' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout the selected main revision
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Check deployment authorization is configured
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo '::error::Deployment is not configured. Add the scoped CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets, then rerun this workflow. No site was deployed.'
+            exit 1
+          fi
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+      - name: Install, audit, and test the locked site
+        run: |
+          npm ci
+          npm audit --audit-level=high
+          npm test
+      - name: Stamp the exact deployment revision
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const commit = process.env.GITHUB_SHA;
+          if (!/^[a-f0-9]{40}$/.test(commit ?? '')) throw new Error('Missing deployment revision');
+          writeFileSync('dist/deployment.json', JSON.stringify({ commit, built_at: new Date().toISOString() }) + '\n');
+          NODE
+      - name: Deploy the existing Cloudflare Worker and domain
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx --no-install wrangler deploy
+      - name: Verify the public revision and customer entry points
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const origin = 'https://shadowpath.coriolislabs.ca';
+          const sha = process.env.GITHUB_SHA;
+          async function get(path) {
+            const res = await fetch(`${origin}${path}?release=${sha}`, { signal: AbortSignal.timeout(15000) });
+            assert.equal(res.status, 200, `Unexpected status on ${path}: ${res.status}`);
+            return res;
+          }
+          let deployed = false;
+          for (let attempt = 0; attempt < 6; attempt++) {
+            try {
+              const data = await (await get('/deployment.json')).json();
+              assert.equal(data.commit, sha, 'The domain is still serving a different revision');
+              deployed = true;
+              break;
+            } catch (error) {
+              if (attempt === 5) throw error;
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+          }
+          assert.ok(deployed);
+          const checks = [
+            ['/', 'Your agent passed policy.'],
+            ['/pilot/', 'C$7,500'],
+            ['/evidence/', 'Explicit boundaries.'],
+            ['/investors/', 'Start a pre-seed conversation'],
+            ['/contact/', 'Prepare email draft'],
+            ['/trust/', 'Website and contact privacy'],
+            ['/replay/', 'Recorded synthetic fixture'],
+            ['/protected-refunds/', 'Protected'],
+          ];
+          for (const [path, text] of checks) {
+            const html = await (await get(path)).text();
+            assert.ok(html.includes(text), `Expected current content on ${path}`);
+            console.log(`Verified ${path}`);
+          }
+          console.log(`Verified public website revision ${sha}`);
+          NODE

@@ -1,70 +1,74 @@
 # Velvet Outcome Assurance Pilot
 
-The design-partner pilot starts with one consequential business outcome—not a broad platform rollout.
-The goal is to leave with an executable effect inventory, an independently observed baseline, and a
-prioritized control plan that the customer's team can rerun.
+A paid, assisted evaluation of one consequential staging workflow. The goal is a bounded,
+independently observed baseline and a customer-owned project an engineer can rerun.
 
-## A good first outcome
+**Indicative starting price: C$7,500.** Final scope, applicable taxes, payment terms, and
+schedule are agreed in writing before work begins. The planning target is 10 business days
+after prerequisites are met, not a service-level commitment or guaranteed availability.
 
-Choose a state change that is both valuable to automate and expensive to get wrong, for example:
+[Discuss a workflow](https://shadowpath.coriolislabs.ca/contact/?intent=pilot) or email
+[Paul Chumbe](mailto:paulchum1@gmail.com).
 
-- releasing a payment above a defined threshold;
-- disabling a customer or employee account;
-- approving a production deployment;
-- changing a regulated record;
-- exporting a sensitive dataset.
+## Starting scope
 
-The pilot should run against an isolated environment or a hermetic fixture. It should not experiment
-on production customers, credentials, balances, or records.
+One customer-owned staging workflow, two or three explicit business constraints, an agreed
+route inventory, one baseline, and one agreed remediation retest. Examples include a refund
+limit, an account-state change, or authority that must expire after cancellation. Adapter and
+observer feasibility are established during scoping, not assumed from a marketing example.
+
+This is not a broad platform rollout or a promise to discover a vulnerability. A clean result
+is useful when the covered routes, useful allowed controls, and independent observations are clear.
 
 ## Pilot loop
 
-### 1. Define the effect
-
-Name the safe and prohibited substrate states precisely. Select an observer that is independent of the
-agent and the control being tested.
-
-### 2. Inventory equivalent routes
-
-Map every reachable path to the same effect: canonical API, alternate API, browser or admin UI,
-database, queue, webhook, delegated credential, scheduled job, and human-operator path where relevant.
-
-### 3. Execute isolated trials
-
-Reset the subject, observe the safe state, dispatch one route, and reconcile the substrate. Retain the
-route evidence and exact adapter used for every trial.
-
-### 4. Close and retest
-
-Rank escaped paths by effect criticality and authority depth. Add or move enforcement to the relevant
-substrate, rerun the same portfolio, and compare the machine-readable results.
+1. **Define the effect.** Specify safe and prohibited states, owner, acceptance criteria,
+   authorized environment, routes, and a state observer independent of the agent's explanation.
+2. **Establish the baseline.** Reset the fixture, exercise the agreed isolated trials, observe
+   the resulting state, and retain route evidence. Mark absent coverage and inconclusive results.
+3. **Remediate and retest.** Rank observed gaps and perform one agreed remediation retest.
+   Implementation beyond the written scope is separately estimated.
+4. **Hand over and rerun.** The customer's engineer runs the project and receives limitations,
+   evidence, a remediation backlog, and CI handoff instructions.
 
 ## Deliverables
 
-- one user-owned ShadowPath effect project;
-- an explicit route and observer inventory;
-- a machine-readable baseline plus Markdown report;
-- a portfolio manifest ready for the next protected outcome;
-- a remediation backlog tied to observed paths;
-- a rerun command suitable for CI or a controlled assurance job.
+- One customer-owned ShadowPath effect project and explicit route/observer inventory.
+- Machine-readable baseline and readable report with configuration and source provenance.
+- Useful allowed-action controls as well as prohibited-action checks.
+- Prioritized remediation plan and one agreed retest.
+- Rerun instructions, an engineer-led handoff, and the next coverage decision.
 
 ## Required customer inputs
 
-- an engineering owner for the affected business system;
-- a security or AI-platform owner for the agent control;
-- an isolated test environment or a representative hermetic fixture;
-- read access for an independent state observer;
-- agreement on the prohibited effect and claim boundary.
+An engineering owner for the business workflow and a person authorized to approve testing;
+these may be the same person. A customer-controlled isolated environment or representative
+hermetic fixture, synthetic data, scoped test credentials, a reset procedure, and an agreed
+independent observation method are required. Read-only observation is preferred.
+
+Agree artifact location, authorized access, redaction, retention, deletion, and credential
+revocation before sharing data. Never send secrets through the website or a public issue.
+Use the [onboarding checklist](customer-onboarding.md) during scoping.
 
 ## Success criteria
 
-The pilot is useful when the customer can answer, with reviewable evidence:
+The customer's engineer can state the protected outcome, enumerate the tested routes,
+distinguish observed effects from prevented effects and inconclusive trials, identify the
+observer, and rerun the project after a relevant change. A report explicitly identifies
+uncovered routes and what its evidence does not establish.
 
-1. What exact outcome are we protecting?
-2. Which routes can reach it?
-3. Which routes did the current control actually prevent?
-4. Which independent observer confirmed the final state?
-5. Can our team rerun the same test after a control or architecture change?
+## After the pilot
 
-Velvet currently provides local, self-hosted code and evidence artifacts. A pilot is not a legal
-compliance determination, audit signoff, insurance decision, or claim that undeclared routes are safe.
+Choose whether to maintain checks for future releases, add another workflow, or integrate
+supported enforcement. Assessment does not require replacing the existing gateway. Inline
+enforcement requires a supported integration and is not silently included for every route.
+Ongoing coverage is separately scoped; no automatic subscription or renewal is created.
+
+## Out of scope
+
+Production experimentation, unrestricted third-party testing, guaranteed discovery, broad
+penetration testing, production rollout, certification, insurance decisions, and round-the-clock
+incident response are outside the starting offer. No claim is made for undeclared routes.
+
+Velvet currently provides local, self-hosted code and evidence artifacts. Read the
+[claims register](claims-evidence.md) and [trust boundaries](https://shadowpath.coriolislabs.ca/trust/).
