@@ -1,0 +1,51 @@
+name: Customer-facing readiness
+on:
+  push:
+    branches: [main, launch/customer-investor-readiness]
+    paths: ["site/**", "README.md", "docs/public/**", ".github/workflows/customer-readiness.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["site/**", "README.md", "docs/public/**", ".github/workflows/customer-readiness.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: customer-readiness-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  customer-site:
+    name: Build and verify customer entry points
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install locked site dependencies
+        run: npm ci
+      - name: Build and verify site, links, and commercial boundaries
+        run: npm test
+      - name: Validate deployment bundle without publishing
+        run: npm run deploy:dry-run
+      - name: Retain inspectable build and changed-source context
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: customer-site-${{ github.sha }}
+          retention-days: 14
+          path: |
+            site/dist
+            site/src
+            site/tests
+            docs/public/customer-onboarding.md
+            docs/public/investor-brief.md
+            docs/public/claims-evidence.md
+            docs/public/pilot.md
+            README.md

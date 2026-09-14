@@ -1,0 +1,21 @@
+---
+import "../styles/global.css";
+import LaunchLayout from "../layouts/LaunchLayout.astro";
+import { REPOSITORY } from "../config/launch";
+---
+<LaunchLayout title="Recorded synthetic replay | Velvet" description="Replay Velvet's committed eight-route synthetic fixture. This browser view is not a fresh assessment or a vendor evaluation.">
+  <div class="l-wrap l-page"><div class="l-page-head"><p class="l-eyebrow">Recorded synthetic fixture</p><h1>The deny worked.<br />The conclusion failed.</h1><p class="l-lede">The named route is blocked. Eight declared alternative routes still reach the same prohibited state. This replay visualizes the committed local result; it does not execute new tests or contact any external system.</p></div>
+    <div class="l-split"><section class="proof-console" aria-labelledby="console-title">
+      <div class="console-topline"><div><p class="console-kicker">Recorded replay / not a live assessment</p><h2 id="console-title">Customer account remains active</h2></div><span class="console-state" data-console-state>READY</span></div>
+      <div class="protected-route"><div><span>Protected route</span><code>customer.disable</code></div><strong data-protected-status>NOT TESTED</strong></div>
+      <div class="route-summary"><div><span>Equivalent routes</span><strong><span data-tested-count>0</span>/8 tested</strong></div><div><span>Observed breaches</span><strong><span data-breach-count>0</span>/8</strong></div></div>
+      <ol class="route-list" data-route-list aria-label="Equivalent effect routes"></ol>
+      <div class="console-verdict" aria-live="polite"><span>Recorded verdict</span><strong data-verdict>WAITING FOR REPLAY</strong></div>
+      <div class="console-actions"><button class="button button-console" type="button" data-run-proof>Replay recorded result</button><button class="button button-console-quiet" type="button" data-reset-proof>Reset</button></div>
+      <noscript><p>JavaScript is disabled. The committed result is CONTROL_FALSE_SUCCESS: one blocked named route and eight observed equivalent-route effects. Inspect the linked source report for the evidence.</p></noscript>
+    </section><div class="l-prose"><h2>What to look for</h2><p>The control's decision and the business state answer different questions. The observer reconciles state after each isolated route trial.</p><div class="l-callout"><p>The result belongs to a deliberately constructed synthetic fixture. It is not a finding against a named vendor, a customer case study, or a measurement of market prevalence.</p></div><p><a class="l-inline-link" href={`${REPOSITORY}/blob/main/benchmarks/agent_authorization/shadowpath/SHADOWPATH_RESULTS.md`}>Inspect the committed result and provenance ↗</a></p><p><a class="l-inline-link" href="/evidence/">Compare public evidence boundaries ↗</a></p></div></div>
+    <section class="l-page-section"><h2>Reproduce from source</h2><p>The command below replays the committed fixture. Source installation may require the repository's Python and Rust build prerequisites. See the quickstart before executing a fresh local fixture.</p><div class="command-card"><div><p class="console-kicker">Committed replay</p><code data-command>uvx --from git+https://github.com/paulchum/velvet-rope.git velvet-rope shadowpath demo</code></div><button class="button button-copy" type="button" data-copy-command>Copy command</button></div><p class="l-fine"><a href={`${REPOSITORY}/blob/main/docs/public/shadowpath-quickstart.md`}>Source setup and fresh local execution</a> · Pin a reviewed commit for reproducible evaluation.</p></section>
+    <div class="l-actions"><a class="l-button" href="/pilot/">Assess your own authorized workflow ↗</a></div>
+  </div>
+  <script>import "../scripts/replay";</script>
+</LaunchLayout>
