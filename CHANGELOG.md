@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Upgraded ShadowPath discovery to derive protected resource witnesses from
+  policy regexes, materialize fixture-free disposable baselines, generate
+  content-aware arguments, record provider-owned typed resource relations and
+  schema/annotation-derived candidate Effect Footprints, require stable scope
+  digests, and schedule state expansion fairly across large scopes. Added the
+  first production model, for Pipelock-mediated filesystems; Docker, OpenHands,
+  runtime, and service adapters remain future work.
 - Migrated the public product site to Astro 7 on Cloudflare Workers Static
   Assets at `shadowpath.coriolislabs.ca`, with a managed custom domain, canonical
   metadata, hardened response headers, a custom 404, and a privacy-bounded event

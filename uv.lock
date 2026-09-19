@@ -508,9 +508,9 @@ name = "boto3"
 version = "1.43.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "botocore" },
-    { name = "jmespath" },
-    { name = "s3transfer" },
+    { name = "botocore", marker = "python_full_version < '3.15'" },
+    { name = "jmespath", marker = "python_full_version < '3.15'" },
+    { name = "s3transfer", marker = "python_full_version < '3.15'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/48/4f/f13d80d377b54dd2973e243e4eb7ce748706cd53876361cc72506006fd8b/boto3-1.43.16.tar.gz", hash = "sha256:6c337bbe608aacc7d335c79e671f0c893870293b74d652f7a7af22ccd0dfef16", size = 113152, upload-time = "2026-05-27T19:31:39.899Z" }
 wheels = [
@@ -522,9 +522,9 @@ name = "botocore"
 version = "1.43.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jmespath" },
-    { name = "python-dateutil" },
-    { name = "urllib3" },
+    { name = "jmespath", marker = "python_full_version < '3.15'" },
+    { name = "python-dateutil", marker = "python_full_version < '3.15'" },
+    { name = "urllib3", marker = "python_full_version < '3.15'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a1/74/140451a1fe027cb5e387cc7b1ec56224616ca742c330f1492f71c5cba3fb/botocore-1.43.16.tar.gz", hash = "sha256:813dae233d8b365c19aaf7865b32070e34d7e793654881bf86ecbbef3f4ad5c6", size = 15388648, upload-time = "2026-05-27T19:31:25.172Z" }
 wheels = [
@@ -5076,7 +5076,7 @@ name = "s3transfer"
 version = "0.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "botocore" },
+    { name = "botocore", marker = "python_full_version < '3.15'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/11/b3/bcdc2f58fa92592db511beda154c2c08d28f21f6c4637f06a42a24b10c21/s3transfer-0.17.1.tar.gz", hash = "sha256:042dd5e3b1b512355e35a23f0223e426b7042e80b97830ea2680ddce327fc45e", size = 159439, upload-time = "2026-05-26T19:45:01.714Z" }
 wheels = [
@@ -5498,6 +5498,15 @@ wheels = [
 ]
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260906"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/6e/abec85b9013db5b934b0280a6dd104904d84f7bcbaab2e2f3def87ac7463/types_pyyaml-6.0.12.20260906.tar.gz", hash = "sha256:f59c1cc05010b833d2d72287bbaa72610106b28d42d89a907313117faba85212", size = 18649, upload-time = "2026-09-06T06:35:35.362Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/c0/fc0644b7ddcfb969e95845837143cb5173ddd6e06ee4ba5fc493cd9329b7/types_pyyaml-6.0.12.20260906-py3-none-any.whl", hash = "sha256:bca893ff0d51df5c9053137d5d0e6ccd36e939a196356f1d5c16372422f5137b", size = 21282, upload-time = "2026-09-06T06:35:34.372Z" },
+]
+
+[[package]]
 name = "types-requests"
 version = "2.33.0.20260518"
 source = { registry = "https://pypi.org/simple" }
@@ -5754,6 +5763,8 @@ dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "pyyaml" },
+    { name = "referencing" },
     { name = "scipy" },
     { name = "sqlglot" },
     { name = "starlette" },
@@ -5817,6 +5828,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "types-jsonschema" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -5841,6 +5853,8 @@ requires-dist = [
     { name = "openai-agents", marker = "extra == 'live-openai'", specifier = ">=0.3,<1" },
     { name = "playwright", marker = "extra == 'shadowpath'", specifier = ">=1.55,<2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+    { name = "pyyaml", specifier = ">=6,<7" },
+    { name = "referencing", specifier = ">=0.36,<1" },
     { name = "scipy", specifier = ">=1.14,<2" },
     { name = "semantic-kernel", marker = "extra == 'live-semantic-kernel'", specifier = ">=1,<2" },
     { name = "sqlglot", specifier = ">=25,<27" },
@@ -5864,6 +5878,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7,<8" },
     { name = "ruff", specifier = ">=0.14,<0.15" },
     { name = "types-jsonschema", specifier = ">=4.26" },
+    { name = "types-pyyaml", specifier = ">=6.0.12" },
 ]
 
 [[package]]

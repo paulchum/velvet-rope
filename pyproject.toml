@@ -31,6 +31,8 @@ dependencies = [
   "matplotlib>=3.9,<4",
   "numpy>=2,<3",
   "psycopg[binary]>=3.2,<4",
+  "pyyaml>=6,<7",
+  "referencing>=0.36,<1",
   "scipy>=1.14,<2",
   "sqlglot>=25,<27",
   "starlette>=1.0.1,<2",
@@ -62,6 +64,7 @@ velvet = "velvet.cli:main"
 velvet-rope = "velvet.cli:main"
 velvet-bernoulli = "velvet.research.run_bernoulli:main"
 velvet-mcp-firewall = "velvet.mcp_firewall:main"
+velvet-shadowpath-discover = "velvet.shadowpath_discover:main"
 
 [project.urls]
 Homepage = "https://github.com/paulchum/velvet-rope"
@@ -84,6 +87,7 @@ dev = [
     "pytest-cov>=7,<8",
     "ruff>=0.14,<0.15",
     "types-jsonschema>=4.26",
+    "types-PyYAML>=6.0.12",
 ]
 
 [build-system]
