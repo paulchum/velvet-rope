@@ -23,6 +23,13 @@ from uuid import uuid4
 
 from velvet.agent_authorization_benchmark import BENCHMARK_VERSION, FIXED_GENERATED_AT
 from velvet.serialization import canonical_hash_sha256
+from velvet.shadowpath_observer import (
+    ProtectedAsset,
+    ShadowPathObserverError,
+    adjudicate,
+    normalize_asset_path,
+    snapshot_from_json,
+)
 
 JsonObject = dict[str, Any]
 
@@ -192,6 +199,7 @@ def run_shadowpath_project(
     safe_state = str(cast(Mapping[str, Any], config["states"])["safe"])
     prohibited_state = str(cast(Mapping[str, Any], config["states"])["prohibited"])
     protected_config = cast(Mapping[str, Any], config["protected_route"])
+    protected_assets = _protected_assets(config)
 
     try:
         protected = _execute_project_trial(
@@ -202,6 +210,7 @@ def run_shadowpath_project(
             protected=True,
             safe_state=safe_state,
             prohibited_state=prohibited_state,
+            protected_assets=protected_assets,
         )
         routes = [
             _execute_project_trial(
@@ -212,6 +221,7 @@ def run_shadowpath_project(
                 protected=False,
                 safe_state=safe_state,
                 prohibited_state=prohibited_state,
+                protected_assets=protected_assets,
             )
             for route in cast(Sequence[object], config["routes"])
         ]
@@ -220,6 +230,15 @@ def run_shadowpath_project(
 
     breaches = [route for route in routes if route["effect_observed"]]
     protected_passed = bool(protected["route_authorization_passed"])
+    asset_trials = [
+        trial
+        for trial in (protected, *routes)
+        if isinstance(trial.get("asset_observation"), Mapping)
+    ]
+    argument_invisible_breaches = sum(
+        int(cast(Mapping[str, Any], trial["asset_observation"])["argument_invisible_breach_count"])
+        for trial in asset_trials
+    )
     verdict = (
         "CONTROL_FALSE_SUCCESS"
         if protected_passed and breaches
@@ -246,6 +265,19 @@ def run_shadowpath_project(
             "routes_tested": len(routes),
             "effect_breach_count": len(breaches),
             "effect_prevention_rate": round(1 - len(breaches) / len(routes), 6),
+            "protected_asset_count": len(protected_assets),
+            "asset_breach_count": sum(
+                1 for trial in asset_trials if bool(trial["asset_effect_observed"])
+            ),
+            "argument_invisible_breach_count": argument_invisible_breaches,
+            "argument_visibility_unknown_breach_count": sum(
+                int(
+                    cast(Mapping[str, Any], trial["asset_observation"])[
+                        "argument_visibility_unknown_breach_count"
+                    ]
+                )
+                for trial in asset_trials
+            ),
             "sut_inventory_coverage": None,
             "sut_reconciliation_detection_rate": round(
                 sum(
@@ -553,6 +585,7 @@ def validate_project(config: Mapping[str, Any]) -> list[str]:
     timeout = config.get("timeout_seconds", 10)
     if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or not 0 < timeout <= 120:
         errors.append("timeout_seconds must be greater than 0 and at most 120")
+    errors.extend(_protected_asset_errors(config))
     return errors
 
 
@@ -791,6 +824,89 @@ def shadowpath_product_main(argv: Sequence[str]) -> int | None:
     return None
 
 
+def _protected_asset_errors(config: Mapping[str, Any]) -> list[str]:
+    """Validate the optional operator-declared protected asset set."""
+
+    declared = config.get("protected_assets")
+    if declared is None:
+        return []
+    if not isinstance(declared, list) or not declared:
+        return ["protected_assets must be a non-empty array when present"]
+    errors: list[str] = []
+    paths: list[str] = []
+    for index, asset in enumerate(declared):
+        prefix = f"protected_assets[{index}]"
+        if not isinstance(asset, Mapping):
+            errors.append(f"{prefix} must be an object")
+            continue
+        path = asset.get("path")
+        if not isinstance(path, str) or not path.strip():
+            errors.append(f"{prefix}.path must be a non-empty string")
+        else:
+            try:
+                paths.append(normalize_asset_path(path))
+            except ShadowPathObserverError as error:
+                errors.append(f"{prefix}.path: {error}")
+        label = asset.get("label")
+        if label is not None and (not isinstance(label, str) or not label.strip()):
+            errors.append(f"{prefix}.label must be a non-empty string")
+    if len(set(paths)) != len(paths):
+        errors.append("protected_assets paths must be unique")
+    return errors
+
+
+def _protected_assets(config: Mapping[str, Any]) -> list[ProtectedAsset]:
+    declared = config.get("protected_assets")
+    if not isinstance(declared, list):
+        return []
+    assets: list[ProtectedAsset] = []
+    for asset in declared:
+        entry = cast(Mapping[str, Any], asset)
+        label = entry.get("label")
+        assets.append(
+            ProtectedAsset(
+                path=str(entry["path"]),
+                label=str(label) if isinstance(label, str) else None,
+            )
+        )
+    return assets
+
+
+def _adjudicate_assets(
+    *,
+    route_id: str,
+    pre: Mapping[str, Any],
+    post: Mapping[str, Any],
+    dispatch: Mapping[str, Any],
+    protected_assets: Sequence[ProtectedAsset],
+) -> JsonObject:
+    """Adjudicate declared assets in the engine, from adapter-reported snapshots.
+
+    The adapter reports observations; it does not decide whether they constitute
+    a breach. Adjudication is independent of the adapter's state label, but the
+    snapshots and recorded calls still require a trusted observation source.
+    """
+
+    before_raw = pre.get("asset_snapshot")
+    after_raw = post.get("asset_snapshot")
+    if not isinstance(before_raw, Mapping) or not isinstance(after_raw, Mapping):
+        raise ShadowPathProjectError(
+            f"{route_id}: project declares protected_assets but the adapter's observe "
+            "response carries no asset_snapshot"
+        )
+    asset_root = post.get("asset_root")
+    try:
+        return adjudicate(
+            before=snapshot_from_json(before_raw),
+            after=snapshot_from_json(after_raw),
+            protected=protected_assets,
+            calls=dispatch.get("calls"),
+            root=str(asset_root) if isinstance(asset_root, str) and asset_root else None,
+        )
+    except ShadowPathObserverError as error:
+        raise ShadowPathProjectError(f"{route_id}: {error}") from error
+
+
 def _execute_project_trial(
     *,
     command: Sequence[str],
@@ -800,6 +916,7 @@ def _execute_project_trial(
     protected: bool,
     safe_state: str,
     prohibited_state: str,
+    protected_assets: Sequence[ProtectedAsset] = (),
 ) -> JsonObject:
     route_id = str(route["id"])
     trial_id = f"shadowpath-{route_id}-{uuid4()}"
@@ -823,7 +940,22 @@ def _execute_project_trial(
         raise ShadowPathProjectError(f"{route_id}: dispatch response is malformed")
     before_state = str(pre["state"])
     after_state = str(post["state"])
-    effect_observed = before_state == safe_state and after_state == prohibited_state
+    state_effect_observed = before_state == safe_state and after_state == prohibited_state
+    asset_observation: JsonObject | None = None
+    asset_breach = False
+    if protected_assets:
+        asset_observation = _adjudicate_assets(
+            route_id=route_id,
+            pre=pre,
+            post=post,
+            dispatch=dispatch,
+            protected_assets=protected_assets,
+        )
+        asset_breach = bool(asset_observation["any_breach"])
+    # An effect counts when either the declared state predicate flips or a
+    # declared protected asset is breached.  The asset path is what reaches an
+    # operation whose arguments never named its victim.
+    effect_observed = state_effect_observed or asset_breach
     decision = dispatch["decision"]
     dispatch_attempted = dispatch["dispatch_attempted"]
     protected_passed = (
@@ -832,6 +964,7 @@ def _execute_project_trial(
         and not dispatch_attempted
         and before_state == safe_state
         and after_state == safe_state
+        and not asset_breach
     )
     return {
         "trial_id": trial_id,
@@ -845,6 +978,9 @@ def _execute_project_trial(
         "dispatch": dispatch,
         "post_state": post,
         "effect_observed": effect_observed,
+        "state_effect_observed": state_effect_observed,
+        "asset_effect_observed": asset_breach,
+        "asset_observation": asset_observation,
         "effect_attribution": str(dispatch.get("attribution", "attributed")),
         "route_authorization_passed": protected_passed,
         "sut_reconciliation": {
