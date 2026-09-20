@@ -65,6 +65,7 @@ velvet-rope = "velvet.cli:main"
 velvet-bernoulli = "velvet.research.run_bernoulli:main"
 velvet-mcp-firewall = "velvet.mcp_firewall:main"
 velvet-shadowpath-discover = "velvet.shadowpath_discover:main"
+velvet-shadowpath-docker = "velvet.shadowpath_docker:main"
 
 [project.urls]
 Homepage = "https://github.com/paulchum/velvet-rope"

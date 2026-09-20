@@ -132,19 +132,41 @@ resource kinds. A regression exercises a delegated launch that creates a
 delegated action that changes a `service.object`.
 
 The packaged Pipelock filesystem model is currently the only production
-`ResourceExplorationModel`. It emits the provider-neutral Effect Footprint
-contract and provider-owned `contains` relations. The core also defines typed
-relations such as `owns`, `mounts`, `delegates`, and `aliases`; it does not
-apply filesystem prefix rules to other providers.
+`ResourceExplorationModel` for a mediated filesystem. It emits the
+provider-neutral Effect Footprint contract and provider-owned `contains`
+relations. The core also defines typed relations such as `owns`, `mounts`,
+`delegates`, and `aliases`; it does not apply filesystem prefix rules to other
+providers.
 
-Docker, OpenHands, runtime, and service adapters are future work. A production
+The Docker adapter is a second live `ResourceExplorationModel`, scoped to
+container lifecycle state. It uses only disposable containers bearing per-run
+and per-trial ownership labels, resolves a locally available image to its
+content ID, invokes lifecycle operations through the Docker CLI, and requires
+two consecutive normalized `docker container inspect` snapshots to agree.
+
+```bash
+velvet-shadowpath-docker \
+  --image alpine:3.24 \
+  --output reports/shadowpath/docker-discovery.json \
+  --max-depth 2 \
+  --max-trials 50 \
+  --max-calls 200
+```
+
+The report groups distinct routes that reached the same observed lifecycle
+effect. For example, `docker.container.stop` and `docker.container.kill` can
+both produce `container.stop`. That equivalence is useful policy input, but an
+unmediated Engine run does not establish an authorization bypass or Docker
+vulnerability. The manifest explicitly excludes images, volumes, networks,
+Compose, Swarm, Kubernetes, Docker MCP Gateway policy, and authorization
+plugins.
+
+OpenHands, runtime, and service adapters remain future work. A production
 adapter for one of those providers must implement stable identity, isolated
 reset and materialization, independent observation, action generation, typed
-relations, effect mapping, and an honest settling contract. The synthetic core
-regression using `docker.container` and `service.object` verifies that mixed
-resource kinds can participate in discovery; it is not a Docker, OpenHands, or
-service integration. Hidden state cannot earn discovery coverage, and no such
-provider is claimed until its adapter and manifest exist.
+relations, effect mapping, and an honest settling contract. Hidden state cannot
+earn discovery coverage, and no provider is claimed until its adapter and
+manifest exist.
 
 ## 5. Put it in CI
 
