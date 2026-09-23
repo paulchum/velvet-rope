@@ -306,7 +306,8 @@ class StripeRestRelay:
 
     def _serve(self) -> None:
         listener = self._socket
-        assert listener is not None
+        if listener is None:
+            return
         while not self._stopping.is_set():
             try:
                 conn, _ = listener.accept()
