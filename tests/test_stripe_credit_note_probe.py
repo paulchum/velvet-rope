@@ -103,6 +103,12 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(probe.classify_failure(error), "approval_required")
         self.assertEqual(error.approval_request_id, "apreq_123")
 
+    def test_app_denial_requires_an_unchanged_dispatch_counter(self) -> None:
+        self.assertTrue(probe.AppDenied("dec_" + "a" * 32, "a" * 64, 2, 2).no_dispatch)
+        self.assertFalse(probe.AppDenied("dec_" + "b" * 32, "a" * 64, 2, 3).no_dispatch)
+        with self.assertRaisesRegex(probe.ProbeError, "invalid application relay witness"):
+            probe.AppDenied("dec_untrusted", "a" * 64, 2, 2)
+
 
 class AssessmentTests(unittest.TestCase):
     def complete_report(self, *, linked_refund: str = "re_credit") -> Any:
@@ -148,6 +154,23 @@ class AssessmentTests(unittest.TestCase):
         self.assertTrue(summary["measurement_complete"])
         self.assertFalse(summary["credit_note_effect_confirmed"])
         self.assertNotEqual(summary["overall_verdict"], "ALTERNATE_REFUND_EFFECT_OBSERVED")
+
+    def test_application_denial_with_credit_note_refund_is_distinct(self) -> None:
+        run = self.complete_report()
+        run.report["phases"][0]["dispatch"] = "app_denied_no_dispatch"
+        run.assess()
+        self.assertEqual(run.report["summary"]["overall_verdict"],
+                         "CREDIT_NOTE_REFUND_AFTER_APP_DENIAL")
+
+    def test_effect_aware_closure_preserves_balance_credit(self) -> None:
+        run = self.complete_report()
+        run.report["phases"][0]["dispatch"] = "app_denied_no_dispatch"
+        run.report["phases"][1]["dispatch"] = "app_denied_no_dispatch"
+        run.report["phases"][1]["observed_refunds"] = []
+        run.report["phases"][1]["observed_credit_note"] = {}
+        run.assess()
+        self.assertEqual(run.report["summary"]["overall_verdict"],
+                         "APP_DENIED_BOTH_REFUND_ROUTES_BALANCE_CREDIT_SUCCEEDED")
 
     def test_incomplete_observation_cannot_be_measured_as_success(self) -> None:
         run = self.complete_report()
@@ -346,6 +369,7 @@ class EndToEndTests(unittest.TestCase):
                              "verified_by_fresh_credit_note_resource")
             self.assertEqual(report["account_checks"], {
                 "setup_account_read": True, "actor_account_read": False,
+                "actor_account_read_skipped_for_app_relay": False,
                 "observer_account_read": False, "observer_refund_list_read": True,
                 "observer_credit_note_list_read": True, "observer_fresh_charge_read": True,
             })
@@ -362,6 +386,75 @@ class EndToEndTests(unittest.TestCase):
                                   if call[:3] == ("observer", "GET", "/v1/account")]), 1)
             self.assertNotIn("sk_test_setup", json.dumps(report))
             self.assertNotIn("rk_test_actor", json.dumps(report))
+            self.assertEqual(report["credentials"]["actor_fingerprint_scope"], "local_run_id")
+            self.assertEqual(len(report["credentials"]["actor_fingerprint_sha256"]), 64)
+
+    def test_application_policy_a_denies_direct_and_observes_credit_refund(self) -> None:
+        class PolicyA(FakeStripeApi):
+            def request(self, role: str, method: str, path: str,
+                        params: dict[str, Any], idempotency: str | None) -> Any:
+                if role == "actor" and method == "POST" and path == "/v1/refunds":
+                    self.calls.append((role, method, path, dict(params)))
+                    raise probe.AppDenied("dec_" + "a" * 32, "a" * 64, 0, 0)
+                return super().request(role, method, path, params, idempotency)
+
+        with tempfile.TemporaryDirectory() as directory:
+            run = probe.Probe(self.settings(directory), self.KEYS, PolicyA(),
+                              actor_account_preflight=False)
+            report = run.run()
+            self.assertTrue(report["account_checks"]["actor_account_read_skipped_for_app_relay"])
+            self.assertFalse(any(row["role"] == "actor" and row["path"] == "/v1/account"
+                                 for row in report["requests"]))
+            self.assertTrue(report["summary"]["measurement_complete"])
+            self.assertEqual(report["summary"]["overall_verdict"],
+                             "CREDIT_NOTE_REFUND_AFTER_APP_DENIAL")
+            self.assertEqual(report["phases"][0]["dispatch_count_before"], 0)
+            self.assertEqual(report["phases"][0]["dispatch_count_after"], 0)
+            self.assertEqual(report["phases"][1]["observed_refunds"][0]["status"],
+                             "succeeded")
+
+    def test_application_policy_c_denies_both_and_keeps_balance_credit(self) -> None:
+        class PolicyC(FakeStripeApi):
+            def request(self, role: str, method: str, path: str,
+                        params: dict[str, Any], idempotency: str | None) -> Any:
+                if role == "actor" and method == "POST" and (path == "/v1/refunds" or
+                        (path == "/v1/credit_notes" and "refund_amount" in params)):
+                    self.calls.append((role, method, path, dict(params)))
+                    raise probe.AppDenied("dec_" + "c" * 32, "c" * 64, 0, 0)
+                return super().request(role, method, path, params, idempotency)
+
+        with tempfile.TemporaryDirectory() as directory:
+            run = probe.Probe(self.settings(directory), self.KEYS, PolicyC(),
+                              actor_account_preflight=False)
+            report = run.run()
+            self.assertTrue(report["summary"]["measurement_complete"])
+            self.assertEqual(report["summary"]["overall_verdict"],
+                             "APP_DENIED_BOTH_REFUND_ROUTES_BALANCE_CREDIT_SUCCEEDED")
+            self.assertEqual([phase["dispatch"] for phase in report["phases"]],
+                             ["app_denied_no_dispatch", "app_denied_no_dispatch", "accepted"])
+            self.assertEqual(report["phases"][2]["observed_refunds"], [])
+
+    def test_resource_registration_happens_after_baselines_before_actor_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            provider = FakeStripeApi()
+
+            def register(resources: dict[str, Any]) -> None:
+                self.assertEqual(set(resources), set(FakeStripeApi.lanes))
+                self.assertEqual(resources["direct_refund"]["charge_id"], "ch_Dr1")
+                self.assertEqual(resources["credit_note_refund"]["invoice_id"], "in_Cr1")
+                self.assertFalse(any(call[0] == "actor" and call[1] == "POST"
+                                     for call in provider.calls))
+                for lane in FakeStripeApi.lanes:
+                    self.assertTrue(any(call[0] == "observer" and call[1] == "GET"
+                                        and call[2] == "/v1/refunds"
+                                        and call[3].get("charge") == resources[lane]["charge_id"]
+                                        for call in provider.calls))
+
+            run = probe.Probe(self.settings(directory), self.KEYS, provider,
+                              before_actor_phases=register)
+            report = run.run()
+            self.assertEqual(report["actor_resource_registration"],
+                             "completed_before_dispatch")
 
     def test_partial_refund_pagination_preserves_effect_but_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

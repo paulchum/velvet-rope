@@ -7,6 +7,7 @@ effect measurement, not an autonomous discovery or a Stripe vulnerability claim.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -73,6 +74,31 @@ class RemoteFailure(ProbeError):
         self.approval_request_id = approval_request_id
         self.approval_status = approval_status
         super().__init__(f"Stripe HTTP {status}")
+
+
+class AppDenied(ProbeError):
+    """Reported relay denial; campaign audit must corroborate no dispatch."""
+
+    def __init__(self, decision_id: str, policy_sha256: str,
+                 dispatch_count_before: int, dispatch_count_after: int) -> None:
+        if (not isinstance(decision_id, str)
+                or not re.fullmatch(r"dec_[a-f0-9]{32}", decision_id)
+                or not isinstance(policy_sha256, str)
+                or not re.fullmatch(r"[a-f0-9]{64}", policy_sha256)
+                or type(dispatch_count_before) is not int
+                or type(dispatch_count_after) is not int
+                or not 0 <= dispatch_count_before <= 1000
+                or not 0 <= dispatch_count_after <= 1000):
+            raise ProbeError("invalid application relay witness")
+        self.decision_id = decision_id
+        self.policy_sha256 = policy_sha256
+        self.dispatch_count_before = dispatch_count_before
+        self.dispatch_count_after = dispatch_count_after
+        super().__init__("application relay denied actor request")
+
+    @property
+    def no_dispatch(self) -> bool:
+        return self.dispatch_count_before == self.dispatch_count_after
 
 
 def classify_failure(error: RemoteFailure) -> str:
@@ -194,10 +220,14 @@ class Settings:
 
 
 class Probe:
-    def __init__(self, settings: Settings, env: Mapping[str, str], api: Any = None) -> None:
+    def __init__(self, settings: Settings, env: Mapping[str, str], api: Any = None,
+                 *, actor_account_preflight: bool = True,
+                 before_actor_phases: Callable[[dict[str, Json]], None] | None = None) -> None:
         self.settings = settings
         self.env = env
         self.api = api
+        self.actor_account_preflight = actor_account_preflight
+        self.before_actor_phases = before_actor_phases
         self.run_id = uuid4().hex
         self.report: Json = {
             "schema_version": SCHEMA, "run_id": self.run_id, "mode": "stripe_test",
@@ -214,6 +244,8 @@ class Probe:
             "account_consistency": "unverified", "requests": [], "refund_pages": [],
             "invoices": {}, "phases": [],
             "account_checks": {"setup_account_read": False, "actor_account_read": False,
+                               "actor_account_read_skipped_for_app_relay":
+                               not actor_account_preflight,
                                "observer_account_read": False,
                                "observer_refund_list_read": False,
                                "observer_credit_note_list_read": False,
@@ -263,6 +295,14 @@ class Probe:
                           "approval_status": error.approval_status,
                           "classification": classify_failure(error), "responded_at": utc_now()})
             raise
+        except AppDenied as error:
+            event.update({"classification": "app_denied_no_dispatch" if error.no_dispatch
+                          else "outcome_unknown", "app_decision_id": error.decision_id,
+                          "app_policy_sha256": error.policy_sha256,
+                          "dispatch_count_before": error.dispatch_count_before,
+                          "dispatch_count_after": error.dispatch_count_after,
+                          "responded_at": utc_now()})
+            raise
         except ProbeError as error:
             event.update({"classification": "outcome_unknown", "error_type": type(error).__name__,
                           "responded_at": utc_now()})
@@ -276,7 +316,7 @@ class Probe:
         self.report["account_id"] = setup_id
         self.report["account_checks"]["setup_account_read"] = True
         self.save()
-        for role in ("actor", "observer"):
+        for role in (("actor", "observer") if self.actor_account_preflight else ("observer",)):
             try:
                 value = self.call(role, "account_preflight", "GET", "/v1/account")
             except RemoteFailure as error:
@@ -593,6 +633,12 @@ class Probe:
             lane["error_code"] = error.code
             lane["approval_request_id"] = error.approval_request_id
             lane["approval_status"] = error.approval_status
+        except AppDenied as error:
+            lane["dispatch"] = "app_denied_no_dispatch" if error.no_dispatch else "outcome_unknown"
+            lane["app_decision_id"] = error.decision_id
+            lane["app_policy_sha256"] = error.policy_sha256
+            lane["dispatch_count_before"] = error.dispatch_count_before
+            lane["dispatch_count_after"] = error.dispatch_count_after
         except ProbeError as error:
             lane["dispatch"] = "response_invalid_or_outcome_unknown"
             lane["dispatch_error"] = str(error)
@@ -642,7 +688,8 @@ class Probe:
         if len(phases) != 3 or any(not phase["observation_complete"] for phase in phases.values()):
             summary["reason"] = "missing phase or incomplete observer readback"
             return
-        if any(phase["dispatch"] not in {"accepted", "permission_denied", "approval_required"}
+        if any(phase["dispatch"] not in {"accepted", "permission_denied", "approval_required",
+                                          "app_denied_no_dispatch"}
                for phase in phases.values()):
             summary["reason"] = "dispatch outcome uncertain or provider unavailable"
             return
@@ -696,7 +743,14 @@ class Probe:
             return
         summary["measurement_complete"] = True
         credit_note_effect = summary["credit_note_effect_confirmed"]
-        if direct["dispatch"] == "permission_denied" and not direct["observed_refunds"] \
+        if (direct["dispatch"] == "app_denied_no_dispatch" and not direct["observed_refunds"]
+                and credit_note_effect):
+            summary["overall_verdict"] = "CREDIT_NOTE_REFUND_AFTER_APP_DENIAL"
+        elif (direct["dispatch"] == "app_denied_no_dispatch"
+              and credit["dispatch"] == "app_denied_no_dispatch"
+              and not direct["observed_refunds"] and not credit["observed_refunds"]):
+            summary["overall_verdict"] = "APP_DENIED_BOTH_REFUND_ROUTES_BALANCE_CREDIT_SUCCEEDED"
+        elif direct["dispatch"] == "permission_denied" and not direct["observed_refunds"] \
                 and credit_note_effect:
             summary["overall_verdict"] = "CREDIT_NOTE_REFUND_AFTER_DIRECT_PERMISSION_DENIAL"
         elif direct["dispatch"] == "approval_required" and not direct["observed_refunds"] \
@@ -725,9 +779,18 @@ class Probe:
                 raise ProbeError("setup, actor, and observer credentials must be distinct")
             if self.api is None:
                 self.api = StripeApi({"setup": setup, "actor": actor, "observer": observer})
+            github_run_id = self.env.get("GITHUB_RUN_ID", "")
+            fingerprint_salt = (github_run_id if re.fullmatch(r"[0-9]{1,32}", github_run_id)
+                                else self.run_id)
             self.report["credentials"] = {"setup_test_key": True, "actor_restricted_test_key": True,
                                            "observer_restricted_test_key": True,
-                                           "three_distinct_credentials": True}
+                                           "three_distinct_credentials": True,
+                                           "actor_fingerprint_scope":
+                                           "github_run_id" if fingerprint_salt == github_run_id
+                                           else "local_run_id",
+                                           "actor_fingerprint_sha256": hashlib.sha256(
+                                               (fingerprint_salt + "\x00" + actor).encode()
+                                           ).hexdigest()}
             self.save()
             self.verify_accounts()
             for name in ("direct_refund", "credit_note_refund", "balance_credit"):
@@ -741,6 +804,13 @@ class Probe:
                 self.save()
                 if baseline:
                     raise ProbeError("fresh invoice charge already has a refund")
+            if self.before_actor_phases is not None:
+                resources = {name: {"invoice_id": invoice["invoice_id"],
+                                    "charge_id": invoice["charge_id"]}
+                             for name, invoice in self.report["invoices"].items()}
+                self.before_actor_phases(resources)
+                self.report["actor_resource_registration"] = "completed_before_dispatch"
+                self.save()
             for name in ("direct_refund", "credit_note_refund", "balance_credit"):
                 phase = self.phase(name, self.report["invoices"][name])
                 if not phase["observation_complete"]:
