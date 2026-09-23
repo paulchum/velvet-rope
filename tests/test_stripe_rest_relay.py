@@ -189,6 +189,7 @@ class RelayTests(unittest.TestCase):
             self.note(client, "credit_amount", "idem-second")
         self.assertEqual(len(self.transport.calls), 1)
         self.assertEqual(len(self.audit_rows()), 1)
+        assert self.server is not None
         with self.assertRaises(probe.ProbeError):
             self.server.register_fresh_resources({})
 
@@ -198,8 +199,10 @@ class RelayTests(unittest.TestCase):
         evidence = json.dumps({"value": response.value, "witness": client.last_witness})
         self.assertNotIn("rk_test_", evidence)
         self.assertNotIn("rk_test_", self.audit.read_text())
-        self.assertEqual(client.last_witness["policy_sha256"], relay.policy_sha256("A"))
-        self.assertEqual(client.last_witness["source_sha256"], relay.SOURCE_SHA256)
+        witness = client.last_witness
+        assert witness is not None
+        self.assertEqual(witness["policy_sha256"], relay.policy_sha256("A"))
+        self.assertEqual(witness["source_sha256"], relay.SOURCE_SHA256)
 
     def test_persistent_keyless_worker_protocol(self) -> None:
         self.start("A")

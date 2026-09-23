@@ -77,10 +77,16 @@ class FakeWorker:
         pass
 
 
-class CampaignFakeStripeApi(fixture.FakeStripeApi):
-    def response(self, value: dict[str, Any], status: int = 200) -> Any:
+class CampaignFakeStripeApi:
+    def __init__(self) -> None:
+        self.inner = fixture.FakeStripeApi()
+        self.calls: list[tuple[str, str, str, dict[str, Any]]] = self.inner.calls
+
+    def request(self, role: str, method: str, path: str,
+                params: dict[str, object], idempotency: str | None) -> Any:
+        response = self.inner.request(role, method, path, params, idempotency)
         return campaign._probe.ApiResponse(
-            value, status, f"req_{len(self.calls)}", "2026-08-26.dahlia")
+            response.value, response.status, f"req_{len(self.calls)}", "2026-08-26.dahlia")
 
 
 class CapabilityGateTests(unittest.TestCase):

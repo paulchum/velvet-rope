@@ -22,7 +22,7 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(__file__).resolve().parent
@@ -115,7 +115,8 @@ def build_image() -> str:
         _isolated().docker("build", "--quiet", "--label",
                     "org.velvet.agent.sha256=" + worker_source_sha256(),
                     "--tag", IMAGE_TAG, str(context), timeout=240)
-    image = _isolated().docker("image", "inspect", IMAGE_TAG, "--format", "{{.Id}}").strip()
+    image = str(_isolated().docker("image", "inspect", IMAGE_TAG,
+                                   "--format", "{{.Id}}")).strip()
     if not IMAGE_ID.fullmatch(image):
         raise _probe.ProbeError("Docker did not return an immutable image ID")
     return image
@@ -203,7 +204,7 @@ class Worker:
             self.process.stdin.write(wire)
             self.process.stdin.flush()
             raw = _isolated().IsolatedAgent.read_line(self.process.stdout)
-            return _probe.obj(json.loads(raw), "worker reply")
+            return cast(dict[str, Any], _probe.obj(json.loads(raw), "worker reply"))
         except (OSError, ValueError) as error:
             raise _probe.ProbeError("isolated worker transport: " + type(error).__name__) from None
 
@@ -294,7 +295,8 @@ def _github_identity(env: Mapping[str, str]) -> str:
 def _load_result(path: Path) -> dict[str, Any]:
     if not path.is_file() or path.stat().st_size > MAX_BYTES:
         raise _probe.ProbeError("prerequisite result unavailable or too large")
-    return _probe.obj(json.loads(path.read_bytes()), "prerequisite result")
+    return cast(dict[str, Any], _probe.obj(json.loads(path.read_bytes()),
+                                           "prerequisite result"))
 
 
 def verify_baseline(path: Path, env: Mapping[str, str]) -> dict[str, Any]:

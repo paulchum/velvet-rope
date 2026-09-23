@@ -146,8 +146,9 @@ def _safe_value(value: Mapping[str, object]) -> dict[str, object]:
         if isinstance(candidate, str) and candidate.startswith(prefix) \
                 and SAFE_ID.fullmatch(candidate):
             result[name] = candidate
-    if type(value.get("amount")) is int and 0 <= value["amount"] <= 5000:
-        result["amount"] = value["amount"]
+    amount = value.get("amount")
+    if isinstance(amount, int) and not isinstance(amount, bool) and 0 <= amount <= 5000:
+        result["amount"] = amount
     if type(value.get("livemode")) is bool:
         result["livemode"] = value["livemode"]
     status = value.get("status")
@@ -402,12 +403,14 @@ class RelayClient:
         kind = result.get("kind")
         if kind == "app_denied" and self.last_witness is not None:
             row = self.last_witness
-            if (isinstance(row.get("decision_id"), str)
-                    and isinstance(row.get("policy_sha256"), str)
-                    and type(row.get("dispatch_count_before")) is int
-                    and type(row.get("dispatch_count_after")) is int):
-                raise AppDenied(row["decision_id"], row["policy_sha256"],
-                                row["dispatch_count_before"], row["dispatch_count_after"])
+            decision_id = row.get("decision_id")
+            policy_hash = row.get("policy_sha256")
+            before = row.get("dispatch_count_before")
+            after = row.get("dispatch_count_after")
+            if (isinstance(decision_id, str) and isinstance(policy_hash, str)
+                    and isinstance(before, int) and not isinstance(before, bool)
+                    and isinstance(after, int) and not isinstance(after, bool)):
+                raise AppDenied(decision_id, policy_hash, before, after)
         if kind == "remote_failure":
             status = result.get("status")
             if type(status) is int and 400 <= status <= 599:
@@ -464,10 +467,17 @@ def actor_main(socket_path: Path) -> int:
                     "op", "role", "method", "path", "params", "idempotency"
                 } or not isinstance(message["params"], dict):
                     raise ProbeError("invalid worker request envelope")
+                role = message.get("role")
+                method = message.get("method")
+                path = message.get("path")
+                params = message["params"]
+                idempotency = message.get("idempotency")
+                if (not isinstance(role, str) or not isinstance(method, str)
+                        or not isinstance(path, str) or not isinstance(idempotency, str)
+                        or any(not isinstance(key, str) for key in params)):
+                    raise ProbeError("invalid worker request fields")
                 try:
-                    response = client.request(message.get("role"), message.get("method"),
-                                              message.get("path"), message.get("params", {}),
-                                              message.get("idempotency"))
+                    response = client.request(role, method, path, params, idempotency)
                     result = {"ok": True, "value": response.value,
                               "status": response.status, "request_id": response.request_id,
                               "stripe_version": response.stripe_version,
