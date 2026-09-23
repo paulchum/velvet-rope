@@ -204,6 +204,10 @@ class FakeStripeApi:
             if role != "setup":
                 raise probe.RemoteFailure(403, "req_account_denied", "permission_denied")
             return self.response({"id": "acct_probe"})
+        if role == "observer" and method == "GET" and path in {
+            "/v1/refunds", "/v1/credit_notes"
+        } and params == {"limit": 1}:
+            return self.response({"data": [], "has_more": False})
 
         if method == "POST" and path == "/v1/customers":
             lane = self.lanes[len(self.invoices)]
@@ -342,7 +346,8 @@ class EndToEndTests(unittest.TestCase):
                              "verified_by_fresh_credit_note_resource")
             self.assertEqual(report["account_checks"], {
                 "setup_account_read": True, "actor_account_read": False,
-                "observer_account_read": False, "observer_fresh_charge_read": True,
+                "observer_account_read": False, "observer_refund_list_read": True,
+                "observer_credit_note_list_read": True, "observer_fresh_charge_read": True,
             })
             self.assertEqual({row["charge_id"] for row in report["invoices"].values()},
                              {"ch_Dr1", "ch_Cr1", "ch_Ba1"})
@@ -386,6 +391,24 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(provider.calls, [])
             self.assertEqual(json.loads((run.settings.output / "result.json").read_text()),
                              report)
+
+    def test_missing_observer_credit_note_scope_stops_before_invoice_writes(self) -> None:
+        class MissingCreditNoteRead(FakeStripeApi):
+            def request(self, role: str, method: str, path: str,
+                        params: dict[str, Any], idempotency: str | None) -> Any:
+                if (role == "observer" and method == "GET" and path == "/v1/credit_notes"
+                        and params == {"limit": 1}):
+                    self.calls.append((role, method, path, dict(params)))
+                    raise probe.RemoteFailure(403, "req_note_scope", "permission_denied")
+                return super().request(role, method, path, params, idempotency)
+
+        with tempfile.TemporaryDirectory() as directory:
+            provider = MissingCreditNoteRead()
+            run = probe.Probe(self.settings(directory), self.KEYS, provider)
+            report = run.run()
+            self.assertFalse(report["summary"]["measurement_complete"])
+            self.assertEqual(report["summary"]["overall_verdict"], "INDETERMINATE")
+            self.assertFalse(any(call[1] == "POST" for call in provider.calls))
 
 
 if __name__ == "__main__":

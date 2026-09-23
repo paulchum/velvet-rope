@@ -215,6 +215,8 @@ class Probe:
             "invoices": {}, "phases": [],
             "account_checks": {"setup_account_read": False, "actor_account_read": False,
                                "observer_account_read": False,
+                               "observer_refund_list_read": False,
+                               "observer_credit_note_list_read": False,
                                "observer_fresh_charge_read": False},
             "application_boundary": "none; direct Stripe REST test",
             "summary": {"overall_verdict": "INDETERMINATE", "measurement_complete": False},
@@ -293,6 +295,14 @@ class Probe:
                 and self.report["account_checks"]["observer_account_read"])
             else "partially_verified_pending_fresh_resource")
         self.save()
+        for path, check in (("/v1/refunds", "observer_refund_list_read"),
+                            ("/v1/credit_notes", "observer_credit_note_list_read")):
+            listing = self.call("observer", "read_scope_preflight", "GET", path, {"limit": 1})
+            if (not isinstance(listing.get("data"), list)
+                    or type(listing.get("has_more")) is not bool):
+                raise ProbeError(f"observer {path} read preflight was malformed")
+            self.report["account_checks"][check] = True
+            self.save()
 
     def setup_invoice(self, name: str) -> Json:
         """Create a fresh charged invoice and prove its invoice-payment to charge chain."""
