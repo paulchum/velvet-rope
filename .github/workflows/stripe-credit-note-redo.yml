@@ -1,0 +1,159 @@
+name: Stripe credit note refund-effect probe
+
+on:
+  push:
+    paths:
+      - .github/workflows/stripe-credit-note-redo.yml
+      - src/velvet/stripe_credit_note_probe.py
+      - src/velvet/stripe_credit_note_campaign.py
+      - src/velvet/stripe_rest_relay.py
+      - tests/test_stripe_credit_note_probe.py
+      - tests/test_stripe_credit_note_campaign.py
+      - tests/test_stripe_rest_relay.py
+      - docs/stripe-redo-protocol.md
+  pull_request:
+    paths:
+      - .github/workflows/stripe-credit-note-redo.yml
+      - src/velvet/stripe_credit_note_probe.py
+      - src/velvet/stripe_credit_note_campaign.py
+      - src/velvet/stripe_rest_relay.py
+      - tests/test_stripe_credit_note_probe.py
+      - tests/test_stripe_credit_note_campaign.py
+      - tests/test_stripe_rest_relay.py
+      - docs/stripe-redo-protocol.md
+  workflow_dispatch:
+    inputs:
+      run_sandbox:
+        description: Create fresh test invoices and test-mode refunds in the protected Stripe sandbox
+        required: true
+        type: boolean
+        default: false
+      mode:
+        description: Provider approval pilot or provider-backed application control benchmark
+        required: true
+        type: choice
+        options: [provider, campaign]
+        default: provider
+      replications:
+        description: Fresh independent sets; use three before a campaign-level claim
+        required: true
+        type: number
+        default: 1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stripe-credit-note-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    name: Source-only probe tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install offline checks
+        run: python -m pip install 'ruff>=0.14,<0.15' 'jsonschema>=4,<5'
+      - name: Lint probe and tests
+        run: |
+          ruff check src/velvet/stripe_credit_note_probe.py src/velvet/stripe_rest_relay.py \
+            src/velvet/stripe_credit_note_campaign.py tests/test_stripe_credit_note_probe.py \
+            tests/test_stripe_rest_relay.py tests/test_stripe_credit_note_campaign.py
+      - name: Run offline tests without Stripe credentials
+        run: |
+          python -m unittest discover -s tests -p 'test_stripe_credit_note_probe.py' -v
+          python -m unittest discover -s tests -p 'test_stripe_rest_relay.py' -v
+          python -m unittest discover -s tests -p 'test_stripe_credit_note_campaign.py' -v
+      - name: Build the reviewed credential-free worker image
+        run: python -I src/velvet/stripe_credit_note_campaign.py build-image
+
+  sandbox:
+    name: Provider-backed test-mode run (explicit opt-in)
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.run_sandbox
+    needs: offline
+    runs-on: ubuntu-latest
+    environment: stripe-sandbox
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install evidence publisher dependency
+        run: python -m pip install 'jsonschema>=4,<5'
+      - name: Install pinned evidence scanner before credentials are available
+        run: go install github.com/zricethezav/gitleaks/v8@v8.28.0
+      - name: Build credential-free actor image before credentials are available
+        if: inputs.mode == 'campaign'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$(python -I src/velvet/stripe_credit_note_campaign.py build-image)"
+          echo "VELVET_STRIPE_RELAY_IMAGE=$image" >> "$GITHUB_ENV"
+      - name: Attempt once per fresh test set
+        env:
+          VELVET_STRIPE_SETUP_KEY: ${{ secrets.VELVET_STRIPE_SETUP_KEY }}
+          VELVET_STRIPE_AGENT_KEY: ${{ secrets.VELVET_STRIPE_AGENT_KEY }}
+          VELVET_STRIPE_OBSERVER_KEY: ${{ secrets.VELVET_STRIPE_OBSERVER_KEY }}
+          EXPERIMENT_MODE: ${{ inputs.mode }}
+          REPLICATIONS: ${{ inputs.replications }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_RUN_ATTEMPT" != 1 ]; then
+            echo 'Mutation reruns are refused. Reconcile prior invoices and request IDs first.'
+            exit 2
+          fi
+          if [ "$REPLICATIONS" != 1 ] && [ "$REPLICATIONS" != 3 ]; then
+            echo 'Choose one pilot set or three independent sets.'
+            exit 2
+          fi
+          for trial in $(seq 1 "$REPLICATIONS"); do
+            provider="reports/stripe-provider-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-t${trial}"
+            python -I src/velvet/stripe_credit_note_probe.py run \
+              --allow-test-writes --observe-seconds 60 --output "$provider"
+            if [ "$EXPERIMENT_MODE" != campaign ]; then
+              continue
+            fi
+            if ! python -c 'import json,sys; s=json.load(open(sys.argv[1]))["summary"]; sys.exit(0 if s.get("measurement_complete") and s.get("direct_refund_effect_count")==1 and s.get("credit_note_effect_confirmed") and s.get("non_refunding_credit_control_passed") else 1)' "$provider/result.json"; then
+              echo 'Same-key provider capability control did not pass; relay benchmark skipped.'
+              break
+            fi
+            candidate="reports/stripe-policy-A-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-t${trial}"
+            python -I src/velvet/stripe_credit_note_campaign.py run --policy A \
+              --image "$VELVET_STRIPE_RELAY_IMAGE" --baseline-result "$provider/result.json" \
+              --allow-test-writes --observe-seconds 60 --output "$candidate"
+            if ! python -c 'import json,sys; r=json.load(open(sys.argv[1])); sys.exit(0 if r.get("candidate_confirmed") is True else 1)' "$candidate/result.json"; then
+              echo 'Route-filter candidate was not confirmed; closure test skipped.'
+              break
+            fi
+            closure="reports/stripe-policy-C-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-t${trial}"
+            python -I src/velvet/stripe_credit_note_campaign.py run --policy C \
+              --image "$VELVET_STRIPE_RELAY_IMAGE" --baseline-result "$provider/result.json" \
+              --candidate-result "$candidate/result.json" --allow-test-writes \
+              --observe-seconds 60 --output "$closure"
+          done
+      - name: Stage sanitized evidence after success or failure
+        if: always()
+        env:
+          VELVET_STRIPE_SETUP_KEY: ${{ secrets.VELVET_STRIPE_SETUP_KEY }}
+          VELVET_STRIPE_AGENT_KEY: ${{ secrets.VELVET_STRIPE_AGENT_KEY }}
+          VELVET_STRIPE_OBSERVER_KEY: ${{ secrets.VELVET_STRIPE_OBSERVER_KEY }}
+        run: python -I src/velvet/stripe_shadowpath.py publish-evidence --source reports --output publish
+      - name: Scan staged evidence for secrets
+        id: evidence-scan
+        if: always()
+        run: |
+          "$(go env GOPATH)/bin/gitleaks" detect --no-git --source publish \
+            --config .gitleaks.toml --redact --exit-code 1
+      - name: Retain the measured result even if a finding fails the run
+        if: always() && steps.evidence-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: stripe-credit-note-${{ github.run_id }}-${{ github.run_attempt }}
+          path: publish/stripe-*/result.json
+          if-no-files-found: warn
